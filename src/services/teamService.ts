@@ -1,5 +1,9 @@
-import { findAll } from "@/repositories/teamRepository";
+import { findAll, findById } from "@/repositories/teamRepository";
 
-export function getAllTeams() {
+export async function getAllTeams() {
 	return findAll();
+}
+
+export async function getTeamById(id: string) {
+	return findById(id);
 }
