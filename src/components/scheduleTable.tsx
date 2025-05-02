@@ -3,6 +3,7 @@ import * as React from "react";
 import { useState } from "react";
 
 import { Button } from "@/components/ui/button";
+import { useRouter } from "next/navigation";
 import {
     DropdownMenu,
     DropdownMenuContent,
@@ -154,7 +155,7 @@ const schedule = [
 
 export default function ScheduleTable() {
     const [selectedWeek, setSelectedWeek] = useState("1");
-
+    const router = useRouter();
     function getLogo(teamName: string) {
         return teams.find((team) => team.team === teamName)?.logo || "";
     }
@@ -165,7 +166,16 @@ export default function ScheduleTable() {
 
     return (
         <div className="max-w-2xl mx-auto p-4 space-y-4 font-sans border border-gray-300 rounded-lg shadow-md bg-white">
-            <div className="text-2xl font-bold">Schedule</div>
+            <div className="text-2xl font-bold">
+                Schedule
+                <Button
+                    className="float-right bg-violet-700 hover:bg-violet-800"
+                    onClick={() => router.push("/schedule")}
+                >
+                    Full Schedule
+                </Button>
+            </div>
+
             <DropdownMenu>
                 <DropdownMenuTrigger asChild>
                     <Button variant="outline">Week {selectedWeek}</Button>
