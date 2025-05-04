@@ -85,7 +85,7 @@ export const gameRelations = relations(games, ({ one, many }) => ({
 		fields: [games.playoffSeriesId],
 		references: [playoffSeries.id],
 	}),
-	teamGames: many(teamGames),
+	teams: many(teamGames),
 	playerGamesStats: many(playerGamesStats),
 }));
 

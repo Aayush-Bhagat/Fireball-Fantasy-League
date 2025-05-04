@@ -1,9 +1,15 @@
+import { teamResponseDto } from "./../../../dtos/teamDtos";
 import { getAllTeams } from "@/services/teamService";
+import { NextResponse } from "next/server";
 
-export async function GET(request: Request) {
+export async function GET() {
 	const teams = await getAllTeams();
-	return new Response(JSON.stringify(teams), {
+
+	const response: teamResponseDto = {
+		teams: teams,
+	};
+
+	return NextResponse.json(response, {
 		status: 200,
-		headers: { "Content-Type": "application/json" },
 	});
 }
