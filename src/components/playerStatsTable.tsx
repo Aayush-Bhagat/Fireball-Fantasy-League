@@ -1,5 +1,7 @@
 "use client";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Button } from "./ui/button";
+import { useRouter } from "next/navigation";
 
 const topBatters = [
     {
@@ -106,15 +108,22 @@ const teams = [
 ];
 
 export default function PlayerStatsTable() {
+    const router = useRouter();
     function getLogo(teamName: string) {
         return teams.find((team) => team.team === teamName)?.logo || "";
     }
 
     return (
         <div className="max-w-2xl mx-auto p-6 font-sans border border-gray-300 rounded-lg shadow-lg bg-white">
-            <h2 className="text-3xl font-extrabold mb-4 text-center">
+            <div className="text-2xl font-bold pb-4">
                 Top Players
-            </h2>
+                <Button
+                    className="float-right bg-violet-700 hover:bg-violet-800"
+                    onClick={() => router.push("/viewAllPlayers")}
+                >
+                    View Players
+                </Button>
+            </div>
             <Tabs defaultValue="bat" className="w-full">
                 <TabsList>
                     <TabsTrigger value="bat">Batting</TabsTrigger>
@@ -209,7 +218,7 @@ export default function PlayerStatsTable() {
                                         {player.strikeouts}
                                     </td>
                                     <td className="py-3 px-4 text-center font-mono">
-                                        {player.era.toFixed(3)}
+                                        {player.era.toFixed(2)}
                                     </td>
                                 </tr>
                             ))}
