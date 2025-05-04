@@ -1,8 +1,17 @@
-import { PlayerGameDto, PlayerHistoryDto } from "@/dtos/playerDtos";
+import {
+	PlayerGameDto,
+	PlayerHistoryDto,
+	PlayerWithStatsDto,
+} from "@/dtos/playerDtos";
 import { calculateInningsPitched } from "@/lib/statUtils";
 import { calculateEra } from "@/lib/statUtils";
 import { findPlayerGames } from "@/repositories/gameRepository";
-import { findPlayerHistoryByPlayer } from "@/repositories/playerRepository";
+import {
+	findAllPlayers,
+	findAllPlayerStats,
+	findPlayerHistoryByPlayer,
+} from "@/repositories/playerRepository";
+
 export async function getPlayerGames(playerId: string) {
 	const games = await findPlayerGames(playerId);
 
@@ -77,4 +86,59 @@ export async function getPlayerHistory(playerId: string) {
 	});
 
 	return playerHistory;
+}
+
+export async function getAllPlayerStats() {
+	const stats = await findAllPlayerStats();
+
+	const allPlayers = await findAllPlayers();
+
+	const allPlayersWithStats: PlayerWithStatsDto[] = allPlayers.map(
+		(player) => {
+			const stat = stats.find((s) => s.playerId === player.id);
+			return {
+				id: player.id,
+				name: player.name,
+				image: player.image,
+				isCaptain: player.isCaptain,
+				team: {
+					id: player.team.id,
+					name: player.team.name,
+					logo: player.team.logo,
+					abbreviation: player.team.abbreviation,
+					conference: player.team.conference.name,
+					userId: player.team.userId,
+				},
+				batting: player.batting,
+				pitching: player.pitching,
+				running: player.running,
+				fielding: player.fielding,
+				starSwing: player.starSwing,
+				starPitch: player.starPitch,
+				fieldingAbility: player.fieldingAbility,
+				stats: {
+					atBats: Number(stat?.atBats) || 0,
+					hits: Number(stat?.hits) || 0,
+					runs: Number(stat?.runs) || 0,
+					rbis: Number(stat?.rbis) || 0,
+					walks: Number(stat?.walks) || 0,
+					strikeouts: Number(stat?.strikeouts) || 0,
+					homeRuns: Number(stat?.homeRuns) || 0,
+					inningsPitched: calculateInningsPitched(
+						Number(stat?.outsPitched) || 0
+					),
+					runsAllowed: Number(stat?.runsAllowed) || 0,
+					outs: Number(stat?.outs) || 0,
+					battingAverage:
+						Number(stat?.hits) / Number(stat?.atBats) || 0,
+					era: calculateEra(
+						Number(stat?.runsAllowed) || 0,
+						Number(stat?.outsPitched) || 0
+					),
+				},
+			};
+		}
+	);
+
+	return allPlayersWithStats;
 }

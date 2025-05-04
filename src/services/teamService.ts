@@ -5,7 +5,7 @@ import {
 	findRosterStatsByTeam,
 	findTeamById,
 } from "@/repositories/teamRepository";
-import { TeamDto, TeamWithKeepsDto } from "@/dtos/teamDtos";
+import { TeamDto, TeamStandingsDto, TeamWithKeepsDto } from "@/dtos/teamDtos";
 import { findPlayersByTeam } from "@/repositories/playerRepository";
 import { PlayerWithStatsDto } from "@/dtos/playerDtos";
 import { GameDtoMapper } from "@/lib/mappers/gameMappers";
@@ -28,6 +28,60 @@ export async function getAllTeams() {
 	}));
 
 	return teamDtos;
+}
+
+export async function getStandings(season: string) {
+	if (season !== "current" && isNaN(Number(season))) {
+		throw new Error("Invalid season");
+	}
+
+	const seasonId = season === "current" ? null : parseInt(season);
+
+	const standings = await findAllTeamRecordsBySeason(seasonId);
+
+	const easternStandings = standings.filter(
+		(standing) => standing.conferenceName === "Eastern"
+	);
+
+	const westernStandings = standings.filter(
+		(standing) => standing.conferenceName === "Western"
+	);
+
+	const easternStandingsSorted = easternStandings.sort((a, b) => {
+		return b.wins - a.wins;
+	});
+
+	const westernStandingsSorted = westernStandings.sort((a, b) => {
+		return b.wins - a.wins;
+	});
+
+	const easternStandingsDto: TeamStandingsDto[] = easternStandingsSorted.map(
+		(standing) => ({
+			id: standing.teamId,
+			name: standing.teamName,
+			abbreviation: standing.teamAbbreviation,
+			logo: standing.teamLogo,
+			conference: standing.conferenceName,
+			wins: standing.wins,
+			losses: standing.losses,
+			season: standing.season,
+		})
+	);
+
+	const westernStandingsDto: TeamStandingsDto[] = westernStandingsSorted.map(
+		(standing) => ({
+			id: standing.teamId,
+			name: standing.teamName,
+			abbreviation: standing.teamAbbreviation,
+			logo: standing.teamLogo,
+			conference: standing.conferenceName,
+			wins: standing.wins,
+			losses: standing.losses,
+			season: standing.season,
+		})
+	);
+
+	return { eastern: easternStandingsDto, western: westernStandingsDto };
 }
 
 export async function getTeamById(id: string) {

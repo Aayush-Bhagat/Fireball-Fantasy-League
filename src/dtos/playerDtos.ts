@@ -15,6 +15,10 @@ export type PlayerDto = {
 	fieldingAbility: string;
 };
 
+export type PlayerStatsResponseDto = {
+	players: PlayerWithStatsDto[];
+};
+
 export type PlayerStatsDto = {
 	atBats: number;
 	hits: number;

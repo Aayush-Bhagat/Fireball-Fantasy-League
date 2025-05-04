@@ -13,6 +13,22 @@ export type TeamDto = {
 	userId: string;
 };
 
+export type StandingsDto = {
+	eastern: TeamStandingsDto[];
+	western: TeamStandingsDto[];
+};
+
+export type TeamStandingsDto = {
+	id: string;
+	name: string;
+	abbreviation: string;
+	logo: string | null;
+	conference: string;
+	wins: number;
+	losses: number;
+	season: number;
+};
+
 export type TeamGameDto = {
 	id: string;
 	name: string;
