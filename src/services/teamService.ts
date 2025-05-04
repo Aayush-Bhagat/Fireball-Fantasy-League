@@ -48,11 +48,11 @@ export async function getStandings(season: string) {
 	);
 
 	const easternStandingsSorted = easternStandings.sort((a, b) => {
-		return b.wins - a.wins;
+		return Number(b.wins) - Number(a.wins);
 	});
 
 	const westernStandingsSorted = westernStandings.sort((a, b) => {
-		return b.wins - a.wins;
+		return Number(b.wins) - Number(a.wins);
 	});
 
 	const easternStandingsDto: TeamStandingsDto[] = easternStandingsSorted.map(
@@ -62,9 +62,9 @@ export async function getStandings(season: string) {
 			abbreviation: standing.teamAbbreviation,
 			logo: standing.teamLogo,
 			conference: standing.conferenceName,
-			wins: standing.wins,
-			losses: standing.losses,
-			season: standing.season,
+			wins: Number(standing.wins),
+			losses: Number(standing.losses),
+			season: Number(standing.season),
 		})
 	);
 
@@ -75,9 +75,9 @@ export async function getStandings(season: string) {
 			abbreviation: standing.teamAbbreviation,
 			logo: standing.teamLogo,
 			conference: standing.conferenceName,
-			wins: standing.wins,
-			losses: standing.losses,
-			season: standing.season,
+			wins: Number(standing.wins),
+			losses: Number(standing.losses),
+			season: Number(standing.season),
 		})
 	);
 
