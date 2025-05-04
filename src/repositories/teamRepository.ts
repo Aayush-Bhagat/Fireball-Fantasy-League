@@ -1,7 +1,7 @@
 import { sql, eq, and, sum } from "drizzle-orm";
 import { db } from "@/db";
 import { games, teamGames } from "@/models/games";
-import { teams } from "@/models/teams";
+import { conferences, teams } from "@/models/teams";
 import { seasons } from "@/models/seasons";
 import { playerGamesStats, players } from "@/models/players";
 
@@ -46,8 +46,11 @@ export async function findAllTeamRecordsBySeason(season: number | null) {
 
 	const results = await db
 		.select({
-			name: teams.name,
+			teamName: teams.name,
 			teamId: teamGames.teamId,
+			teamAbbreviation: teams.abbreviation,
+			teamLogo: teams.logo,
+			conferenceName: conferences.name,
 			season: games.seasonId,
 			wins: sql<number>`sum(case when ${teamGames.outcome} = 'Win' then 1 else 0 end)`,
 			losses: sql<number>`sum(case when ${teamGames.outcome} = 'Loss' then 1 else 0 end)`,
@@ -55,8 +58,16 @@ export async function findAllTeamRecordsBySeason(season: number | null) {
 		.from(teamGames)
 		.innerJoin(games, eq(teamGames.gameId, games.id))
 		.innerJoin(teams, eq(teamGames.teamId, teams.id))
+		.innerJoin(conferences, eq(teams.conferenceId, conferences.id))
 		.where(eq(games.seasonId, seasonId))
-		.groupBy(teams.name, teamGames.teamId, games.seasonId);
+		.groupBy(
+			teams.name,
+			teamGames.teamId,
+			games.seasonId,
+			teams.abbreviation,
+			teams.logo,
+			conferences.name
+		);
 
 	return results;
 }
