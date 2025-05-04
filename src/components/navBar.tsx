@@ -2,16 +2,20 @@
 
 import { useState } from "react";
 import { ChevronDown, Menu } from "lucide-react";
-
+import { useRouter } from "next/navigation";
 export default function NavBar() {
     const [menuOpen, setMenuOpen] = useState(false);
     const [dropdownOpen, setDropdownOpen] = useState(false);
     const [nestedDropdownOpen, setNestedDropdownOpen] = useState(false);
-
+    const router = useRouter();
     return (
         <nav className="fixed top-0 left-0 w-full z-50 bg-white dark:bg-gray-900 border-b border-gray-200 dark:border-gray-700">
             <div className="flex items-center justify-between w-full p-4 md:px-6">
-                <a href="#" className="flex items-center space-x-3">
+                <a
+                    href="#"
+                    className="flex items-center space-x-3"
+                    onClick={() => router.push("/")}
+                >
                     <img src="/images/blooper.png" alt="Logo" className="h-8" />
                     <span className="text-2xl font-semibold dark:text-white">
                         Fireball League
@@ -38,8 +42,9 @@ export default function NavBar() {
                             <a
                                 href="#"
                                 className="hover:text-blue-600 dark:hover:text-blue-400"
+                                onClick={() => router.push("/schedule")}
                             >
-                                Home
+                                Schedule
                             </a>
                         </li>
 
@@ -57,6 +62,7 @@ export default function NavBar() {
                                     <a
                                         href="#"
                                         className="block px-4 py-2 hover:bg-gray-100 dark:hover:bg-gray-700"
+                                        onClick={() => router.push("/roster")}
                                     >
                                         Roster
                                     </a>
@@ -64,12 +70,15 @@ export default function NavBar() {
                                     {/* Nested Dropdown */}
                                     <div className="relative">
                                         <button
-                                            onClick={() =>
-                                                setNestedDropdownOpen(
-                                                    !nestedDropdownOpen
-                                                )
-                                            }
+                                            // onClick={() =>
+                                            //     setNestedDropdownOpen(
+                                            //         !nestedDropdownOpen
+                                            //     )
+                                            // }
                                             className="w-full text-left px-4 py-2 hover:bg-gray-100 dark:hover:bg-gray-700"
+                                            onClick={() =>
+                                                router.push("/editLineup")
+                                            }
                                         >
                                             Lineup
                                         </button>
@@ -101,6 +110,7 @@ export default function NavBar() {
                                     <a
                                         href="#"
                                         className="block px-4 py-2 hover:bg-gray-100 dark:hover:bg-gray-700"
+                                        onClick={() => router.push("/trade")}
                                     >
                                         Trades
                                     </a>
@@ -112,6 +122,7 @@ export default function NavBar() {
                             <a
                                 href="#"
                                 className="hover:text-blue-600 dark:hover:text-blue-400"
+                                onClick={() => router.push("/login")}
                             >
                                 LogIn
                             </a>
