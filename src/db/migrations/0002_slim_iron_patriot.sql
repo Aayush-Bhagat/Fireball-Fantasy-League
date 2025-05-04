@@ -1,0 +1,1 @@
+ALTER TABLE "player_games_stats" RENAME COLUMN "innings_pitched" TO "outs_pitched";

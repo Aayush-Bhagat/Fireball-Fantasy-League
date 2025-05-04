@@ -13,6 +13,7 @@ import { relations } from "drizzle-orm";
 import { keepSlots, teams } from "./teams";
 import { games, playoffSeries } from "./games";
 import { trades } from "./trades";
+import { playerHistory } from "./players";
 
 export const seasons = pgTable(
 	"seasons",
@@ -36,6 +37,7 @@ export const seasonRelations = relations(seasons, ({ many }) => ({
 	awards: many(seasonAwards),
 	trades: many(trades),
 	keeps: many(keepSlots),
+	playerHistory: many(playerHistory),
 }));
 
 export const awardCategories = pgEnum("award_categories", [

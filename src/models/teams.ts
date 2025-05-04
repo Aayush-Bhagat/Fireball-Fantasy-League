@@ -10,7 +10,7 @@ import {
 import { relations } from "drizzle-orm";
 import { users } from "./users";
 import { seasonAwards, seasons } from "./seasons";
-import { players, playerGamesStats } from "./players";
+import { players, playerGamesStats, playerHistory } from "./players";
 import { playoffSeries, teamGames } from "./games";
 
 export const conferences = pgTable("conferences", {
@@ -51,11 +51,17 @@ export const teamRelations = relations(teams, ({ one, many }) => ({
 	players: many(players),
 	trades: many(trades),
 	tradeAssets: many(tradeAssets),
-	keeps: many(keepSlots),
+	keeps: many(keepSlots, {
+		relationName: "keeps",
+	}),
+	originalKeeps: many(keepSlots, {
+		relationName: "original_keeps",
+	}),
 	playerGamesStats: many(playerGamesStats),
 	games: many(teamGames),
 	playoffSeries: many(playoffSeries),
 	seasonAwards: many(seasonAwards),
+	playerHistory: many(playerHistory),
 }));
 
 export const fieldingPositions = pgEnum("fielding_positions", [
@@ -114,6 +120,7 @@ export const keepSlotsRelations = relations(keepSlots, ({ one, many }) => ({
 	team: one(teams, {
 		fields: [keepSlots.teamId],
 		references: [teams.id],
+		relationName: "keeps",
 	}),
 	season: one(seasons, {
 		fields: [keepSlots.seasonId],
@@ -122,6 +129,7 @@ export const keepSlotsRelations = relations(keepSlots, ({ one, many }) => ({
 	originalTeam: one(teams, {
 		fields: [keepSlots.originalTeamId],
 		references: [teams.id],
+		relationName: "original_keeps",
 	}),
 	tradeAssets: many(tradeAssets),
 }));
