@@ -73,7 +73,7 @@ const eastConference = [
 
 export default function StandingTable() {
     return (
-        <div className="max-w-2xl mx-auto p-4 space-y-4 font-sans border border-gray-300 rounded-lg shadow-md bg-white">
+        <div className="mx-auto p-4 space-y-4 font-sans border border-gray-300 rounded-lg shadow-md bg-white">
             <div className="text-2xl font-bold">Standings</div>
             <Tabs defaultValue="west" className="w-full">
                 <TabsList>

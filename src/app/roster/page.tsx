@@ -54,7 +54,6 @@ export default function Roster() {
         <>
             <NavBar />
             <div className="min-h-screen bg-gray-100 font-sans pt-20">
-                {/* Modal */}
                 {showCard && selectedPlayer && (
                     <div className="fixed inset-0 z-50 bg-black/30 backdrop-blur-sm flex items-center justify-center">
                         <div className="relative">

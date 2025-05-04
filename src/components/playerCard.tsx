@@ -1,19 +1,12 @@
 "use client";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Progress } from "@/components/ui/progress";
-
+import { PlayerWithStatsDto } from "@/dtos/playerDtos";
+import PlayerGameLog from "./playerGameLog";
+import PlayerHistory from "./playerHistory";
 type SeasonStat = {
     year: number;
     team: string;
-    hr: number;
-    rbi: number;
-    r: number;
-    avg: string;
-};
-
-type GameLog = {
-    date: string;
-    opponent: string;
     hr: number;
     rbi: number;
     r: number;
@@ -27,66 +20,70 @@ const seasonStats: SeasonStat[] = [
     { year: 2021, team: "Fireballs", hr: 11, rbi: 42, r: 61, avg: ".249" },
 ];
 
-const gameLogs: GameLog[] = [
-    {
-        date: "2024-08-29",
-        opponent: "Moonshiners",
-        hr: 2,
-        rbi: 4,
-        r: 3,
-        avg: ".500",
-    },
-    {
-        date: "2024-08-28",
-        opponent: "Ghost Bats",
-        hr: 1,
-        rbi: 2,
-        r: 1,
-        avg: ".333",
-    },
-    {
-        date: "2024-08-27",
-        opponent: "Thunderbolts",
-        hr: 0,
-        rbi: 1,
-        r: 0,
-        avg: ".250",
-    },
-];
-
-export default function PlayerCard({ player }: any) {
+type Props = {
+    player: PlayerWithStatsDto;
+};
+export default function PlayerCard({ player }: Props) {
     if (!player) {
         return <div>Loading...</div>;
     }
-    const batting = player.batting || 10;
-    const fielding = player.fielding || 7;
-    const pitching = player.pitching || 6;
-    const running = player.running || 2;
+    const batting = player.batting;
+    const fielding = player.fielding;
+    const pitching = player.pitching;
+    const running = player.running;
     return (
         <div className="max-w-xl mx-auto p-6 bg-white border border-gray-200 rounded-2xl shadow-2xl font-sans">
             <div className="bg-purple-600 text-white rounded-xl p-6 flex items-center gap-4 shadow">
-                <img
-                    src={player.image}
-                    alt="Player"
-                    className="w-20 h-20 rounded-full object-cover"
-                />
+                {player.image && (
+                    <img
+                        src={player.image}
+                        alt="Player"
+                        className="w-30 h-30 "
+                    />
+                )}
                 <div className="flex-1">
                     <h1 className="text-2xl font-bold">{player.name}</h1>
                     <p className="text-sm text-purple-200 mb-2">
-                        Fireballs · OF
+                        {player.team.abbreviation} · OF
                     </p>
                     <div className="flex space-x-6">
                         <div className="text-center">
-                            <p className="text-lg font-bold">{player.hr}</p>
+                            <p className="text-lg font-bold">
+                                {player.stats.homeRuns}
+                            </p>
                             <p className="text-sm">HR</p>
                         </div>
                         <div className="text-center">
-                            <p className="text-lg font-bold">{player.rbi}</p>
+                            <p className="text-lg font-bold">
+                                {player.stats.rbis}
+                            </p>
                             <p className="text-sm">RBI</p>
                         </div>
                         <div className="text-center">
-                            <p className="text-lg font-bold">{player.avg}</p>
+                            <p className="text-lg font-bold">
+                                {player.stats.battingAverage.toFixed(3)}
+                            </p>
                             <p className="text-sm">AVG</p>
+                        </div>
+                    </div>
+                    <div className="flex space-x-6">
+                        <div className="text-center">
+                            <p className="text-lg font-bold">
+                                {player.stats.era}
+                            </p>
+                            <p className="text-sm">ERA</p>
+                        </div>
+                        <div className="text-center">
+                            <p className="text-lg font-bold">
+                                {player.stats.runsAllowed}
+                            </p>
+                            <p className="text-sm">RA</p>
+                        </div>
+                        <div className="text-center">
+                            <p className="text-lg font-bold">
+                                {player.stats.inningsPitched}
+                            </p>
+                            <p className="text-sm">IP</p>
                         </div>
                     </div>
                 </div>
@@ -155,54 +152,12 @@ export default function PlayerCard({ player }: any) {
                 <div className="mt-4 w-full min-h-[320px]">
                     {/* History Tab */}
                     <TabsContent value="history" className="mt-4">
-                        <h2 className="text-lg font-semibold mb-2">
-                            Player History
-                        </h2>
-                        <div className="w-full table-auto bg-white border border-gray-100 shadow rounded-lg text-sm">
-                            <span className="p-2 block">
-                                Drafted 5th overall in 2024 By the Fireballs
-                            </span>
-                        </div>
+                        <PlayerHistory player={player.id} />
                     </TabsContent>
 
                     {/* Recent Games */}
                     <TabsContent value="recent" className="mt-4">
-                        <h2 className="text-lg font-semibold mb-2">
-                            Recent Game Log
-                        </h2>
-                        <div className="overflow-x-auto">
-                            <table className="w-full table-fixed bg-white border border-gray-100 shadow rounded-lg text-sm">
-                                <thead className="bg-purple-600 text-white">
-                                    <tr>
-                                        <th className="p-2">Date</th>
-                                        <th className="p-2">Opponent</th>
-                                        <th className="p-2">HR</th>
-                                        <th className="p-2">RBI</th>
-                                        <th className="p-2">R</th>
-                                        <th className="p-2">AVG</th>
-                                    </tr>
-                                </thead>
-                                <tbody>
-                                    {gameLogs.map((log, i) => (
-                                        <tr
-                                            key={i}
-                                            className="even:bg-gray-50 text-center"
-                                        >
-                                            <td className="p-2 whitespace-nowrap">
-                                                {log.date}
-                                            </td>
-                                            <td className="p-2">
-                                                {log.opponent}
-                                            </td>
-                                            <td className="p-2">{log.hr}</td>
-                                            <td className="p-2">{log.rbi}</td>
-                                            <td className="p-2">{log.r}</td>
-                                            <td className="p-2">{log.avg}</td>
-                                        </tr>
-                                    ))}
-                                </tbody>
-                            </table>
-                        </div>
+                        <PlayerGameLog player={player.id} />
                     </TabsContent>
 
                     {/* Career Stats */}

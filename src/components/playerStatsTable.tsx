@@ -114,7 +114,7 @@ export default function PlayerStatsTable() {
     }
 
     return (
-        <div className="max-w-2xl mx-auto p-6 font-sans border border-gray-300 rounded-lg shadow-lg bg-white">
+        <div className=" mx-auto p-6 font-sans border border-gray-300 rounded-lg shadow-lg bg-white">
             <div className="text-2xl font-bold pb-4">
                 Top Players
                 <Button
