@@ -58,10 +58,10 @@ export default function PlayerCard({ player }: any) {
     if (!player) {
         return <div>Loading...</div>;
     }
-    const batting = player.batting || 8;
+    const batting = player.batting || 10;
     const fielding = player.fielding || 7;
     const pitching = player.pitching || 6;
-    const running = player.running || 9;
+    const running = player.running || 2;
     return (
         <div className="max-w-xl mx-auto p-6 bg-white border border-gray-200 rounded-2xl shadow-2xl font-sans">
             <div className="bg-purple-600 text-white rounded-xl p-6 flex items-center gap-4 shadow">
