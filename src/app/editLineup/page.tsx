@@ -55,7 +55,6 @@ export default function Page() {
 
     return (
         <>
-            <NavBar />
             <div className="min-h-screen bg-gradient-to-b from-violet-50 to-white pt-20 px-6">
                 <div className="flex flex-col items-center mb-8">
                     <div className="flex items-center gap-4">

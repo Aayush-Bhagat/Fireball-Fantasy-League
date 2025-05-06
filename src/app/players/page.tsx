@@ -8,7 +8,6 @@ export default async function ViewAllPlayers() {
 
     return (
         <>
-            <NavBar />
             <ViewPlayers players={players} />
         </>
     );

@@ -7,6 +7,7 @@ export default function AdminNumberField() {
         <NumberField.Root
             id={id}
             defaultValue={0}
+            min={0}
             className="flex flex-col items-center gap-1"
         >
             <NumberField.ScrubArea className="cursor-ew-resize">

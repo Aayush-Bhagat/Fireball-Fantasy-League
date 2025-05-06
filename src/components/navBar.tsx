@@ -31,6 +31,21 @@ export default function NavBar({ isLoggedIn, role }: Props) {
 						Fireball League
 					</span>
 				</Link>
+                {/* Navigation Links */}
+                <div
+                    className={`w-full md:w-auto ${
+                        menuOpen ? "block" : "hidden"
+                    } md:block`}
+                >
+                    <ul className="flex flex-col md:flex-row md:items-center gap-4 mt-4 md:mt-0 text-gray-900 dark:text-white">
+                        <li>
+                            <Link
+                                href="/schedule"
+                                className="hover:text-blue-600 dark:hover:text-blue-400"
+                            >
+                                Schedule
+                            </Link>
+                        </li>
 
 				{/* Mobile Menu Button */}
 				<button
