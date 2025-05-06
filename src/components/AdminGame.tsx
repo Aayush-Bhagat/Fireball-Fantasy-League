@@ -1,5 +1,5 @@
 import React from "react";
-import ExampleNumberField from "./ui/numberInput";
+import AdminNumberField from "./ui/numberInput";
 
 type Player = {
     name: string;
@@ -54,9 +54,7 @@ export default function AdminGame() {
                                 <th className="text-left px-4 py-2 w-20">
                                     Player
                                 </th>
-                                <th className="text-left px-4 py-2 w-40">
-                                    Name
-                                </th>
+
                                 <th className="text-center px-4 py-2 w-12">
                                     AB
                                 </th>
@@ -64,22 +62,28 @@ export default function AdminGame() {
                                     H
                                 </th>
                                 <th className="text-center px-4 py-2 w-12">
-                                    HR
+                                    R
                                 </th>
                                 <th className="text-center px-4 py-2 w-12">
                                     Rbi
                                 </th>
                                 <th className="text-center px-4 py-2 w-12">
-                                    IP
+                                    HR
                                 </th>
                                 <th className="text-center px-4 py-2 w-12">
-                                    SO
+                                    Outs Pitched
                                 </th>
                                 <th className="text-center px-4 py-2 w-12">
                                     RA
                                 </th>
                                 <th className="text-center px-4 py-2 w-12">
+                                    SO
+                                </th>
+                                <th className="text-center px-4 py-2 w-12">
                                     Walks
+                                </th>
+                                <th className="text-center px-4 py-2 w-12">
+                                    Outs
                                 </th>
                             </tr>
                         </thead>
@@ -95,33 +99,38 @@ export default function AdminGame() {
                                             alt={player.name}
                                             className="w-12 h-12 rounded-full border border-gray-300"
                                         />
-                                    </td>
-                                    <td className="px-4 py-2 font-medium text-gray-800">
                                         {player.name}
                                     </td>
+
                                     <td className="px-4 py-2 font-medium text-gray-800">
-                                        <ExampleNumberField />
+                                        <AdminNumberField />
                                     </td>
                                     <td className="px-4 py-2 font-medium text-gray-800">
-                                        <ExampleNumberField />
+                                        <AdminNumberField />
                                     </td>
                                     <td className="px-4 py-2 font-medium text-gray-800">
-                                        <ExampleNumberField />
+                                        <AdminNumberField />
                                     </td>
                                     <td className="px-4 py-2 font-medium text-gray-800">
-                                        <ExampleNumberField />
+                                        <AdminNumberField />
                                     </td>
                                     <td className="px-4 py-2 font-medium text-gray-800">
-                                        <ExampleNumberField />
+                                        <AdminNumberField />
                                     </td>
                                     <td className="px-4 py-2 font-medium text-gray-800">
-                                        <ExampleNumberField />
+                                        <AdminNumberField />
                                     </td>
                                     <td className="px-4 py-2 font-medium text-gray-800">
-                                        <ExampleNumberField />
+                                        <AdminNumberField />
                                     </td>
                                     <td className="px-4 py-2 font-medium text-gray-800">
-                                        <ExampleNumberField />
+                                        <AdminNumberField />
+                                    </td>
+                                    <td className="px-4 py-2 font-medium text-gray-800">
+                                        <AdminNumberField />
+                                    </td>
+                                    <td className="px-4 py-2 font-medium text-gray-800">
+                                        <AdminNumberField />
                                     </td>
                                 </tr>
                             ))}
@@ -141,9 +150,7 @@ export default function AdminGame() {
                                 <th className="text-left px-4 py-2 w-20">
                                     Player
                                 </th>
-                                <th className="text-left px-4 py-2 w-40">
-                                    Name
-                                </th>
+
                                 <th className="text-center px-4 py-2 w-12">
                                     AB
                                 </th>
@@ -151,22 +158,28 @@ export default function AdminGame() {
                                     H
                                 </th>
                                 <th className="text-center px-4 py-2 w-12">
-                                    HR
+                                    R
                                 </th>
                                 <th className="text-center px-4 py-2 w-12">
                                     Rbi
                                 </th>
                                 <th className="text-center px-4 py-2 w-12">
-                                    IP
+                                    HR
                                 </th>
                                 <th className="text-center px-4 py-2 w-12">
-                                    SO
+                                    Outs Pitched
                                 </th>
                                 <th className="text-center px-4 py-2 w-12">
                                     RA
                                 </th>
                                 <th className="text-center px-4 py-2 w-12">
+                                    SO
+                                </th>
+                                <th className="text-center px-4 py-2 w-12">
                                     Walks
+                                </th>
+                                <th className="text-center px-4 py-2 w-12">
+                                    Outs
                                 </th>
                             </tr>
                         </thead>
@@ -174,7 +187,7 @@ export default function AdminGame() {
                             {teamBlue.map((player, index) => (
                                 <tr
                                     key={index}
-                                    className="border-t border-blue-100"
+                                    className="border-t border-red-100"
                                 >
                                     <td className="px-4 py-2">
                                         <img
@@ -182,33 +195,38 @@ export default function AdminGame() {
                                             alt={player.name}
                                             className="w-12 h-12 rounded-full border border-gray-300"
                                         />
-                                    </td>
-                                    <td className="px-4 py-2 font-medium text-gray-800">
                                         {player.name}
                                     </td>
+
                                     <td className="px-4 py-2 font-medium text-gray-800">
-                                        <ExampleNumberField />
+                                        <AdminNumberField />
                                     </td>
                                     <td className="px-4 py-2 font-medium text-gray-800">
-                                        <ExampleNumberField />
+                                        <AdminNumberField />
                                     </td>
                                     <td className="px-4 py-2 font-medium text-gray-800">
-                                        <ExampleNumberField />
+                                        <AdminNumberField />
                                     </td>
                                     <td className="px-4 py-2 font-medium text-gray-800">
-                                        <ExampleNumberField />
+                                        <AdminNumberField />
                                     </td>
                                     <td className="px-4 py-2 font-medium text-gray-800">
-                                        <ExampleNumberField />
+                                        <AdminNumberField />
                                     </td>
                                     <td className="px-4 py-2 font-medium text-gray-800">
-                                        <ExampleNumberField />
+                                        <AdminNumberField />
                                     </td>
                                     <td className="px-4 py-2 font-medium text-gray-800">
-                                        <ExampleNumberField />
+                                        <AdminNumberField />
                                     </td>
                                     <td className="px-4 py-2 font-medium text-gray-800">
-                                        <ExampleNumberField />
+                                        <AdminNumberField />
+                                    </td>
+                                    <td className="px-4 py-2 font-medium text-gray-800">
+                                        <AdminNumberField />
+                                    </td>
+                                    <td className="px-4 py-2 font-medium text-gray-800">
+                                        <AdminNumberField />
                                     </td>
                                 </tr>
                             ))}

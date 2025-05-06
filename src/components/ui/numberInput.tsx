@@ -1,7 +1,7 @@
 import * as React from "react";
 import { NumberField } from "@base-ui-components/react/number-field";
 
-export default function ExampleNumberField() {
+export default function AdminNumberField() {
     const id = React.useId();
     return (
         <NumberField.Root
@@ -23,7 +23,7 @@ export default function ExampleNumberField() {
                 <NumberField.Decrement className="flex items-center justify-center rounded-l-md border border-gray-300 bg-gray-50 hover:bg-gray-100 active:bg-gray-200 p-2 text-gray-900">
                     <MinusIcon />
                 </NumberField.Decrement>
-                <NumberField.Input className="h-10 w-16 text-center text-lg border-t border-b border-gray-200 bg-white text-gray-900 focus:outline-none focus:ring-2 focus:ring-blue-500 rounded-none" />
+                <NumberField.Input className="h-10 w-10 text-center text-lg border-t border-b border-gray-200 bg-white text-gray-900 focus:outline-none focus:ring-2 focus:ring-blue-500 rounded-none" />
                 <NumberField.Increment className="flex items-center justify-center rounded-r-md border border-gray-300 bg-gray-50 hover:bg-gray-100 active:bg-gray-200 p-2 text-gray-900">
                     <PlusIcon />
                 </NumberField.Increment>

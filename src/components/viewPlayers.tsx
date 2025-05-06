@@ -79,14 +79,14 @@ export default function ViewPlayers({ players }: Props) {
                 </td>
                 <td className="px-6 py-4">
                     <div className="flex items-center gap-2">
-                        {player.team.logo && (
+                        {player.team?.logo && (
                             <img
                                 src={player.team.logo}
                                 alt={`${player.team.name} logo`}
                                 className="w-6 h-6 rounded-full"
                             />
                         )}
-                        <span>{player.team.name}</span>
+                        <span>{player.team?.name}</span>
                     </div>
                 </td>
 
