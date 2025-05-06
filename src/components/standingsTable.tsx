@@ -95,22 +95,22 @@ export default function StandingTable({ standings }: Props) {
                                             {team.losses}
                                         </td>
 
-                                        <td className="px-4 py-2">
-                                            {(
-                                                team.wins /
-                                                (team.wins + team.losses)
-                                            ).toFixed(3)}
-                                        </td>
-                                        <td className="px-4 py-2">
-                                            {team.wins + team.losses}
-                                        </td>
-                                    </tr>
-                                ))}
-                            </tbody>
-                        </table>
-                    </div>
-                </TabsContent>
-            </Tabs>
-        </div>
-    );
+										<td className="px-4 py-2">
+											{(
+												team.wins /
+												(team.wins + team.losses)
+											).toFixed(3)}
+										</td>
+										<td className="px-4 py-2">
+											{team.wins + team.losses}
+										</td>
+									</tr>
+								))}
+							</tbody>
+						</table>
+					</div>
+				</TabsContent>
+			</Tabs>
+		</div>
+	);
 }

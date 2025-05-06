@@ -4,7 +4,7 @@ import { games, teamGames } from "@/models/games";
 import { playerGamesStats, players } from "@/models/players";
 import { seasons } from "@/models/seasons";
 import { conferences, teams } from "@/models/teams";
-import { eq, and, sql, lt, ne } from "drizzle-orm";
+import { eq, and, sql, lt, ne, asc } from "drizzle-orm";
 import { alias } from "drizzle-orm/pg-core";
 
 export async function findGamesByWeekAndSeason(
@@ -175,33 +175,40 @@ export async function findPlayerGames(playerId: string) {
 		.from(seasons);
 
 	const playerTeam = alias(teams, "playerTeam");
-	const playerTeamGames = alias(teamGames, "playerTeamGames");
+	const playerTeamGame = alias(teamGames, "playerTeamGame");
 	const playerTeamConference = alias(conferences, "playerTeamConference");
+
 	const opponentTeam = alias(teams, "opponentTeam");
-	const opponentTeamGames = alias(teamGames, "opponentTeamGames");
+	const opponentTeamGame = alias(teamGames, "opponentTeamGame");
 	const opponentTeamConference = alias(conferences, "opponentTeamConference");
 
-	const result = db
+	const result = await db
 		.select({
 			gameId: games.id,
 			week: games.week,
 			playedAt: games.playedAt,
-			teamId: playerTeam.id,
-			teamName: playerTeam.name,
-			teamLogo: playerTeam.logo,
-			teamAbbreviation: playerTeam.abbreviation,
-			teamConference: playerTeamConference.name,
-			teamUserId: playerTeam.userId,
-			opponentId: opponentTeam.id,
-			opponentName: opponentTeam.name,
-			opponentLogo: opponentTeam.logo,
-			opponentAbbreviation: opponentTeam.abbreviation,
-			opponentConference: opponentTeamConference.name,
-			opponentUserId: opponentTeam.userId,
-			teamScore: playerTeamGames.score,
-			teamOutcome: playerTeamGames.outcome,
-			opponentScore: opponentTeamGames.score,
-			opponentOutcome: opponentTeamGames.outcome,
+
+			// Player's team
+			playerTeamId: playerTeam.id,
+			playerTeamName: playerTeam.name,
+			playerTeamAbbreviation: playerTeam.abbreviation,
+			playerTeamLogo: playerTeam.logo,
+			playerTeamScore: playerTeamGame.score,
+			playerTeamOutcome: playerTeamGame.outcome,
+			playerTeamConferenceId: playerTeamConference.id,
+			playerTeamConferenceName: playerTeamConference.name,
+			playerTeamUserId: playerTeam.userId,
+			// Opponent team
+			opponentTeamId: opponentTeam.id,
+			opponentTeamName: opponentTeam.name,
+			opponentTeamAbbreviation: opponentTeam.abbreviation,
+			opponentTeamLogo: opponentTeam.logo,
+			opponentTeamScore: opponentTeamGame.score,
+			opponentTeamOutcome: opponentTeamGame.outcome,
+			opponentTeamConferenceId: opponentTeamConference.id,
+			opponentTeamConferenceName: opponentTeamConference.name,
+			opponentTeamUserId: opponentTeam.userId,
+			// Player stats
 			atBats: playerGamesStats.atBats,
 			hits: playerGamesStats.hits,
 			runs: playerGamesStats.runs,
@@ -215,33 +222,39 @@ export async function findPlayerGames(playerId: string) {
 		})
 		.from(playerGamesStats)
 		.innerJoin(games, eq(playerGamesStats.gameId, games.id))
-		.innerJoin(players, eq(playerGamesStats.playerId, players.id))
-		.innerJoin(playerTeam, eq(players.teamId, playerTeam.id))
+		.innerJoin(seasons, eq(games.seasonId, seasons.id))
+		.innerJoin(
+			playerTeamGame,
+			and(
+				eq(playerTeamGame.gameId, games.id),
+				eq(playerTeamGame.teamId, playerGamesStats.teamId)
+			)
+		)
+		.innerJoin(playerTeam, eq(playerTeam.id, playerGamesStats.teamId))
 		.innerJoin(
 			playerTeamConference,
 			eq(playerTeam.conferenceId, playerTeamConference.id)
 		)
+		.innerJoin(players, eq(players.id, playerGamesStats.playerId))
 		.innerJoin(
-			playerTeamGames,
+			opponentTeamGame,
 			and(
-				eq(playerTeamGames.gameId, games.id),
-				eq(playerTeamGames.teamId, playerGamesStats.teamId)
+				eq(opponentTeamGame.gameId, games.id),
+				ne(opponentTeamGame.teamId, playerGamesStats.teamId)
 			)
 		)
-		.innerJoin(
-			opponentTeamGames,
-			and(
-				eq(opponentTeamGames.gameId, games.id),
-				ne(opponentTeamGames.teamId, playerGamesStats.teamId)
-			)
-		)
-		.innerJoin(opponentTeam, eq(opponentTeam.id, opponentTeamGames.teamId))
+		.innerJoin(opponentTeam, eq(opponentTeam.id, opponentTeamGame.teamId))
 		.innerJoin(
 			opponentTeamConference,
 			eq(opponentTeam.conferenceId, opponentTeamConference.id)
 		)
-		.where(and(eq(players.id, playerId), eq(games.seasonId, seasonQuery)))
-		.orderBy(games.week, games.playedAt);
+		.where(
+			and(
+				eq(playerGamesStats.playerId, playerId),
+				eq(seasons.id, seasonQuery)
+			)
+		)
+		.orderBy(asc(games.week), asc(games.playedAt));
 
 	return result;
 }

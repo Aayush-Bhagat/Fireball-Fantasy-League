@@ -118,14 +118,16 @@ export async function getTeamRoster(teamId: string) {
 			name: player.name,
 			image: player.image,
 			isCaptain: player.isCaptain,
-			team: {
-				id: player.team.id,
-				name: player.team.name,
-				logo: player.team.logo,
-				abbreviation: player.team.abbreviation,
-				conference: player.team.conference.name,
-				userId: player.team.userId,
-			},
+			team: player.team
+				? {
+						id: player.team.id,
+						name: player.team.name,
+						logo: player.team.logo,
+						abbreviation: player.team.abbreviation,
+						conference: player.team.conference.name,
+						userId: player.team?.userId,
+				  }
+				: null,
 			batting: player.batting,
 			pitching: player.pitching,
 			running: player.running,

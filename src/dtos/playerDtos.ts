@@ -3,7 +3,7 @@ import { TeamDto } from "./teamDtos";
 export type PlayerDto = {
 	id: string;
 	name: string;
-	team: TeamDto;
+	team: TeamDto | null;
 	image: string | null;
 	isCaptain: boolean;
 	batting: number;
@@ -37,7 +37,7 @@ export type PlayerStatsDto = {
 export type PlayerWithStatsDto = {
 	id: string;
 	name: string;
-	team: TeamDto;
+	team: TeamDto | null;
 	image: string | null;
 	isCaptain: boolean;
 	batting: number;
@@ -82,4 +82,39 @@ export type PlayerHistoryDto = {
 
 export type PlayerHistoryResponseDto = {
 	history: PlayerHistoryDto[];
+};
+
+export type CareerStatsDto = {
+	seasonId: number;
+	playerId: string;
+	playerName: string;
+	homeRuns: number;
+	atBats: number;
+	hits: number;
+	runs: number;
+	RBIs: number;
+	walks: number;
+	strikeouts: number;
+	inningsPitched: number;
+	runsAllowed: number;
+	outs: number;
+	battingAverage: number;
+	era: number;
+	teamsPlayedFor: string[];
+};
+
+export type PlayerCareerStatsDto = {
+	id: string;
+	name: string;
+	team: TeamDto | null;
+	image: string | null;
+	isCaptain: boolean;
+	batting: number;
+	pitching: number;
+	running: number;
+	fielding: number;
+	starSwing: string | null;
+	starPitch: string | null;
+	fieldingAbility: string | null;
+	careerStats: CareerStatsDto[];
 };

@@ -56,7 +56,8 @@ export type TeamRosterDto = {
 export type KeepDto = {
 	id: string;
 	teamId: string;
-	value: string;
+	odds: string;
+	value: number;
 	seasonId: number;
 	originalTeamId: string;
 };
