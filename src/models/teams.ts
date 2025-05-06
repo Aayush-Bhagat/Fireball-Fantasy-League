@@ -104,8 +104,9 @@ export const keepSlots = pgTable(
 		seasonId: integer("season_id")
 			.notNull()
 			.references(() => seasons.id),
-		value: text("value").notNull(),
+		odds: text("odds").notNull(),
 		originalTeamId: uuid("original_team_id").notNull(),
+		value: integer("value").notNull(),
 	},
 	(table) => [
 		index("idx_keep_slots_team").on(table.teamId),

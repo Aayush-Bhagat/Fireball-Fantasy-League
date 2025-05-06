@@ -1,3 +1,14 @@
 .env
 node_modules
 .next
+
+/out
+
+.vercel
+
+/dist
+
+/build
+
+/coverage
+

@@ -20,9 +20,7 @@ export const players = pgTable(
 	{
 		id: uuid("id").primaryKey(),
 		name: text("name").notNull().unique(),
-		teamId: uuid("team_id")
-			.notNull()
-			.references(() => teams.id),
+		teamId: uuid("team_id").references(() => teams.id),
 		image: text("image"),
 		isCaptain: boolean("is_captain").notNull(),
 		pitching: integer("pitching").notNull(),
