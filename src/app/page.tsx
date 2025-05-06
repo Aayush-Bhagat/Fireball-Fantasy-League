@@ -4,8 +4,12 @@ import TeamsTable from "@/components/teamsTable";
 import ScheduleTable from "@/components/scheduleTable";
 import PlayerStatsTable from "@/components/playerStatsTable";
 import { getWeeklySchedule } from "@/requests/schedule";
+import { getStandings } from "@/requests/standings";
+import { viewAllPlayers } from "@/requests/players";
 export default async function Home() {
     const { games } = await getWeeklySchedule(null, "current");
+    const standings = await getStandings("current");
+    const { players } = await viewAllPlayers();
 
     return (
         <>
@@ -22,10 +26,10 @@ export default async function Home() {
                     </section>
                     <section className="space-y-6">
                         <div className=" ">
-                            <StandingTable />
+                            <StandingTable standings={standings} />
                         </div>
                         <div className="">
-                            <PlayerStatsTable />
+                            <PlayerStatsTable players={players} />
                         </div>
                     </section>
                 </div>
