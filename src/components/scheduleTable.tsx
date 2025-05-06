@@ -23,7 +23,7 @@ type Props = {
 };
 
 export default function ScheduleTable({ games }: Props) {
-    const [selectedWeek, setSelectedWeek] = useState("1");
+    const [selectedWeek, setSelectedWeek] = useState("current");
     const router = useRouter();
 
     const { data: schedule } = useQuery({
@@ -59,6 +59,9 @@ export default function ScheduleTable({ games }: Props) {
                         onValueChange={(value) => setSelectedWeek(value)}
                         defaultValue={"current"}
                     >
+                        <DropdownMenuRadioItem value="current">
+                            Current Week
+                        </DropdownMenuRadioItem>
                         {Array.from({ length: 7 }, (_, i) => (
                             <DropdownMenuRadioItem
                                 key={i}
@@ -67,9 +70,6 @@ export default function ScheduleTable({ games }: Props) {
                                 Week {i + 1}
                             </DropdownMenuRadioItem>
                         ))}
-                        <DropdownMenuRadioItem value="current">
-                            Current Week
-                        </DropdownMenuRadioItem>
                     </DropdownMenuRadioGroup>
                 </DropdownMenuContent>
             </DropdownMenu>

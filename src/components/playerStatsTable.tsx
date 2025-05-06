@@ -1,135 +1,84 @@
 "use client";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Button } from "./ui/button";
-import { useRouter } from "next/navigation";
+import Link from "next/link";
+import { PlayerWithStatsDto } from "@/dtos/playerDtos";
 
-const topBatters = [
-    {
-        name: "Bowser",
-        team: "Phoenix Firebirds",
-        hr: 34,
-        rbi: 98,
-        avg: 0.312,
-        image: "https://mario.wiki.gallery/images/5/5e/MSS_Bowser_Character_Select_Sprite.png",
-    },
-    {
-        name: "Mario",
-        team: "Denver Devils",
-        hr: 41,
-        rbi: 109,
-        avg: 0.299,
-        image: "https://mario.wiki.gallery/images/e/e4/MSS_Mario_Character_Select_Sprite.png",
-    },
-    {
-        name: "Luigi",
-        team: "Orlando Lynx",
-        hr: 27,
-        rbi: 85,
-        avg: 0.321,
-        image: "https://mario.wiki.gallery/images/5/50/MSS_Luigi_Character_Select_Sprite_1.png",
-    },
-    {
-        name: "Yoshi",
-        team: "Seattle Storm",
-        hr: 22,
-        rbi: 74,
-        avg: 0.337,
-        image: "https://mario.wiki.gallery/images/5/5b/MSS_Yoshi_Character_Select_Sprite.png",
-    },
-];
-const topPitchers = [
-    {
-        name: "Wario",
-        team: "Boston Titans",
-        era: 2.73,
-        wins: 16,
-        strikeouts: 211,
-        image: "https://mario.wiki.gallery/images/9/96/MSS_Wario_Character_Select_Sprite.png",
-    },
-    {
-        name: "Donkey Kong",
-        team: "Chicago Wolves",
-        era: 2.89,
-        wins: 14,
-        strikeouts: 198,
-        image: "https://mario.wiki.gallery/images/c/c5/MSS_Donkey_Kong_Character_Select_Sprite.png",
-    },
-    {
-        name: "Daisy",
-        team: "Miami Sharks",
-        era: 2.65,
-        wins: 17,
-        strikeouts: 203,
-        image: "https://mario.wiki.gallery/images/3/3e/MSS_Daisy_Character_Select_Sprite.png",
-    },
-    {
-        name: "Toad",
-        team: "Toronto Thunder",
-        era: 2.58,
-        wins: 15,
-        strikeouts: 190,
-        image: "https://mario.wiki.gallery/images/6/62/MSS_Red_Toad_Character_Select_Sprite.png",
-    },
-];
+type Props = {
+    players: PlayerWithStatsDto[];
+};
 
-const teams = [
-    {
-        team: "Phoenix Firebirds",
-        logo: "https://cdn.discordapp.com/avatars/154678519559880704/f51b4ffe13d9565de09cb62e96d9e6c9.webp?size=240",
-    },
-    {
-        team: "Denver Devils",
-        logo: "https://cdn.discordapp.com/avatars/211450221270532096/2d82db96edc8a353f40a1bcce4c5ca51.webp?size=240",
-    },
-    {
-        team: "Orlando Lynx",
-        logo: "https://cdn.discordapp.com/avatars/296397828706795529/a001d16fdd8d613bc5e6c54ed210f1b4.webp?size=240",
-    },
-    {
-        team: "Seattle Storm",
-        logo: "https://cdn.discordapp.com/avatars/155399049288220673/b6261f79039b870e5f6324cf304dbf45.webp?size=240",
-    },
-    {
-        team: "Boston Titans",
-        logo: "https://cdn.discordapp.com/avatars/222243857402822658/f359ddab179ade1c5100474ae4da838f.webp?size=240",
-    },
-    {
-        team: "Chicago Wolves",
-        logo: "https://cdn.discordapp.com/avatars/154677629021061120/da633cd609f3a03c3626e0c733cd8406.webp?size=240",
-    },
-    {
-        team: "Miami Sharks",
-        logo: "https://media3.giphy.com/media/TeSYVrvuBbt8A/200w.gif?cid=6c09b952y0osty53z4v94sw6e79ybrjnyg9i5svqxq9xz4rg&ep=v1_gifs_search&rid=200w.gif&ct=g",
-    },
-    {
-        team: "Toronto Thunder",
-        logo: "https://cdn.discordapp.com/avatars/234443334578470913/6e6650c277dc6b95b5b809babba89771.webp?size=240",
-    },
-];
+// 🎯 Weighted sorting logic
+function getTopBatters(players: PlayerWithStatsDto[], count = 5) {
+    const weights = {
+        hr: 3,
+        rbi: 2,
+        avg: 100,
+    };
 
-export default function PlayerStatsTable() {
-    const router = useRouter();
-    function getLogo(teamName: string) {
-        return teams.find((team) => team.team === teamName)?.logo || "";
-    }
+    return players
+        .filter((p) => p.stats && p.stats.battingAverage !== undefined)
+        .sort((a, b) => {
+            const aScore =
+                a.stats.homeRuns * weights.hr +
+                a.stats.rbis * weights.rbi +
+                a.stats.battingAverage * weights.avg;
+
+            const bScore =
+                b.stats.homeRuns * weights.hr +
+                b.stats.rbis * weights.rbi +
+                b.stats.battingAverage * weights.avg;
+
+            return bScore - aScore;
+        })
+        .slice(0, count);
+}
+
+function getTopPitchers(players: PlayerWithStatsDto[], count = 5) {
+    const weights = {
+        era: -100,
+        so: 2,
+        ip: 1,
+    };
+
+    return players
+        .filter((p) => p.stats && p.stats.era !== undefined && p.stats.era > 0)
+        .sort((a, b) => {
+            const aScore =
+                a.stats.era * weights.era +
+                a.stats.strikeouts * weights.so +
+                a.stats.inningsPitched * weights.ip;
+
+            const bScore =
+                b.stats.era * weights.era +
+                b.stats.strikeouts * weights.so +
+                b.stats.inningsPitched * weights.ip;
+
+            return bScore - aScore;
+        })
+        .slice(0, count);
+}
+
+export default function PlayerStatsTable({ players }: Props) {
+    const topBatters = getTopBatters(players);
+    const topPitchers = getTopPitchers(players);
 
     return (
-        <div className=" mx-auto p-6 font-sans border border-gray-300 rounded-lg shadow-lg bg-white">
+        <div className="mx-auto p-6 font-sans border border-gray-300 rounded-lg shadow-lg bg-white">
             <div className="text-2xl font-bold pb-4">
                 Top Players
-                <Button
-                    className="float-right bg-violet-700 hover:bg-violet-800"
-                    onClick={() => router.push("/viewAllPlayers")}
-                >
-                    View Players
-                </Button>
+                <Link href="/players">
+                    <Button className="float-right bg-violet-700 hover:bg-violet-800">
+                        View Players
+                    </Button>
+                </Link>
             </div>
             <Tabs defaultValue="bat" className="w-full">
                 <TabsList>
                     <TabsTrigger value="bat">Batting</TabsTrigger>
                     <TabsTrigger value="pitch">Pitching</TabsTrigger>
                 </TabsList>
-                <TabsContent className="" value="bat">
+                <TabsContent value="bat">
                     <table className="w-full text-sm md:text-base">
                         <thead>
                             <tr className="bg-gray-100 text-gray-700 uppercase text-sm tracking-wide">
@@ -146,43 +95,47 @@ export default function PlayerStatsTable() {
                                     className="border-t hover:bg-gray-50 transition-all"
                                 >
                                     <td className="py-3 px-4 flex items-center gap-3">
-                                        <img
-                                            src={player.image}
-                                            alt={player.name}
-                                            className="w-8 h-8 rounded-full"
-                                        />
+                                        {player.image && (
+                                            <img
+                                                src={player.image}
+                                                alt={player.name}
+                                                className="w-8 h-8 rounded-full"
+                                            />
+                                        )}
                                         <span className="font-medium">
                                             {player.name}
                                         </span>
                                     </td>
                                     <td className="py-3 px-4 flex items-center gap-2">
-                                        <img
-                                            src={getLogo(player.team)}
-                                            alt={`${player.team} logo`}
-                                            className="w-6 h-6 rounded-full"
-                                        />
-                                        <span>{player.team}</span>
+                                        {player.team.logo && (
+                                            <img
+                                                src={player.team.logo}
+                                                alt={`${player.team.name} logo`}
+                                                className="w-6 h-6 rounded-full"
+                                            />
+                                        )}
+                                        <span>{player.team.name}</span>
                                     </td>
                                     <td className="py-3 px-4 text-center font-semibold">
-                                        {player.hr}
+                                        {player.stats.homeRuns}
                                     </td>
                                     <td className="py-3 px-4 text-center font-semibold">
-                                        {player.rbi}
+                                        {player.stats.rbis}
                                     </td>
                                     <td className="py-3 px-4 text-center font-mono">
-                                        {player.avg.toFixed(3)}
+                                        {player.stats.battingAverage.toFixed(3)}
                                     </td>
                                 </tr>
                             ))}
                         </tbody>
                     </table>
                 </TabsContent>
-                <TabsContent className="" value="pitch">
+                <TabsContent value="pitch">
                     <table className="w-full text-sm md:text-base">
                         <thead>
                             <tr className="bg-gray-100 text-gray-700 uppercase text-sm tracking-wide">
                                 <th className="py-3 px-4 text-left">Player</th>
-                                <th className="py-3 px-4 text-center">W</th>
+                                <th className="py-3 px-4 text-center">IP</th>
                                 <th className="py-3 px-4 text-center">SO</th>
                                 <th className="py-3 px-4 text-center">ERA</th>
                             </tr>
@@ -194,31 +147,35 @@ export default function PlayerStatsTable() {
                                     className="border-t hover:bg-gray-50 transition-all"
                                 >
                                     <td className="py-3 px-4 flex items-center gap-3">
-                                        <img
-                                            src={player.image}
-                                            alt={player.name}
-                                            className="w-8 h-8 rounded-full"
-                                        />
+                                        {player.image && (
+                                            <img
+                                                src={player.image}
+                                                alt={player.name}
+                                                className="w-8 h-8 rounded-full"
+                                            />
+                                        )}
                                         <span className="font-medium">
                                             {player.name}
                                         </span>
                                     </td>
                                     <td className="py-3 px-4 flex items-center gap-2">
-                                        <img
-                                            src={getLogo(player.team)}
-                                            alt={`${player.team} logo`}
-                                            className="w-6 h-6 rounded-full"
-                                        />
-                                        <span>{player.team}</span>
+                                        {player.team.logo && (
+                                            <img
+                                                src={player.team.logo}
+                                                alt={`${player.team.name} logo`}
+                                                className="w-6 h-6 rounded-full"
+                                            />
+                                        )}
+                                        <span>{player.team.name}</span>
                                     </td>
                                     <td className="py-3 px-4 text-center font-semibold">
-                                        {player.wins}
+                                        {player.stats.inningsPitched}
                                     </td>
                                     <td className="py-3 px-4 text-center font-semibold">
-                                        {player.strikeouts}
+                                        {player.stats.strikeouts}
                                     </td>
                                     <td className="py-3 px-4 text-center font-mono">
-                                        {player.era.toFixed(2)}
+                                        {player.stats.era.toFixed(2)}
                                     </td>
                                 </tr>
                             ))}
