@@ -1,11 +1,9 @@
 "use client";
-
 import { useState } from "react";
 import { ChevronDown, Menu } from "lucide-react";
-import { useRouter } from "next/navigation";
 import { Button } from "./ui/button";
 import { logout } from "@/app/login/actions";
-
+import Link from "next/link";
 type Props = {
 	isLoggedIn: boolean;
 };
@@ -14,20 +12,15 @@ export default function NavBar({ isLoggedIn }: Props) {
 	const [menuOpen, setMenuOpen] = useState(false);
 	const [dropdownOpen, setDropdownOpen] = useState(false);
 	const [nestedDropdownOpen] = useState(false);
-	const router = useRouter();
 	return (
 		<nav className="fixed top-0 left-0 w-full z-50 bg-white dark:bg-gray-900 border-b border-gray-200 dark:border-gray-700">
 			<div className="flex items-center justify-between w-full p-4 md:px-6">
-				<a
-					href="#"
-					className="flex items-center space-x-3"
-					onClick={() => router.push("/")}
-				>
+				<Link href="/" className="flex items-center space-x-3">
 					<img src="/images/blooper.png" alt="Logo" className="h-8" />
 					<span className="text-2xl font-semibold dark:text-white">
 						Fireball League
 					</span>
-				</a>
+				</Link>
 
 				{/* Mobile Menu Button */}
 				<button
@@ -46,102 +39,59 @@ export default function NavBar({ isLoggedIn }: Props) {
 				>
 					<ul className="flex flex-col md:flex-row md:items-center gap-4 mt-4 md:mt-0 text-gray-900 dark:text-white">
 						<li>
-							<a
-								href="#"
+							<Link
+								href="/"
 								className="hover:text-blue-600 dark:hover:text-blue-400"
-								onClick={() => router.push("/schedule")}
 							>
 								Schedule
-							</a>
+							</Link>
 						</li>
 
 						{/* Dropdown Menu */}
-						{isLoggedIn && (
-							<li className="relative">
-								<button
-									onClick={() =>
-										setDropdownOpen(!dropdownOpen)
-									}
-									className="flex items-center gap-1 hover:text-blue-600 dark:hover:text-blue-400"
-								>
-									My Team <ChevronDown className="w-4 h-4" />
-								</button>
 
-								{dropdownOpen && (
-									<div className="absolute z-20 mt-2 bg-white dark:bg-gray-800 shadow-md rounded-lg p-2 w-44">
-										<a
-											href="#"
-											className="block px-4 py-2 hover:bg-gray-100 dark:hover:bg-gray-700"
-											onClick={() =>
-												router.push("/roster")
-											}
-										>
-											Roster
-										</a>
+						<li className="relative">
+							<button
+								onClick={() => setDropdownOpen(!dropdownOpen)}
+								className="flex items-center gap-1 hover:text-blue-600 dark:hover:text-blue-400"
+							>
+								My Team <ChevronDown className="w-4 h-4" />
+							</button>
 
-										{/* Nested Dropdown */}
-										<div className="relative">
-											<button
-												// onClick={() =>
-												//     setNestedDropdownOpen(
-												//         !nestedDropdownOpen
-												//     )
-												// }
-												className="w-full text-left px-4 py-2 hover:bg-gray-100 dark:hover:bg-gray-700"
-												onClick={() =>
-													router.push("/editLineup")
-												}
-											>
-												Lineup
-											</button>
+							{dropdownOpen && (
+								<div className="absolute z-20 mt-2 bg-white dark:bg-gray-800 shadow-md rounded-lg p-2 w-44">
+									<Link
+										href="/roster"
+										className="block px-4 py-2 hover:bg-gray-100 dark:hover:bg-gray-700"
+									>
+										Roster
+									</Link>
 
-											{nestedDropdownOpen && (
-												<div className="absolute left-full top-0 ml-1 bg-white dark:bg-gray-700 shadow-md rounded-lg w-44">
-													<a
-														href="#"
-														className="block px-4 py-2 hover:bg-gray-100 dark:hover:bg-gray-600"
-													>
-														Overview
-													</a>
-													<a
-														href="#"
-														className="block px-4 py-2 hover:bg-gray-100 dark:hover:bg-gray-600"
-													>
-														Billing
-													</a>
-													<a
-														href="#"
-														className="block px-4 py-2 hover:bg-gray-100 dark:hover:bg-gray-600"
-													>
-														Rewards
-													</a>
-												</div>
-											)}
-										</div>
+									{/* Nested Dropdown */}
+									<Link
+										href="/editLineup"
+										className="block px-4 py-2 hover:bg-gray-100 dark:hover:bg-gray-700"
+									>
+										Lineup
+									</Link>
 
-										<a
-											href="#"
-											className="block px-4 py-2 hover:bg-gray-100 dark:hover:bg-gray-700"
-											onClick={() =>
-												router.push("/trade")
-											}
-										>
-											Trades
-										</a>
-									</div>
-								)}
-							</li>
-						)}
+									<Link
+										href="/trade"
+										className="block px-4 py-2 hover:bg-gray-100 dark:hover:bg-gray-700"
+									>
+										Trades
+									</Link>
+								</div>
+							)}
+						</li>
 
 						<li>
 							{!isLoggedIn && (
-								<a
-									href="#"
+								<Link
+									href="/login"
 									className="hover:text-blue-600 dark:hover:text-blue-400"
-									onClick={() => router.push("/login")}
 								>
-									LogIn
-								</a>
+									Log In
+								</Link>
 							)}
 							{isLoggedIn && (
 								<Button

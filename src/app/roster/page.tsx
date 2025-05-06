@@ -1,6 +1,5 @@
 "use client";
 import React, { useState } from "react";
-import NavBar from "@/components/navBar";
 import { Button } from "@/components/ui/button";
 import { useRouter } from "next/navigation";
 import PlayerCard from "@/components/playerCard"; // import your player card here

@@ -1,12 +1,7 @@
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { StandingsDto } from "@/dtos/teamDtos";
+import { Skeleton } from "../ui/skeleton";
 
-type Props = {
-	standingsData: Promise<StandingsDto>;
-};
-export default async function StandingTable({ standingsData }: Props) {
-	const standings = await standingsData;
-
+export default function StandingsTableSkeleton() {
 	return (
 		<div className="mx-auto p-4 space-y-4 font-sans border border-gray-300 rounded-lg shadow-md bg-white">
 			<div className="text-2xl font-bold">Standings</div>
@@ -28,34 +23,23 @@ export default async function StandingTable({ standingsData }: Props) {
 								</tr>
 							</thead>
 							<tbody className="w-full">
-								{standings.western.map((team) => (
-									<tr className="border-t" key={team.id}>
+								{Array.from({ length: 4 }, (_, index) => (
+									<tr className="border-t" key={index}>
 										<td className="px-4 py-2 whitespace-nowrap flex items-center">
-											{team.logo && (
-												<img
-													src={team.logo}
-													alt={`${team.name} logo`}
-													className="w-10 h-10 mr-2 rounded-2xl"
-												/>
-											)}
-
-											{team.name}
+											<Skeleton className="w-10 h-10 mr-2 rounded-2xl" />
+											<Skeleton className="h-5 w-24" />
 										</td>
 										<td className="px-4 py-2">
-											{team.wins}
+											<Skeleton className="h-5 w-8 mx-auto" />
 										</td>
 										<td className="px-4 py-2">
-											{team.losses}
-										</td>
-
-										<td className="px-4 py-2">
-											{(
-												team.wins /
-												(team.wins + team.losses)
-											).toFixed(3)}
+											<Skeleton className="h-5 w-8 mx-auto" />
 										</td>
 										<td className="px-4 py-2">
-											{team.wins + team.losses}
+											<Skeleton className="h-5 w-12 mx-auto" />
+										</td>
+										<td className="px-4 py-2">
+											<Skeleton className="h-5 w-8 mx-auto" />
 										</td>
 									</tr>
 								))}
@@ -76,33 +60,23 @@ export default async function StandingTable({ standingsData }: Props) {
 								</tr>
 							</thead>
 							<tbody>
-								{standings.eastern.map((team) => (
-									<tr className="border-t" key={team.id}>
+								{Array.from({ length: 8 }, (_, index) => (
+									<tr className="border-t" key={index}>
 										<td className="px-4 py-2 whitespace-nowrap flex items-center">
-											{team.logo && (
-												<img
-													src={team.logo}
-													alt={`${team.name} logo`}
-													className="w-10 h-10 mr-2 rounded-2xl"
-												/>
-											)}
-											{team.name}
+											<Skeleton className="w-10 h-10 mr-2 rounded-2xl" />
+											<Skeleton className="h-5 w-24" />
 										</td>
 										<td className="px-4 py-2">
-											{team.wins}
+											<Skeleton className="h-5 w-8 mx-auto" />
 										</td>
 										<td className="px-4 py-2">
-											{team.losses}
-										</td>
-
-										<td className="px-4 py-2">
-											{(
-												team.wins /
-												(team.wins + team.losses)
-											).toFixed(3)}
+											<Skeleton className="h-5 w-8 mx-auto" />
 										</td>
 										<td className="px-4 py-2">
-											{team.wins + team.losses}
+											<Skeleton className="h-5 w-12 mx-auto" />
+										</td>
+										<td className="px-4 py-2">
+											<Skeleton className="h-5 w-8 mx-auto" />
 										</td>
 									</tr>
 								))}

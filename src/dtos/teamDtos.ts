@@ -1,6 +1,6 @@
 import { PlayerWithStatsDto } from "./playerDtos";
 
-export type teamResponseDto = {
+export type TeamResponseDto = {
 	teams: TeamDto[];
 };
 

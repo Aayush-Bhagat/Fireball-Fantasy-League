@@ -9,12 +9,14 @@ import ScheduleTableSkeleton from "@/components/loaders/ScheduleTableSkeleton";
 import { Suspense } from "react";
 import TeamsTableSkeleton from "@/components/loaders/TeamsTableSkeleton";
 import { getAllTeams } from "@/requests/teams";
-
+import StandingsTableSkeleton from "@/components/loaders/StandingTableSkeleton";
+import PlayerStatsTableSkeleton from "@/components/loaders/PlayerStatsTableSkeleton";
 
 export default async function Home() {
-	const { games } = await getWeeklySchedule(null, "current");
-  const standings = await getStandings("current");
-  const { players } = await viewAllPlayers();
+	const games = getWeeklySchedule(null, "current");
+	const standings = getStandings("current");
+	const players = viewAllPlayers();
+	const teams = getAllTeams();
 
 	return (
 		<>
@@ -24,23 +26,27 @@ export default async function Home() {
 					<section className="space-y-6">
 						<div className="">
 							<Suspense fallback={<ScheduleTableSkeleton />}>
-								<ScheduleTable games={games} />
+								<ScheduleTable gamesData={games} />
 							</Suspense>
 						</div>
 						<div className="">
 							<Suspense fallback={<TeamsTableSkeleton />}>
-								<TeamsTable teams={teams} />
+								<TeamsTable teamsData={teams} />
 							</Suspense>
 						</div>
 					</section>
-					{/* <section className="space-y-6">
+					<section className="space-y-6">
 						<div className=" ">
-							<StandingTable standings={standings} />
+							<Suspense fallback={<StandingsTableSkeleton />}>
+								<StandingTable standingsData={standings} />
+							</Suspense>
 						</div>
 						<div className="">
-							<PlayerStatsTable players={players} />
-						</div> 
-					</section>*/}
+							<Suspense fallback={<PlayerStatsTableSkeleton />}>
+								<PlayerStatsTable playersData={players} />
+							</Suspense>
+						</div>
+					</section>
 				</div>
 			</main>
 		</>

@@ -1,12 +1,13 @@
-import { TeamDto } from "@/dtos/teamDtos";
-import { getAllTeams } from "@/requests/teams";
+import { TeamResponseDto } from "@/dtos/teamDtos";
 import Link from "next/link";
 
 type Props = {
-	teams: TeamDto[];
+	teamsData: Promise<TeamResponseDto>;
 };
 
-export default async function TeamsTable({ teams }: Props) {
+export default async function TeamsTable({ teamsData }: Props) {
+	const { teams } = await teamsData;
+
 	return (
 		<div className="mx-auto p-6 font-sans border border-gray-300 rounded-lg shadow-md bg-white">
 			<div className="text-2xl font-bold mb-4">Teams</div>
