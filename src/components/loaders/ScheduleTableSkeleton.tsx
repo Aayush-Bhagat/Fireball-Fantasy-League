@@ -20,7 +20,7 @@ export default function ScheduleTableSkeleton() {
 				</thead>
 				<tbody>
 					{/* Generate 5 skeleton rows */}
-					{Array.from({ length: 5 }, (_, index) => (
+					{Array.from({ length: 6 }, (_, index) => (
 						<tr
 							key={index}
 							className="border-t text-sm text-center"

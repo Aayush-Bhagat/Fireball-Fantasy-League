@@ -4,6 +4,8 @@ import {
 	findAllTeams,
 	findRosterStatsByTeam,
 	findTeamById,
+	findTeamByUserId,
+	findTeamIdByUserId,
 } from "@/repositories/teamRepository";
 import { TeamDto, TeamStandingsDto, TeamWithKeepsDto } from "@/dtos/teamDtos";
 import { findPlayersByTeam } from "@/repositories/playerRepository";
@@ -158,6 +160,36 @@ export async function getTeamRoster(teamId: string) {
 	});
 
 	return fullRosterWithStats;
+}
+
+export async function getUserTeam(userId: string) {
+	const team = await findTeamByUserId(userId);
+
+	if (!team) {
+		throw new Error("Team not found");
+	}
+
+	const teamDto: TeamWithKeepsDto = {
+		team: {
+			id: team.id,
+			name: team.name,
+			logo: team.logo,
+			abbreviation: team.abbreviation,
+			conference: team.conference.name,
+			userId: team.userId,
+		},
+		keeps: team.keeps,
+	};
+
+	return teamDto;
+}
+
+export async function getUserTeamRoster(userId: string) {
+	const teamId = await findTeamIdByUserId(userId);
+
+	const roster = await getTeamRoster(teamId);
+
+	return roster;
 }
 
 export async function getTeamSchedule(teamId: string, season: string | null) {

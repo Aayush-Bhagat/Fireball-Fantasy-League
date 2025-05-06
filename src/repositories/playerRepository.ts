@@ -118,3 +118,14 @@ export async function findPlayerCareerStats(playerId: string) {
 
 	return stats;
 }
+
+export async function findPlayersByTeamId(teamId: string) {
+	const teamPlayers = await db.query.players.findMany({
+		where: eq(players.teamId, teamId),
+		with: {
+			team: { with: { conference: { columns: { name: true } } } },
+		},
+	});
+
+	return teamPlayers;
+}

@@ -31,7 +31,6 @@ export default async function RootLayout({
 	} = await supabase.auth.getUser();
 
 	const isLoggedIn = !!user;
-
 	return (
 		<html lang="en">
 			<body

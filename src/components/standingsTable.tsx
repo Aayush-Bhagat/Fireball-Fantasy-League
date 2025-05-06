@@ -16,7 +16,7 @@ export default async function StandingTable({ standingsData }: Props) {
 					<TabsTrigger value="east">Eastern</TabsTrigger>
 				</TabsList>
 				<TabsContent className="" value="west">
-					<div>
+					<div className="overflow-x-auto">
 						<table className="table-auto w-full text-center">
 							<thead>
 								<tr>
@@ -41,7 +41,7 @@ export default async function StandingTable({ standingsData }: Props) {
 
 											{team.name}
 										</td>
-										<td className="px-4 py-2">
+										<td className="px-8 sm:px-4 py-2">
 											{team.wins}
 										</td>
 										<td className="px-4 py-2">
@@ -49,10 +49,13 @@ export default async function StandingTable({ standingsData }: Props) {
 										</td>
 
 										<td className="px-4 py-2">
-											{(
-												team.wins /
-												(team.wins + team.losses)
-											).toFixed(3)}
+											{team.wins + team.losses === 0
+												? "0.000"
+												: (
+														team.wins /
+														(team.wins +
+															team.losses)
+												  ).toFixed(3)}
 										</td>
 										<td className="px-4 py-2">
 											{team.wins + team.losses}
@@ -64,7 +67,7 @@ export default async function StandingTable({ standingsData }: Props) {
 					</div>
 				</TabsContent>
 				<TabsContent value="east">
-					<div>
+					<div className="overflow-x-auto">
 						<table className="table-auto w-full text-center">
 							<thead>
 								<tr>
@@ -88,7 +91,7 @@ export default async function StandingTable({ standingsData }: Props) {
 											)}
 											{team.name}
 										</td>
-										<td className="px-4 py-2">
+										<td className="px-8 sm:px-4 py-2">
 											{team.wins}
 										</td>
 										<td className="px-4 py-2">
@@ -96,10 +99,13 @@ export default async function StandingTable({ standingsData }: Props) {
 										</td>
 
 										<td className="px-4 py-2">
-											{(
-												team.wins /
-												(team.wins + team.losses)
-											).toFixed(3)}
+											{team.wins + team.losses === 0
+												? "0.000"
+												: (
+														team.wins /
+														(team.wins +
+															team.losses)
+												  ).toFixed(3)}
 										</td>
 										<td className="px-4 py-2">
 											{team.wins + team.losses}

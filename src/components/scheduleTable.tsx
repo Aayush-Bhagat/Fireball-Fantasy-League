@@ -81,96 +81,98 @@ export default function ScheduleTable({ gamesData }: Props) {
 				</DropdownMenuContent>
 			</DropdownMenu>
 
-			<table className="w-full table-auto border-collapse">
-				<thead>
-					<tr className="bg-gray-100 text-center text-sm text-gray-600">
-						<th className="p-2">Week</th>
-						<th className="p-2">Date</th>
-						<th className="p-2">Matchup</th>
-						<th className="p-2">Result</th>
-					</tr>
-				</thead>
-				<tbody>
-					{schedule &&
-						schedule.map((game, index) => (
-							<tr
-								key={index}
-								className="border-t text-sm text-center"
-							>
-								<td className="p-2 pb-4">{game.week}</td>
-								<td className="p-2 pb-4">
-									<div className="text-sm text-gray-500 mb-2 sm:mb-0 w-full  text-center flex flex-col gap-1 xxl:flex-row ">
-										<div>
-											{(game.playedAt &&
-												format(
-													new Date(game.playedAt),
-													"EEEE, MMMM do"
-												)) ||
-												"TBD"}{" "}
+			<div className="overflow-x-auto">
+				<table className="min-w-full table-auto border-collapse">
+					<thead>
+						<tr className="bg-gray-100 text-center text-sm text-gray-600">
+							<th className="p-2">Week</th>
+							<th className="p-2">Date</th>
+							<th className="p-2">Matchup</th>
+							<th className="p-2">Result</th>
+						</tr>
+					</thead>
+					<tbody>
+						{schedule &&
+							schedule.map((game, index) => (
+								<tr
+									key={index}
+									className="border-t text-sm text-center"
+								>
+									<td className="p-2 pb-4">{game.week}</td>
+									<td className="p-2 pb-4">
+										<div className="text-sm text-gray-500 mb-2 sm:mb-0 w-full  text-center flex flex-col gap-1 xxl:flex-row ">
+											<div>
+												{(game.playedAt &&
+													format(
+														new Date(game.playedAt),
+														"EEEE, MMMM do"
+													)) ||
+													"TBD"}{" "}
+											</div>
+											<div>
+												{(game.playedAt &&
+													format(
+														new Date(game.playedAt),
+														"p"
+													)) ||
+													"TBD"}
+											</div>
 										</div>
-										<div>
-											{(game.playedAt &&
-												format(
-													new Date(game.playedAt),
-													"p"
-												)) ||
-												"TBD"}
-										</div>
-									</div>
-								</td>
-								{/* <td className="p-2 pb-4">
+									</td>
+									{/* <td className="p-2 pb-4">
                                     {(game.playedAt &&
                                         format(new Date(game.playedAt), "p")) ||
                                         "TBD"}
                                 </td> */}
 
-								<td className="p-2 pb-4">
-									<div className="flex items-center justify-center gap-4">
-										{/* Team */}
-										<div className="flex items-center gap-2 w-[160px] text-left">
-											{game.team.logo && (
-												<img
-													src={game.team.logo}
-													alt="Team Logo"
-													className="w-6 h-6 rounded-full border"
-												/>
-											)}
-											<span className="truncate font-medium">
-												{game.team.name}
+									<td className="p-2 pb-4">
+										<div className="flex items-center justify-center gap-4">
+											{/* Team */}
+											<div className="flex items-center gap-2 w-[160px] text-left">
+												{game.team.logo && (
+													<img
+														src={game.team.logo}
+														alt="Team Logo"
+														className="w-6 h-6 rounded-full border"
+													/>
+												)}
+												<span className="truncate font-medium">
+													{game.team.name}
+												</span>
+											</div>
+
+											{/* vs */}
+											<span className="text-gray-500 font-semibold">
+												@
 											</span>
+
+											{/* Opponent */}
+											<div className="flex items-center gap-2 w-[160px] justify-end text-right">
+												<span className="truncate font-medium">
+													{game.opponent.name}
+												</span>
+												{game.opponent.logo && (
+													<img
+														src={game.opponent.logo}
+														alt="Opponent Logo"
+														className="w-6 h-6 rounded-full border"
+													/>
+												)}
+											</div>
 										</div>
+									</td>
 
-										{/* vs */}
-										<span className="text-gray-500 font-semibold">
-											@
-										</span>
-
-										{/* Opponent */}
-										<div className="flex items-center gap-2 w-[160px] justify-end text-right">
-											<span className="truncate font-medium">
-												{game.opponent.name}
-											</span>
-											{game.opponent.logo && (
-												<img
-													src={game.opponent.logo}
-													alt="Opponent Logo"
-													className="w-6 h-6 rounded-full border"
-												/>
-											)}
-										</div>
-									</div>
-								</td>
-
-								<td className="p-2">
-									{(game.teamScore != null &&
-										game.opponentScore != null &&
-										`${game.teamScore} - ${game.opponentScore}`) ||
-										"-"}
-								</td>
-							</tr>
-						))}
-				</tbody>
-			</table>
+									<td className="p-2">
+										{(game.teamScore != null &&
+											game.opponentScore != null &&
+											`${game.teamScore} - ${game.opponentScore}`) ||
+											"-"}
+									</td>
+								</tr>
+							))}
+					</tbody>
+				</table>
+			</div>
 		</div>
 	);
 }

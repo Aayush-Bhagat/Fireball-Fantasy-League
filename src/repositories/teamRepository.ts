@@ -15,6 +15,48 @@ export function findAllTeams() {
 	return teams;
 }
 
+export async function findTeamByUserId(userId: string) {
+	const seasonQuery = db
+		.select({
+			id: sql<number>`max(${seasons.id})`.as("id"),
+		})
+		.from(seasons);
+
+	const team = await db.query.teams.findFirst({
+		where: (teams, { eq }) => eq(teams.userId, userId),
+		with: {
+			conference: true,
+			keeps: {
+				where: (keeps, { eq }) => eq(keeps.seasonId, seasonQuery),
+			},
+		},
+	});
+
+	return team;
+}
+
+export async function findTeamIdByUserId(userId: string) {
+	const team = await db
+		.select({
+			id: teams.id,
+		})
+		.from(teams)
+		.where(eq(teams.userId, userId))
+		.limit(1);
+
+	if (!team) {
+		throw new Error("Team not found");
+	}
+
+	const teamId = team.at(0)?.id;
+
+	if (!teamId) {
+		throw new Error("Team ID not found");
+	}
+
+	return teamId;
+}
+
 export async function findTeamById(id: string) {
 	const seasonQuery = db
 		.select({

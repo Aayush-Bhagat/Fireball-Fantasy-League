@@ -1,10 +1,12 @@
-import { SeasonScheduleResponseDto } from "./../dtos/gameDtos";
+import { AdminGameDto, SeasonScheduleResponseDto } from "./../dtos/gameDtos";
 import {
+	findGameById,
 	findGamesByWeekAndSeason,
 	findSeasonSchedule,
 } from "@/repositories/gameRepository";
 import { GameDtoMapper, mapToSeasonSchedule } from "@/lib/mappers/gameMappers";
 import { findAllTeamRecordsBySeason } from "@/repositories/teamRepository";
+import { findPlayersByTeamId } from "@/repositories/playerRepository";
 
 export async function getGamesByWeekAndSeason(
 	week: number | undefined,
@@ -46,4 +48,49 @@ export async function getSeasonSchedule(
 		season: seasonNumber,
 		schedule: seasonSchedule,
 	};
+}
+
+export async function getGameById(gameId: string) {
+	const games = await findGameById(gameId);
+
+	const game = games.at(0);
+
+	if (!game) {
+		throw new Error("Game not found");
+	}
+
+	const teamPlayers = await findPlayersByTeamId(game.teamId);
+
+	const opponentPlayers = await findPlayersByTeamId(game.opponentId);
+
+	const gameDto: AdminGameDto = {
+		gameId: game.gameId,
+		playedAt: game.playedAt,
+		seasonId: game.seasonId,
+		week: game.week,
+		team: {
+			id: game.teamId,
+			name: game.teamName,
+			logo: game.teamLogo,
+			abbreviation: game.teamAbbreviation,
+		},
+		opponent: {
+			id: game.opponentId,
+			name: game.opponentName,
+			logo: game.opponentLogo,
+			abbreviation: game.opponentAbbreviation,
+		},
+		teamRoster: teamPlayers.map((player) => ({
+			id: player.id,
+			name: player.name,
+			image: player.image,
+		})),
+		opponentRoster: opponentPlayers.map((player) => ({
+			id: player.id,
+			name: player.name,
+			image: player.image,
+		})),
+	};
+
+	return gameDto;
 }

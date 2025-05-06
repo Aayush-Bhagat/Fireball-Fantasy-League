@@ -258,3 +258,45 @@ export async function findPlayerGames(playerId: string) {
 
 	return result;
 }
+
+export async function findGameById(gameId: string) {
+	const opponent = alias(teams, "teamTwo");
+
+	const opponentGames = alias(teamGames, "teamTwoGames");
+
+	const result = db
+		.select({
+			gameId: games.id,
+			playedAt: games.playedAt,
+			seasonId: games.seasonId,
+			week: games.week,
+			teamId: teams.id,
+			teamName: teams.name,
+			teamLogo: teams.logo,
+			teamAbbreviation: teams.abbreviation,
+			teamScore: teamGames.score,
+			teamOutcome: teamGames.outcome,
+			opponentId: opponent.id,
+			opponentName: opponent.name,
+			opponentScore: opponentGames.score,
+			opponentAbbreviation: opponent.abbreviation,
+			opponentLogo: opponent.logo,
+			opponentOutcome: opponentGames.outcome,
+		})
+		.from(teamGames)
+		.innerJoin(games, eq(teamGames.gameId, games.id))
+		.innerJoin(
+			opponentGames,
+			and(
+				eq(opponentGames.gameId, teamGames.gameId),
+				lt(opponentGames.teamId, teamGames.teamId)
+			)
+		)
+		.innerJoin(teams, eq(teamGames.teamId, teams.id))
+		.innerJoin(opponent, eq(opponentGames.teamId, opponent.id))
+		.innerJoin(seasons, eq(games.seasonId, seasons.id))
+		.where(eq(games.id, gameId))
+		.limit(1);
+
+	return result;
+}

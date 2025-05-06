@@ -1,4 +1,5 @@
 import { TeamGameDto } from "./teamDtos";
+import { BasicPlayerDto } from "./playerDtos";
 
 export type GameResponseDto = {
 	games: GameDto[];
@@ -29,6 +30,17 @@ export type SeasonScheduleResponseDto = {
 export type SeasonScheduleDto = {
 	week: number;
 	games: GameDto[];
+};
+
+export type AdminGameDto = {
+	gameId: string;
+	seasonId: number;
+	week: number;
+	playedAt: Date | null;
+	team: TeamGameDto;
+	opponent: TeamGameDto;
+	teamRoster: BasicPlayerDto[];
+	opponentRoster: BasicPlayerDto[];
 };
 
 export type GameData = {

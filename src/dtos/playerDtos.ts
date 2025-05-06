@@ -15,6 +15,12 @@ export type PlayerDto = {
 	fieldingAbility: string;
 };
 
+export type BasicPlayerDto = {
+	id: string;
+	name: string;
+	image: string | null;
+};
+
 export type PlayerStatsResponseDto = {
 	players: PlayerWithStatsDto[];
 };
@@ -50,7 +56,7 @@ export type PlayerWithStatsDto = {
 	stats: PlayerStatsDto;
 };
 
-export type PlayerGameDto = {
+export type PlayerGameStatsDto = {
 	gameId: string;
 	week: number;
 	playedAt: Date | null;
@@ -64,7 +70,7 @@ export type PlayerGameDto = {
 };
 
 export type PlayerGameResponseDto = {
-	games: PlayerGameDto[];
+	games: PlayerGameStatsDto[];
 };
 
 export type PlayerHistoryDto = {
