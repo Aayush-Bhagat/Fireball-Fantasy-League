@@ -18,8 +18,23 @@ export async function login(formData: FormData) {
 		throw new Error(error.message);
 	}
 
-	revalidatePath("/");
-	redirect("/roster");
+	const {
+		data: { user },
+	} = await supabase.auth.getUser();
+
+	const { data: role }: { data: { role: string } | null } = await supabase
+		.from("user_roles")
+		.select("role")
+		.eq("id", user?.id)
+		.single();
+
+	if (role?.role === "admin") {
+		revalidatePath("/");
+		redirect("/admin");
+	} else {
+		revalidatePath("/");
+		redirect("/roster");
+	}
 }
 
 export async function logout() {

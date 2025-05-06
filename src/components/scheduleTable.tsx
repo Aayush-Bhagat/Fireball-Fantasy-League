@@ -3,7 +3,6 @@ import * as React from "react";
 import { useState } from "react";
 
 import { Button } from "@/components/ui/button";
-import { useRouter } from "next/navigation";
 import {
 	DropdownMenu,
 	DropdownMenuContent,
@@ -18,6 +17,7 @@ import { format } from "date-fns";
 import { GameResponseDto } from "@/dtos/gameDtos";
 import { useQuery } from "@tanstack/react-query";
 import ScheduleTableSkeleton from "@/components/loaders/ScheduleTableSkeleton";
+import Link from "next/link";
 
 type Props = {
 	gamesData: Promise<GameResponseDto>;
@@ -25,7 +25,6 @@ type Props = {
 
 export default function ScheduleTable({ gamesData }: Props) {
 	const [selectedWeek, setSelectedWeek] = useState("current");
-	const router = useRouter();
 
 	const { games } = React.use(gamesData);
 
@@ -35,7 +34,9 @@ export default function ScheduleTable({ gamesData }: Props) {
 			const res = await getWeeklySchedule(selectedWeek, "current");
 			return res.games;
 		},
-		initialData: games,
+		initialData: selectedWeek === "current" ? games : undefined,
+		enabled: selectedWeek !== "current",
+		staleTime: 1000 * 60 * 5,
 	});
 
 	if (isLoading) {
@@ -46,12 +47,11 @@ export default function ScheduleTable({ gamesData }: Props) {
 		<div className="mx-auto p-4 space-y-4 font-sans border border-gray-300 rounded-lg shadow-md bg-white">
 			<div className="text-2xl font-bold">
 				Schedule
-				<Button
-					className="float-right bg-violet-700 hover:bg-violet-800"
-					onClick={() => router.push("/schedule")}
-				>
-					Full Schedule
-				</Button>
+				<Link href="/schedule">
+					<Button className="float-right bg-violet-700 hover:bg-violet-800">
+						Full Schedule
+					</Button>
+				</Link>
 			</div>
 
 			<DropdownMenu>

@@ -30,14 +30,28 @@ export default async function RootLayout({
 		data: { user },
 	} = await supabase.auth.getUser();
 
+	console.log(user?.id);
+
+	const { data: role }: { data: { role: string } | null } = await supabase
+		.from("user_roles")
+		.select("role")
+		.eq("id", user?.id)
+		.single();
+
 	const isLoggedIn = !!user;
+
+	console.log(role?.role);
+
 	return (
 		<html lang="en">
 			<body
 				className={`${geistSans.variable} ${geistMono.variable} antialiased`}
 			>
 				<QueryProvider>
-					<NavBar isLoggedIn={isLoggedIn} />
+					<NavBar
+						isLoggedIn={isLoggedIn}
+						role={role?.role || "team"}
+					/>
 					{children}
 				</QueryProvider>
 			</body>
