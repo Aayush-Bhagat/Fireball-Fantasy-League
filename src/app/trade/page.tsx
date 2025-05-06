@@ -135,7 +135,6 @@ export default function TradeScreen() {
 
     return (
         <>
-            <NavBar />
             <div className="max-w-5xl mx-auto p-6 bg-white rounded-xl shadow-md space-y-6 mt-20">
                 <h2 className="text-3xl font-bold text-center text-purple-700">
                     Propose Trade

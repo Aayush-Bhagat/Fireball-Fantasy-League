@@ -40,7 +40,7 @@ export default function NavBar({ isLoggedIn }: Props) {
                     <ul className="flex flex-col md:flex-row md:items-center gap-4 mt-4 md:mt-0 text-gray-900 dark:text-white">
                         <li>
                             <Link
-                                href="/"
+                                href="/schedule"
                                 className="hover:text-blue-600 dark:hover:text-blue-400"
                             >
                                 Schedule
