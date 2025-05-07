@@ -40,6 +40,24 @@ export type PlayerStatsDto = {
 	era: number;
 };
 
+export type BasicPlayerStatsDto = {
+	playerId: string;
+	playerName: string;
+	playerImage: string | null;
+	atBats: number;
+	hits: number;
+	runs: number;
+	rbis: number;
+	walks: number;
+	strikeouts: number;
+	homeRuns: number;
+	inningsPitched: number;
+	runsAllowed: number;
+	outs: number;
+	battingAverage: number;
+	era: number;
+};
+
 export type PlayerWithStatsDto = {
 	id: string;
 	name: string;
@@ -98,7 +116,7 @@ export type CareerStatsDto = {
 	atBats: number;
 	hits: number;
 	runs: number;
-	RBIs: number;
+	rbis: number;
 	walks: number;
 	strikeouts: number;
 	inningsPitched: number;

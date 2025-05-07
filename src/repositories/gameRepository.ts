@@ -1,3 +1,4 @@
+import { UpdatePlayerGameStatsDto } from "./../dtos/gameDtos";
 import { db } from "@/db";
 import { GameData } from "@/dtos/gameDtos";
 import { games, teamGames } from "@/models/games";
@@ -299,4 +300,54 @@ export async function findGameById(gameId: string) {
 		.limit(1);
 
 	return result;
+}
+
+export async function updateTeamGameById(
+	gameId: string,
+	teamId: string,
+	score: number,
+	outcome: "Win" | "Loss"
+) {
+	const game = await db
+		.update(teamGames)
+		.set({
+			score: score,
+			outcome: outcome,
+		})
+		.where(and(eq(teamGames.gameId, gameId), eq(teamGames.teamId, teamId)));
+
+	return game;
+}
+
+export async function createPlayerGameStats(
+	playerStats: UpdatePlayerGameStatsDto[],
+	teamId: string,
+	gameId: string
+) {
+	try {
+		const playerGameStats = playerStats.map((stat) => ({
+			playerId: stat.playerId,
+			gameId: gameId,
+			teamId: teamId,
+			atBats: stat.atBats,
+			hits: stat.hits,
+			runs: stat.runs,
+			rbis: stat.rbis,
+			walks: stat.walks,
+			strikeouts: stat.strikeouts,
+			homeRuns: stat.homeRuns,
+			outsPitched: stat.outsPitched,
+			runsAllowed: stat.runsAllowed,
+			outs: stat.outs,
+		}));
+
+		const results = await db
+			.insert(playerGamesStats)
+			.values(playerGameStats);
+
+		return results;
+	} catch (error) {
+		console.error(error);
+		throw error;
+	}
 }

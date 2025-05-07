@@ -1,8 +1,14 @@
-import { AdminGameDto, SeasonScheduleResponseDto } from "./../dtos/gameDtos";
 import {
+	AdminGameDto,
+	SeasonScheduleResponseDto,
+	UpdateGameRequestDto,
+} from "./../dtos/gameDtos";
+import {
+	createPlayerGameStats,
 	findGameById,
 	findGamesByWeekAndSeason,
 	findSeasonSchedule,
+	updateTeamGameById,
 } from "@/repositories/gameRepository";
 import { GameDtoMapper, mapToSeasonSchedule } from "@/lib/mappers/gameMappers";
 import { findAllTeamRecordsBySeason } from "@/repositories/teamRepository";
@@ -94,3 +100,34 @@ export async function getGameById(gameId: string) {
 
 	return gameDto;
 }
+
+export const updateGame = async (game: UpdateGameRequestDto) => {
+	try {
+		const teamOutcome =
+			game.teamScore > game.opponentScore ? "Win" : "Loss";
+		const opponentOutcome =
+			game.opponentScore > game.teamScore ? "Win" : "Loss";
+
+		await updateTeamGameById(
+			game.gameId,
+			game.teamId,
+			game.teamScore,
+			teamOutcome
+		);
+		await updateTeamGameById(
+			game.gameId,
+			game.opponentId,
+			game.opponentScore,
+			opponentOutcome
+		);
+		await createPlayerGameStats(game.teamPlayers, game.teamId, game.gameId);
+		await createPlayerGameStats(
+			game.opponentPlayers,
+			game.opponentId,
+			game.gameId
+		);
+	} catch (error) {
+		console.error(error);
+		throw error;
+	}
+};
