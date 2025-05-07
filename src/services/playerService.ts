@@ -103,6 +103,7 @@ export async function getAllPlayerStats() {
 				name: player.name,
 				image: player.image,
 				isCaptain: player.isCaptain,
+				playerCardImage: player.playerCardImage,
 				team: player.team
 					? {
 							id: player.team.id,

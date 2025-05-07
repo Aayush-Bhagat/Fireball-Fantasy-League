@@ -137,6 +137,7 @@ export async function getTeamRoster(teamId: string) {
 			starSwing: player.starSwing,
 			starPitch: player.starPitch,
 			fieldingAbility: player.fieldingAbility,
+			playerCardImage: player.playerCardImage,
 			stats: {
 				atBats: Number(stat?.atBats) || 0,
 				hits: Number(stat?.hits) || 0,

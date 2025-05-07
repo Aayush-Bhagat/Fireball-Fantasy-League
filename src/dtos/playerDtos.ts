@@ -71,6 +71,7 @@ export type PlayerWithStatsDto = {
 	starSwing: string | null;
 	starPitch: string | null;
 	fieldingAbility: string | null;
+	playerCardImage: string | null;
 	stats: PlayerStatsDto;
 };
 
