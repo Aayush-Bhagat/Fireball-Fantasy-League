@@ -30,6 +30,7 @@ export const players = pgTable(
 		starPitch: text("star_pitch"),
 		starSwing: text("star_swing"),
 		fieldingAbility: text("fielding_ability"),
+		playerCardImage: text("player_card_image"),
 	},
 	(table) => [index("idx_player_team").on(table.teamId)]
 );

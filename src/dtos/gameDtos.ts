@@ -1,5 +1,6 @@
 import { TeamGameDto } from "./teamDtos";
-import { BasicPlayerDto } from "./playerDtos";
+import { BasicPlayerDto, BasicPlayerStatsDto } from "./playerDtos";
+import { z } from "zod";
 
 export type GameResponseDto = {
 	games: GameDto[];
@@ -60,4 +61,45 @@ export type GameData = {
 	opponentScore: number | null;
 	teamOutcome: string | null;
 	opponentOutcome: string | null;
+};
+
+export const UpdatePlayerGameStatsSchema = z.object({
+	playerId: z.string(),
+	atBats: z.number().int().nonnegative(),
+	hits: z.number().int().nonnegative(),
+	runs: z.number().int().nonnegative(),
+	rbis: z.number().int().nonnegative(),
+	walks: z.number().int().nonnegative(),
+	strikeouts: z.number().int().nonnegative(),
+	homeRuns: z.number().int().nonnegative(),
+	outsPitched: z.number().int().nonnegative(),
+	runsAllowed: z.number().int().nonnegative(),
+	outs: z.number().int().nonnegative(),
+});
+
+export const UpdateGameRequestSchema = z.object({
+	gameId: z.string(),
+	teamId: z.string(),
+	opponentId: z.string(),
+	teamScore: z.number().int().nonnegative(),
+	opponentScore: z.number().int().nonnegative(),
+	teamPlayers: z.array(UpdatePlayerGameStatsSchema).min(9),
+	opponentPlayers: z.array(UpdatePlayerGameStatsSchema).min(9),
+});
+
+export type UpdateGameRequestDto = z.infer<typeof UpdateGameRequestSchema>;
+export type UpdatePlayerGameStatsDto = z.infer<
+	typeof UpdatePlayerGameStatsSchema
+>;
+
+export type GameStatsDto = {
+	gameId: string;
+	teamId: string;
+	opponentId: string;
+	teamScore: number;
+	opponentScore: number;
+	teamOutcome: string;
+	opponentOutcome: string;
+	teamPlayers: BasicPlayerStatsDto[];
+	opponentPlayers: BasicPlayerStatsDto[];
 };

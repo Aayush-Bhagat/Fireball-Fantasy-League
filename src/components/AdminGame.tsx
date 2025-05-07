@@ -1,240 +1,185 @@
-import React from "react";
-import AdminNumberField from "./ui/numberInput";
+"use client";
 
-type Player = {
-    name: string;
-    imageUrl: string;
+import { AdminGameDto, UpdateGameRequestDto } from "@/dtos/gameDtos";
+import { use, useEffect, useState } from "react";
+import PlayGameTable from "@/components/PlayGameTable";
+import playerStatsReducer, {
+	initialPlayerStatsState,
+	PlayerStats,
+} from "@/components/hooks/playerStatsReducer";
+import { useReducer } from "react";
+import AdminNumberField from "@/components/ui/numberInput";
+import { useMutation } from "@tanstack/react-query";
+import { Button } from "./ui/button";
+import { updateGame } from "@/requests/games";
+import { Loader2 } from "lucide-react";
+
+type Props = {
+	gameData: Promise<AdminGameDto>;
+	token: string;
 };
 
-const createPlayers = (names: string[]): Player[] =>
-    names.map((name) => ({
-        name,
-        imageUrl: `https://api.dicebear.com/8.x/avataaars/svg?seed=${encodeURIComponent(
-            name
-        )}`,
-    }));
+export default function AdminGame({ gameData, token }: Props) {
+	const game = use(gameData);
 
-const teamRed: Player[] = createPlayers([
-    "Alex Johnson",
-    "Brooke Carter",
-    "Devin Ramirez",
-    "Jordan Nguyen",
-    "Taylor Moore",
-    "Casey Lee",
-    "Riley Thomas",
-    "Morgan Scott",
-    "Jamie Bennett",
-]);
+	const [teamPlayerStats, dispatch] = useReducer(
+		playerStatsReducer,
+		initialPlayerStatsState(game.teamRoster)
+	);
 
-const teamBlue: Player[] = createPlayers([
-    "Cameron Walker",
-    "Sydney Davis",
-    "Logan Parker",
-    "Reese Turner",
-    "Quinn Adams",
-    "Avery Brooks",
-    "Drew Collins",
-    "Kendall Reed",
-    "Skyler Morgan",
-]);
+	const [opponentPlayerStats, dispatchOpponent] = useReducer(
+		playerStatsReducer,
+		initialPlayerStatsState(game.opponentRoster)
+	);
 
-export default function AdminGame() {
-    return (
-        <div className="pt-20 px-6 max-w-full mx-auto">
-            <h1 className="text-3xl font-bold mb-10 text-center">Admin Game</h1>
+	const [teamScore, setTeamScore] = useState(0);
+	const [opponentScore, setOpponentScore] = useState(0);
 
-            <div className="mb-12">
-                <h2 className="text-2xl font-bold text-red-700 mb-4">
-                    🟥 Team Red
-                </h2>
-                <div className="overflow-x-auto">
-                    <table className="w-full bg-red-50 shadow rounded-lg">
-                        <thead className="bg-red-200 text-red-900">
-                            <tr>
-                                <th className="text-left px-4 py-2 w-20">
-                                    Player
-                                </th>
+	// Load saved data from localStorage after component mounts (client-side only)
+	useEffect(() => {
+		const savedTeamStats = localStorage.getItem(
+			`teamPlayerStats-${game.gameId}`
+		);
+		const savedOpponentStats = localStorage.getItem(
+			`opponentPlayerStats-${game.gameId}`
+		);
 
-                                <th className="text-center px-4 py-2 w-12">
-                                    AB
-                                </th>
-                                <th className="text-center px-4 py-2 w-12">
-                                    H
-                                </th>
-                                <th className="text-center px-4 py-2 w-12">
-                                    R
-                                </th>
-                                <th className="text-center px-4 py-2 w-12">
-                                    Rbi
-                                </th>
-                                <th className="text-center px-4 py-2 w-12">
-                                    HR
-                                </th>
-                                <th className="text-center px-4 py-2 w-12">
-                                    Outs Pitched
-                                </th>
-                                <th className="text-center px-4 py-2 w-12">
-                                    RA
-                                </th>
-                                <th className="text-center px-4 py-2 w-12">
-                                    SO
-                                </th>
-                                <th className="text-center px-4 py-2 w-12">
-                                    Walks
-                                </th>
-                                <th className="text-center px-4 py-2 w-12">
-                                    Outs
-                                </th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            {teamRed.map((player, index) => (
-                                <tr
-                                    key={index}
-                                    className="border-t border-red-100"
-                                >
-                                    <td className="px-4 py-2">
-                                        <img
-                                            src={player.imageUrl}
-                                            alt={player.name}
-                                            className="w-12 h-12 rounded-full border border-gray-300"
-                                        />
-                                        {player.name}
-                                    </td>
+		const savedTeamScore = localStorage.getItem(`teamScore-${game.gameId}`);
+		const savedOpponentScore = localStorage.getItem(
+			`opponentScore-${game.gameId}`
+		);
 
-                                    <td className="px-4 py-2 font-medium text-gray-800">
-                                        <AdminNumberField />
-                                    </td>
-                                    <td className="px-4 py-2 font-medium text-gray-800">
-                                        <AdminNumberField />
-                                    </td>
-                                    <td className="px-4 py-2 font-medium text-gray-800">
-                                        <AdminNumberField />
-                                    </td>
-                                    <td className="px-4 py-2 font-medium text-gray-800">
-                                        <AdminNumberField />
-                                    </td>
-                                    <td className="px-4 py-2 font-medium text-gray-800">
-                                        <AdminNumberField />
-                                    </td>
-                                    <td className="px-4 py-2 font-medium text-gray-800">
-                                        <AdminNumberField />
-                                    </td>
-                                    <td className="px-4 py-2 font-medium text-gray-800">
-                                        <AdminNumberField />
-                                    </td>
-                                    <td className="px-4 py-2 font-medium text-gray-800">
-                                        <AdminNumberField />
-                                    </td>
-                                    <td className="px-4 py-2 font-medium text-gray-800">
-                                        <AdminNumberField />
-                                    </td>
-                                    <td className="px-4 py-2 font-medium text-gray-800">
-                                        <AdminNumberField />
-                                    </td>
-                                </tr>
-                            ))}
-                        </tbody>
-                    </table>
-                </div>
-            </div>
+		if (savedTeamStats) {
+			const parsedStats = JSON.parse(savedTeamStats) as PlayerStats[];
+			dispatch({ type: "REPLACE_ALL", payload: parsedStats });
+		}
 
-            <div>
-                <h2 className="text-2xl font-bold text-blue-700 mb-4">
-                    🟦 Team Blue
-                </h2>
-                <div className="overflow-x-auto">
-                    <table className="w-full table-auto bg-blue-50 shadow rounded-lg">
-                        <thead className="bg-blue-200 text-blue-900">
-                            <tr>
-                                <th className="text-left px-4 py-2 w-20">
-                                    Player
-                                </th>
+		if (savedOpponentStats) {
+			const parsedStats = JSON.parse(savedOpponentStats) as PlayerStats[];
+			dispatchOpponent({ type: "REPLACE_ALL", payload: parsedStats });
+		}
 
-                                <th className="text-center px-4 py-2 w-12">
-                                    AB
-                                </th>
-                                <th className="text-center px-4 py-2 w-12">
-                                    H
-                                </th>
-                                <th className="text-center px-4 py-2 w-12">
-                                    R
-                                </th>
-                                <th className="text-center px-4 py-2 w-12">
-                                    Rbi
-                                </th>
-                                <th className="text-center px-4 py-2 w-12">
-                                    HR
-                                </th>
-                                <th className="text-center px-4 py-2 w-12">
-                                    Outs Pitched
-                                </th>
-                                <th className="text-center px-4 py-2 w-12">
-                                    RA
-                                </th>
-                                <th className="text-center px-4 py-2 w-12">
-                                    SO
-                                </th>
-                                <th className="text-center px-4 py-2 w-12">
-                                    Walks
-                                </th>
-                                <th className="text-center px-4 py-2 w-12">
-                                    Outs
-                                </th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            {teamBlue.map((player, index) => (
-                                <tr
-                                    key={index}
-                                    className="border-t border-red-100"
-                                >
-                                    <td className="px-4 py-2">
-                                        <img
-                                            src={player.imageUrl}
-                                            alt={player.name}
-                                            className="w-12 h-12 rounded-full border border-gray-300"
-                                        />
-                                        {player.name}
-                                    </td>
+		if (savedTeamScore) {
+			setTeamScore(parseInt(savedTeamScore));
+		}
 
-                                    <td className="px-4 py-2 font-medium text-gray-800">
-                                        <AdminNumberField />
-                                    </td>
-                                    <td className="px-4 py-2 font-medium text-gray-800">
-                                        <AdminNumberField />
-                                    </td>
-                                    <td className="px-4 py-2 font-medium text-gray-800">
-                                        <AdminNumberField />
-                                    </td>
-                                    <td className="px-4 py-2 font-medium text-gray-800">
-                                        <AdminNumberField />
-                                    </td>
-                                    <td className="px-4 py-2 font-medium text-gray-800">
-                                        <AdminNumberField />
-                                    </td>
-                                    <td className="px-4 py-2 font-medium text-gray-800">
-                                        <AdminNumberField />
-                                    </td>
-                                    <td className="px-4 py-2 font-medium text-gray-800">
-                                        <AdminNumberField />
-                                    </td>
-                                    <td className="px-4 py-2 font-medium text-gray-800">
-                                        <AdminNumberField />
-                                    </td>
-                                    <td className="px-4 py-2 font-medium text-gray-800">
-                                        <AdminNumberField />
-                                    </td>
-                                    <td className="px-4 py-2 font-medium text-gray-800">
-                                        <AdminNumberField />
-                                    </td>
-                                </tr>
-                            ))}
-                        </tbody>
-                    </table>
-                    <div className="pb-20" />
-                </div>
-            </div>
-        </div>
-    );
+		if (savedOpponentScore) {
+			setOpponentScore(parseInt(savedOpponentScore));
+		}
+	}, [game.gameId]);
+
+	useEffect(() => {
+		localStorage.setItem(`teamScore-${game.gameId}`, teamScore.toString());
+		localStorage.setItem(
+			`opponentScore-${game.gameId}`,
+			opponentScore.toString()
+		);
+	}, [teamScore, opponentScore, game.gameId]);
+
+	// Save data to localStorage when it changes
+	useEffect(() => {
+		localStorage.setItem(
+			`teamPlayerStats-${game.gameId}`,
+			JSON.stringify(teamPlayerStats)
+		);
+		localStorage.setItem(
+			`opponentPlayerStats-${game.gameId}`,
+			JSON.stringify(opponentPlayerStats)
+		);
+	}, [teamPlayerStats, opponentPlayerStats, game.gameId]);
+
+	const { mutate: updateGameMutation, isPending } = useMutation({
+		mutationFn: async () => {
+			const updateGameRequest: UpdateGameRequestDto = {
+				gameId: game.gameId,
+				teamScore: teamScore,
+				opponentScore: opponentScore,
+				teamPlayers: teamPlayerStats,
+				opponentPlayers: opponentPlayerStats,
+				teamId: game.team.id,
+				opponentId: game.opponent.id,
+			};
+
+			await updateGame(updateGameRequest, token);
+		},
+	});
+
+	return (
+		<div className="pt-20 px-6 max-w-full mx-auto">
+			<div className="flex flex-col items-center justify-center">
+				<h1 className="text-3xl font-bold mb-10 text-center">
+					Admin Game
+				</h1>
+				<div className="mb-12">
+					<Button
+						className="py-5 bg-violet-700 text-white"
+						onClick={() => updateGameMutation()}
+					>
+						{isPending && (
+							<Loader2 className="w-4 h-4 mr-2 animate-spin" />
+						)}
+						{isPending ? "Submitting..." : "Submit Game"}
+					</Button>
+				</div>
+			</div>
+
+			<div className="mb-12">
+				<div className="flex flex-row items-center gap-2 mb-4">
+					<div>
+						{game.team.logo && (
+							<img
+								src={game.team.logo}
+								alt={game.team.name}
+								className="w-12 h-12 rounded-full border border-gray-300"
+							/>
+						)}
+					</div>
+					<h2 className="text-2xl font-bold text-black">
+						{game.team.name}
+					</h2>
+					<div className="flex flex-row items-center gap-2">
+						<div>Score:</div>
+						<AdminNumberField
+							onChange={(value) => setTeamScore(value)}
+							value={teamScore}
+						/>
+					</div>
+				</div>
+				<PlayGameTable
+					roster={teamPlayerStats}
+					color="red"
+					dispatch={dispatch}
+				/>
+			</div>
+
+			<div>
+				<div className="flex flex-row items-center gap-2 mb-4">
+					<div>
+						{game.opponent.logo && (
+							<img
+								src={game.opponent.logo}
+								alt={game.opponent.name}
+								className="w-12 h-12 rounded-full border border-gray-300"
+							/>
+						)}
+					</div>
+					<h2 className="text-2xl font-bold text-black">
+						{game.opponent.name}
+					</h2>
+					<div className="flex flex-row items-center gap-2">
+						<div>Score:</div>
+						<AdminNumberField
+							onChange={(value) => setOpponentScore(value)}
+							value={opponentScore}
+						/>
+					</div>
+				</div>
+				<PlayGameTable
+					roster={opponentPlayerStats}
+					color="blue"
+					dispatch={dispatchOpponent}
+				/>
+			</div>
+		</div>
+	);
 }

@@ -80,8 +80,8 @@ export const teamLineups = pgTable("team_lineups", {
 	playerId: uuid("player_id")
 		.primaryKey()
 		.references(() => players.id),
-	fieldingPosition: fieldingPositions("fielding_position").notNull(),
-	battingOrder: integer("batting_order").notNull(),
+	fieldingPosition: fieldingPositions("fielding_position"),
+	battingOrder: integer("batting_order"),
 });
 
 export type TeamLineup = typeof teamLineups.$inferSelect;

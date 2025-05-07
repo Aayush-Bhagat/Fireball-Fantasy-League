@@ -10,9 +10,8 @@ type Props = {
 };
 
 export default function NavBar({ isLoggedIn, role }: Props) {
-    const [menuOpen, setMenuOpen] = useState(false);
-    const [dropdownOpen, setDropdownOpen] = useState(false);
-    const [nestedDropdownOpen] = useState(false);
+	const [menuOpen, setMenuOpen] = useState(false);
+	const [dropdownOpen, setDropdownOpen] = useState(false);
 
     // Close dropdown when menu closes
     const toggleMenu = () => {
@@ -22,59 +21,42 @@ export default function NavBar({ isLoggedIn, role }: Props) {
         setMenuOpen(!menuOpen);
     };
 
-    return (
-        <nav className="fixed top-0 left-0 w-full z-50 bg-white dark:bg-gray-900 border-b border-gray-200 dark:border-gray-700">
-            <div className="flex items-center justify-between w-full p-4 md:px-6">
-                <Link href="/" className="flex items-center space-x-3">
-                    <img src="/images/blooper.png" alt="Logo" className="h-8" />
-                    <span className="text-2xl font-semibold dark:text-white">
-                        Fireball League
-                    </span>
-                </Link>
-                {/* Navigation Links */}
-                {/* <div
-                    className={`w-full md:w-auto ${
-                        menuOpen ? "block" : "hidden"
-                    } md:block`}
-                >
-                    <ul className="flex flex-col md:flex-row md:items-center gap-4 mt-4 md:mt-0 text-gray-900 dark:text-white">
-                        <li>
-                            <Link
-                                href="/schedule"
-                                className="hover:text-blue-600 dark:hover:text-blue-400"
-                            >
-                                Schedule
-                            </Link>
-                        </li>
-                    </ul>
-                </div> */}
-                {/* Mobile Menu Button */}
-                <button
-                    onClick={toggleMenu}
-                    className="md:hidden p-2 rounded-lg text-gray-500 hover:bg-gray-100 dark:text-gray-400 dark:hover:bg-gray-700"
-                    aria-label="Toggle Menu"
-                >
-                    <Menu className="w-5 h-5" />
-                </button>
+	return (
+		<nav className="fixed top-0 left-0 w-full z-50 bg-white dark:bg-gray-900 border-b border-gray-200 dark:border-gray-700">
+			<div className="flex items-center justify-between w-full p-4 md:px-6">
+				<Link href="/" className="flex items-center space-x-3">
+					<img src="/images/blooper.png" alt="Logo" className="h-8" />
+					<span className="text-2xl font-semibold dark:text-white">
+						Fireball League
+					</span>
+				</Link>
+				{/* Mobile Menu Button */}
+				<button
+					onClick={toggleMenu}
+					className="md:hidden p-2 rounded-lg text-gray-500 hover:bg-gray-100 dark:text-gray-400 dark:hover:bg-gray-700"
+					aria-label="Toggle Menu"
+				>
+					<Menu className="w-5 h-5" />
+				</button>
 
-                {/* Navigation Links */}
-                <div
-                    className={`${
-                        menuOpen
-                            ? "absolute top-full left-0 right-0 border-b border-gray-200 dark:border-gray-700"
-                            : "hidden"
-                    } md:static md:block md:border-none bg-white dark:bg-gray-900 md:bg-transparent`}
-                >
-                    <ul className="flex flex-col md:flex-row md:items-center gap-4 p-4 md:p-0 text-gray-900 dark:text-white">
-                        <li className="py-2 md:py-0">
-                            <Link
-                                href="/schedule"
-                                className="block w-full hover:text-blue-600 dark:hover:text-blue-400"
-                                onClick={() => setMenuOpen(false)}
-                            >
-                                Schedule
-                            </Link>
-                        </li>
+				{/* Navigation Links */}
+				<div
+					className={`${
+						menuOpen
+							? "absolute top-full left-0 right-0 border-b border-gray-200 dark:border-gray-700"
+							: "hidden"
+					} md:static md:block md:border-none bg-white dark:bg-gray-900 md:bg-transparent`}
+				>
+					<ul className="flex flex-col md:flex-row md:items-center gap-4 p-4 md:p-0 text-gray-900 dark:text-white">
+						<li className="py-2 md:py-0">
+							<Link
+								href="/schedule"
+								className="block w-full hover:text-blue-600 dark:hover:text-blue-400"
+								onClick={() => setMenuOpen(false)}
+							>
+								Schedule
+							</Link>
+						</li>
 
                         {role === "admin" && (
                             <li className="py-2 md:py-0">
