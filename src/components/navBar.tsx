@@ -5,21 +5,21 @@ import { Button } from "./ui/button";
 import { logout } from "@/app/login/actions";
 import Link from "next/link";
 type Props = {
-	isLoggedIn: boolean;
-	role: string;
+    isLoggedIn: boolean;
+    role: string;
 };
 
 export default function NavBar({ isLoggedIn, role }: Props) {
 	const [menuOpen, setMenuOpen] = useState(false);
 	const [dropdownOpen, setDropdownOpen] = useState(false);
 
-	// Close dropdown when menu closes
-	const toggleMenu = () => {
-		if (menuOpen && dropdownOpen) {
-			setDropdownOpen(false);
-		}
-		setMenuOpen(!menuOpen);
-	};
+    // Close dropdown when menu closes
+    const toggleMenu = () => {
+        if (menuOpen && dropdownOpen) {
+            setDropdownOpen(false);
+        }
+        setMenuOpen(!menuOpen);
+    };
 
 	return (
 		<nav className="fixed top-0 left-0 w-full z-50 bg-white dark:bg-gray-900 border-b border-gray-200 dark:border-gray-700">
@@ -58,109 +58,109 @@ export default function NavBar({ isLoggedIn, role }: Props) {
 							</Link>
 						</li>
 
-						{role === "admin" && (
-							<li className="py-2 md:py-0">
-								<Link
-									href="/admin"
-									className="block w-full hover:text-blue-600 dark:hover:text-blue-400"
-								>
-									Admin
-								</Link>
-							</li>
-						)}
+                        {role === "admin" && (
+                            <li className="py-2 md:py-0">
+                                <Link
+                                    href="/admin"
+                                    className="block w-full hover:text-blue-600 dark:hover:text-blue-400"
+                                >
+                                    Admin
+                                </Link>
+                            </li>
+                        )}
 
-						{/* Dropdown Menu - with hover functionality for desktop */}
-						{role !== "admin" && (
-							<li className="relative py-2 md:py-0 group">
-								<button
-									onClick={() =>
-										setDropdownOpen(!dropdownOpen)
-									}
-									className="flex items-center gap-1 w-full hover:text-blue-600 dark:hover:text-blue-400"
-								>
-									My Team <ChevronDown className="w-4 h-4" />
-								</button>
+                        {/* Dropdown Menu - with hover functionality for desktop */}
+                        {role !== "admin" && (
+                            <li className="relative py-2 md:py-0 group">
+                                <button
+                                    onClick={() =>
+                                        setDropdownOpen(!dropdownOpen)
+                                    }
+                                    className="flex items-center gap-1 w-full hover:text-blue-600 dark:hover:text-blue-400"
+                                >
+                                    My Team <ChevronDown className="w-4 h-4" />
+                                </button>
 
-								{/* Mobile dropdown (controlled by state) */}
-								{dropdownOpen && (
-									<div className="md:hidden pl-4 mt-2 space-y-2 border-l-2 border-gray-200 dark:border-gray-700">
-										<Link
-											href="/roster"
-											className="block px-4 py-2 hover:bg-gray-100 dark:hover:bg-gray-700 md:rounded"
-											onClick={() => setMenuOpen(false)}
-										>
-											Roster
-										</Link>
+                                {/* Mobile dropdown (controlled by state) */}
+                                {dropdownOpen && (
+                                    <div className="md:hidden pl-4 mt-2 space-y-2 border-l-2 border-gray-200 dark:border-gray-700">
+                                        <Link
+                                            href="/roster"
+                                            className="block px-4 py-2 hover:bg-gray-100 dark:hover:bg-gray-700 md:rounded"
+                                            onClick={() => setMenuOpen(false)}
+                                        >
+                                            Roster
+                                        </Link>
 
-										<Link
-											href="/editLineup"
-											className="block px-4 py-2 hover:bg-gray-100 dark:hover:bg-gray-700 md:rounded"
-											onClick={() => setMenuOpen(false)}
-										>
-											Lineup
-										</Link>
+                                        <Link
+                                            href="/editLineup"
+                                            className="block px-4 py-2 hover:bg-gray-100 dark:hover:bg-gray-700 md:rounded"
+                                            onClick={() => setMenuOpen(false)}
+                                        >
+                                            Lineup
+                                        </Link>
 
-										<Link
-											href="/trade"
-											className="block px-4 py-2 hover:bg-gray-100 dark:hover:bg-gray-700 md:rounded"
-											onClick={() => setMenuOpen(false)}
-										>
-											Trades
-										</Link>
-									</div>
-								)}
+                                        <Link
+                                            href="/trade"
+                                            className="block px-4 py-2 hover:bg-gray-100 dark:hover:bg-gray-700 md:rounded"
+                                            onClick={() => setMenuOpen(false)}
+                                        >
+                                            Trades
+                                        </Link>
+                                    </div>
+                                )}
 
-								{/* Desktop dropdown (controlled by hover) */}
-								<div className="hidden md:block absolute z-20 mt-2 bg-white dark:bg-gray-800 shadow-md rounded-lg p-2 w-44 invisible group-hover:visible transition-all duration-300 opacity-0 group-hover:opacity-100">
-									<Link
-										href="/roster"
-										className="block px-4 py-2 hover:bg-gray-100 dark:hover:bg-gray-700 rounded"
-									>
-										Roster
-									</Link>
+                                {/* Desktop dropdown (controlled by hover) */}
+                                <div className="hidden md:block absolute z-20 mt-2 bg-white dark:bg-gray-800 shadow-md rounded-lg p-2 w-44 invisible group-hover:visible transition-all duration-300 opacity-0 group-hover:opacity-100">
+                                    <Link
+                                        href="/roster"
+                                        className="block px-4 py-2 hover:bg-gray-100 dark:hover:bg-gray-700 rounded"
+                                    >
+                                        Roster
+                                    </Link>
 
-									<Link
-										href="/editLineup"
-										className="block px-4 py-2 hover:bg-gray-100 dark:hover:bg-gray-700 rounded"
-									>
-										Lineup
-									</Link>
+                                    <Link
+                                        href="/editLineup"
+                                        className="block px-4 py-2 hover:bg-gray-100 dark:hover:bg-gray-700 rounded"
+                                    >
+                                        Lineup
+                                    </Link>
 
-									<Link
-										href="/trade"
-										className="block px-4 py-2 hover:bg-gray-100 dark:hover:bg-gray-700 rounded"
-									>
-										Trades
-									</Link>
-								</div>
-							</li>
-						)}
+                                    <Link
+                                        href="/trade"
+                                        className="block px-4 py-2 hover:bg-gray-100 dark:hover:bg-gray-700 rounded"
+                                    >
+                                        Trades
+                                    </Link>
+                                </div>
+                            </li>
+                        )}
 
-						<li className="py-2 md:py-0">
-							{!isLoggedIn && (
-								<Link
-									href="/login"
-									className="block w-full hover:text-blue-600 dark:hover:text-blue-400"
-									onClick={() => setMenuOpen(false)}
-								>
-									Log In
-								</Link>
-							)}
-							{isLoggedIn && (
-								<Button
-									className="w-full md:w-auto hover:bg-slate-900"
-									onClick={() => {
-										setMenuOpen(false);
-										logout();
-									}}
-								>
-									Log Out
-								</Button>
-							)}
-						</li>
-					</ul>
-				</div>
-			</div>
-		</nav>
-	);
+                        <li className="py-2 md:py-0">
+                            {!isLoggedIn && (
+                                <Link
+                                    href="/login"
+                                    className="block w-full hover:text-blue-600 dark:hover:text-blue-400"
+                                    onClick={() => setMenuOpen(false)}
+                                >
+                                    Log In
+                                </Link>
+                            )}
+                            {isLoggedIn && (
+                                <Button
+                                    className="w-full md:w-auto hover:bg-slate-900"
+                                    onClick={() => {
+                                        setMenuOpen(false);
+                                        logout();
+                                    }}
+                                >
+                                    Log Out
+                                </Button>
+                            )}
+                        </li>
+                    </ul>
+                </div>
+            </div>
+        </nav>
+    );
 }

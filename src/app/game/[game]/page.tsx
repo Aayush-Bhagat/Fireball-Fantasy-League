@@ -1,10 +1,9 @@
 import React from "react";
-
+import BoxScore from "@/components/boxScore";
 export default function page() {
     return (
-        <div>
-            page
-            <div>game</div>
+        <div className="pt-16">
+            <BoxScore />
         </div>
     );
 }
