@@ -1,6 +1,6 @@
 import {
 	PlayerCareerStatsDto,
-	PlayerGameDto,
+	PlayerGameStatsDto,
 	PlayerHistoryDto,
 	PlayerWithStatsDto,
 } from "@/dtos/playerDtos";
@@ -17,7 +17,7 @@ import {
 export async function getPlayerGames(playerId: string) {
 	const games = await findPlayerGames(playerId);
 
-	const playerGames: PlayerGameDto[] = games.map((game) => {
+	const playerGames: PlayerGameStatsDto[] = games.map((game) => {
 		return {
 			gameId: game.gameId,
 			week: game.week,
@@ -186,7 +186,7 @@ export async function getPlayerCareerStats(playerId: string) {
 			atBats: Number(stat.atBats),
 			hits: Number(stat.hits),
 			runs: Number(stat.runs),
-			RBIs: Number(stat.RBIs),
+			rbis: Number(stat.RBIs),
 			walks: Number(stat.walks),
 			strikeouts: Number(stat.strikeouts),
 			outsPitched: Number(stat.outsPitched),

@@ -97,7 +97,7 @@ export async function findPlayerCareerStats(playerId: string) {
 			outs: sql<number>`coalesce(sum(${playerGamesStats.outs}), 0)`,
 			teamsPlayedFor: sql<
 				string[]
-			>`ARRAY_AGG(DISTINCT ${teams.name}) FILTER (WHERE ${teams.id} IS NOT NULL)`.as(
+			>`ARRAY_AGG(DISTINCT ${teams.abbreviation}) FILTER (WHERE ${teams.id} IS NOT NULL)`.as(
 				"teams_played_for"
 			),
 		})
