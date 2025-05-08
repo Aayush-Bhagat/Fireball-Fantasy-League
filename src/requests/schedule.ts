@@ -45,3 +45,23 @@ export async function getWeeklySchedule(week: string | null, season: string) {
 
     return data;
 }
+
+export async function getTeamSchedule(teamId: string) {
+    const response = await fetch(
+        `http://localhost:3000/api/teams/${teamId}/schedule`,
+        {
+            method: "GET",
+            headers: {
+                "Content-Type": "application/json",
+            },
+        }
+    );
+
+    if (!response.ok) {
+        throw new Error("Failed to fetch schedule");
+    }
+
+    const data: GameResponseDto = await response.json();
+
+    return data;
+}

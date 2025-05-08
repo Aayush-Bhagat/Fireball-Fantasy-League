@@ -1,4 +1,5 @@
 import {
+    PlayerCareerStatsDto,
     PlayerGameResponseDto,
     PlayerHistoryDto,
     PlayerHistoryResponseDto,
@@ -58,6 +59,26 @@ export async function viewAllPlayers() {
     }
 
     const data: PlayerStatsResponseDto = await response.json();
+
+    return data;
+}
+
+export async function getCareerStats(playerId: string) {
+    const response = await fetch(
+        `http://localhost:3000/api/players/${playerId}/career`,
+        {
+            method: "GET",
+            headers: {
+                "Content-Type": "application/json",
+            },
+        }
+    );
+
+    if (!response.ok) {
+        throw new Error("Failed to fetch career stats");
+    }
+
+    const data: PlayerCareerStatsDto = await response.json();
 
     return data;
 }
