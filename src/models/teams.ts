@@ -6,6 +6,7 @@ import {
 	integer,
 	index,
 	pgEnum,
+	boolean,
 } from "drizzle-orm/pg-core";
 import { relations } from "drizzle-orm";
 import { users } from "./users";
@@ -82,6 +83,7 @@ export const teamLineups = pgTable("team_lineups", {
 		.references(() => players.id),
 	fieldingPosition: fieldingPositions("fielding_position"),
 	battingOrder: integer("batting_order"),
+	isStarred: boolean("is_starred").notNull().default(false),
 });
 
 export type TeamLineup = typeof teamLineups.$inferSelect;

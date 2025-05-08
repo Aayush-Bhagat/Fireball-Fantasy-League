@@ -1,4 +1,4 @@
-import { TeamGameDto } from "./teamDtos";
+import { TeamDto, TeamGameDto } from "./teamDtos";
 import { BasicPlayerDto, BasicPlayerStatsDto } from "./playerDtos";
 import { z } from "zod";
 
@@ -94,12 +94,12 @@ export type UpdatePlayerGameStatsDto = z.infer<
 
 export type GameStatsDto = {
 	gameId: string;
-	teamId: string;
-	opponentId: string;
-	teamScore: number;
-	opponentScore: number;
-	teamOutcome: string;
-	opponentOutcome: string;
+	team: TeamDto;
+	opponent: TeamDto;
+	teamScore: number | null;
+	opponentScore: number | null;
+	teamOutcome: string | null;
+	opponentOutcome: string | null;
 	teamPlayers: BasicPlayerStatsDto[];
 	opponentPlayers: BasicPlayerStatsDto[];
 };

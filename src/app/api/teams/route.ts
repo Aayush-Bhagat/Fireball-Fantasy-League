@@ -1,11 +1,11 @@
-import { teamResponseDto } from "./../../../dtos/teamDtos";
+import { TeamResponseDto } from "@/dtos/teamDtos";
 import { getAllTeams } from "@/services/teamService";
 import { NextResponse } from "next/server";
 
 export async function GET() {
 	const teams = await getAllTeams();
 
-	const response: teamResponseDto = {
+	const response: TeamResponseDto = {
 		teams: teams,
 	};
 

@@ -265,6 +265,9 @@ export async function findGameById(gameId: string) {
 
 	const opponentGames = alias(teamGames, "teamTwoGames");
 
+	const teamConference = alias(conferences, "teamConference");
+	const opponentConference = alias(conferences, "opponentConference");
+
 	const result = db
 		.select({
 			gameId: games.id,
@@ -277,12 +280,16 @@ export async function findGameById(gameId: string) {
 			teamAbbreviation: teams.abbreviation,
 			teamScore: teamGames.score,
 			teamOutcome: teamGames.outcome,
+			teamConference: teamConference.name,
+			teamUserId: teams.userId,
 			opponentId: opponent.id,
 			opponentName: opponent.name,
 			opponentScore: opponentGames.score,
 			opponentAbbreviation: opponent.abbreviation,
 			opponentLogo: opponent.logo,
 			opponentOutcome: opponentGames.outcome,
+			opponentConference: opponentConference.name,
+			opponentUserId: opponent.userId,
 		})
 		.from(teamGames)
 		.innerJoin(games, eq(teamGames.gameId, games.id))
@@ -296,12 +303,30 @@ export async function findGameById(gameId: string) {
 		.innerJoin(teams, eq(teamGames.teamId, teams.id))
 		.innerJoin(opponent, eq(opponentGames.teamId, opponent.id))
 		.innerJoin(seasons, eq(games.seasonId, seasons.id))
+		.innerJoin(teamConference, eq(teams.conferenceId, teamConference.id))
+		.innerJoin(
+			opponentConference,
+			eq(opponent.conferenceId, opponentConference.id)
+		)
 		.where(eq(games.id, gameId))
 		.limit(1);
 
 	return result;
 }
 
+export async function findTeamGameStats(gameId: string, teamId: string) {
+	const result = await db.query.playerGamesStats.findMany({
+		where: and(
+			eq(playerGamesStats.gameId, gameId),
+			eq(playerGamesStats.teamId, teamId)
+		),
+		with: {
+			player: true,
+		},
+	});
+
+	return result;
+}
 export async function updateTeamGameById(
 	gameId: string,
 	teamId: string,

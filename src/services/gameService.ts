@@ -1,5 +1,7 @@
+import { calculateEra, calculateInningsPitched } from "@/lib/statUtils";
 import {
 	AdminGameDto,
+	GameStatsDto,
 	SeasonScheduleResponseDto,
 	UpdateGameRequestDto,
 } from "./../dtos/gameDtos";
@@ -8,6 +10,7 @@ import {
 	findGameById,
 	findGamesByWeekAndSeason,
 	findSeasonSchedule,
+	findTeamGameStats,
 	updateTeamGameById,
 } from "@/repositories/gameRepository";
 import { GameDtoMapper, mapToSeasonSchedule } from "@/lib/mappers/gameMappers";
@@ -131,3 +134,77 @@ export const updateGame = async (game: UpdateGameRequestDto) => {
 		throw error;
 	}
 };
+
+export async function getGameStats(gameId: string) {
+	const playedGame = await findGameById(gameId);
+
+	const game = playedGame.at(0);
+
+	if (!game) {
+		throw new Error("Game not found");
+	}
+
+	const teamGameStats = await findTeamGameStats(gameId, game.teamId);
+
+	const opponentGameStats = await findTeamGameStats(gameId, game.opponentId);
+
+	const result: GameStatsDto = {
+		gameId: game.gameId,
+		team: {
+			id: game.teamId,
+			name: game.teamName,
+			logo: game.teamLogo,
+			abbreviation: game.teamAbbreviation,
+			conference: game.teamConference,
+			userId: game.teamUserId,
+		},
+		opponent: {
+			id: game.opponentId,
+			name: game.opponentName,
+			logo: game.opponentLogo,
+			abbreviation: game.opponentAbbreviation,
+			conference: game.opponentConference,
+			userId: game.opponentUserId,
+		},
+		teamScore: game.teamScore,
+		opponentScore: game.opponentScore,
+		teamOutcome: game.teamOutcome,
+		opponentOutcome: game.opponentOutcome,
+		teamPlayers: teamGameStats.map((stat) => ({
+			playerId: stat.playerId,
+			playerName: stat.player.name,
+			playerImage: stat.player.image,
+			atBats: stat.atBats,
+			hits: stat.hits,
+			runs: stat.runs,
+			rbis: stat.rbis,
+			walks: stat.walks,
+			strikeouts: stat.strikeouts,
+			homeRuns: stat.homeRuns,
+			inningsPitched: calculateInningsPitched(stat.outsPitched),
+			runsAllowed: stat.runsAllowed,
+			outs: stat.outs,
+			battingAverage: stat.hits / stat.atBats,
+			era: calculateEra(stat.runsAllowed, stat.outsPitched),
+		})),
+		opponentPlayers: opponentGameStats.map((stat) => ({
+			playerId: stat.playerId,
+			playerName: stat.player.name,
+			playerImage: stat.player.image,
+			atBats: stat.atBats,
+			hits: stat.hits,
+			runs: stat.runs,
+			rbis: stat.rbis,
+			walks: stat.walks,
+			strikeouts: stat.strikeouts,
+			homeRuns: stat.homeRuns,
+			inningsPitched: calculateInningsPitched(stat.outsPitched),
+			runsAllowed: stat.runsAllowed,
+			outs: stat.outs,
+			battingAverage: stat.hits / stat.atBats,
+			era: calculateEra(stat.runsAllowed, stat.outsPitched),
+		})),
+	};
+
+	return result;
+}
