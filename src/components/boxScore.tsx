@@ -1,41 +1,30 @@
+import { GameStatsDto } from "@/dtos/gameDtos";
+import { BasicPlayerStatsDto } from "@/dtos/playerDtos";
 import React from "react";
 
-const teamAStats = [
-    { name: "Player 1", ab: 4, r: 0, h: 1, hr: 0, rbi: 1 },
-    { name: "Player 2", ab: 5, r: 1, h: 2, hr: 0, rbi: 0 },
-    { name: "Player 3", ab: 4, r: 1, h: 2, hr: 0, rbi: 0 },
-    { name: "Player 4", ab: 4, r: 0, h: 0, hr: 0, rbi: 0 },
-    { name: "Player 5", ab: 4, r: 0, h: 1, hr: 0, rbi: 0 },
-    { name: "Player 6", ab: 4, r: 0, h: 2, hr: 0, rbi: 0 },
-    { name: "Player 7", ab: 3, r: 1, h: 0, hr: 0, rbi: 0 },
-    { name: "Player 8", ab: 3, r: 1, h: 1, hr: 0, rbi: 0 },
-    { name: "Player 9", ab: 4, r: 0, h: 0, hr: 0, rbi: 0 },
-];
+interface Props {
+    boxScore: Promise<GameStatsDto>;
+}
 
-const teamBStats = [
-    { name: "Player 1", ab: 4, r: 1, h: 1, hr: 0, rbi: 0 },
-    { name: "Player 2", ab: 4, r: 1, h: 1, hr: 0, rbi: 0 },
-    { name: "Player 3", ab: 3, r: 1, h: 2, hr: 0, rbi: 0 },
-    { name: "Player 4", ab: 4, r: 0, h: 1, hr: 0, rbi: 1 },
-    { name: "Player 5", ab: 4, r: 0, h: 0, hr: 0, rbi: 0 },
-    { name: "Player 6", ab: 4, r: 0, h: 1, hr: 0, rbi: 0 },
-    { name: "Player 7", ab: 3, r: 0, h: 1, hr: 0, rbi: 0 },
-    { name: "Player 8", ab: 3, r: 0, h: 0, hr: 0, rbi: 0 },
-    { name: "Player 9", ab: 3, r: 0, h: 0, hr: 0, rbi: 1 },
-];
+export const BoxScore = async ({ boxScore }: Props) => {
+    const data = await boxScore;
 
-export const BoxScore = () => {
-    const renderTable = (teamName: string, icon: string, stats: any[]) => {
+    const renderTable = (
+        teamName: string,
+        icon: string | null,
+        stats: BasicPlayerStatsDto[]
+    ) => {
         const totals = stats.reduce(
             (acc, p) => {
-                acc.ab += p.ab;
-                acc.r += p.r;
-                acc.h += p.h;
-                acc.hr += p.hr;
-                acc.rbi += p.rbi;
+                acc.ab += p.atBats;
+                acc.h += p.hits;
+                acc.r += p.runs;
+                acc.hr += p.homeRuns;
+                acc.rbi += p.rbis;
+                acc.po += p.outs;
                 return acc;
             },
-            { ab: 0, r: 0, h: 0, hr: 0, rbi: 0 }
+            { ab: 0, h: 0, r: 0, hr: 0, rbi: 0, po: 0 }
         );
 
         return (
@@ -44,16 +33,18 @@ export const BoxScore = () => {
                     <h2 className="text-xl font-bold text-gray-800">
                         {teamName}
                     </h2>
-                    <img
-                        src={icon}
-                        alt={`${teamName} logo`}
-                        className="w-10 h-10"
-                    />
+                    {icon && (
+                        <img
+                            src={icon}
+                            alt={`${teamName} logo`}
+                            className="w-10 h-10"
+                        />
+                    )}
                 </div>
                 <table className="w-full text-sm text-left">
                     <thead className="bg-gray-100 text-gray-700 uppercase text-xs">
                         <tr>
-                            {["Player", "AB", "R", "H", "HR", "RBI"].map(
+                            {["Player", "AB", "H", "R", "HR", "RBI", "PO"].map(
                                 (header) => (
                                     <th key={header} className="px-5 py-3">
                                         {header}
@@ -69,22 +60,24 @@ export const BoxScore = () => {
                                 className="border-t hover:bg-gray-50 transition duration-150"
                             >
                                 <td className="px-5 py-3 font-medium text-gray-800">
-                                    {p.name}
+                                    {p.playerName}
                                 </td>
-                                <td className="px-5 py-4">{p.ab}</td>
-                                <td className="px-5 py-4">{p.r}</td>
-                                <td className="px-5 py-4">{p.h}</td>
-                                <td className="px-5 py-4">{p.hr}</td>
-                                <td className="px-5 py-4">{p.rbi}</td>
+                                <td className="px-5 py-4">{p.atBats}</td>
+                                <td className="px-5 py-4">{p.hits}</td>
+                                <td className="px-5 py-4">{p.runs}</td>
+                                <td className="px-5 py-4">{p.homeRuns}</td>
+                                <td className="px-5 py-4">{p.rbis}</td>
+                                <td className="px-5 py-4">{p.outs}</td>
                             </tr>
                         ))}
                         <tr className="font-semibold bg-gray-100 border-t">
                             <td className="px-5 py-4">TOTALS</td>
                             <td className="px-5 py-4">{totals.ab}</td>
-                            <td className="px-5 py-4">{totals.r}</td>
                             <td className="px-5 py-4">{totals.h}</td>
+                            <td className="px-5 py-4">{totals.r}</td>
                             <td className="px-5 py-4">{totals.hr}</td>
                             <td className="px-5 py-4">{totals.rbi}</td>
+                            <td className="px-5 py-4">{totals.po}</td>
                         </tr>
                     </tbody>
                 </table>
@@ -96,19 +89,28 @@ export const BoxScore = () => {
         <div className="bg-gray-50 min-h-screen py-10 px-4">
             <div className="max-w-6xl mx-auto">
                 <h1 className="text-4xl font-extrabold text-center text-gray-900 mb-2">
-                    No Hit Sherlock vs. Blooper
+                    {data.team.name} vs {data.opponent.name}
                 </h1>
-                <h2 className="text-xl text-center text-gray-700 mb-8">
-                    Final Score:{" "}
-                    <span className="font-semibold text-black">4 - 3</span>
+                <h2 className="text-6xl font-extrabold md:text-4xl text-center text-gray-700 mb-8">
+                    <span className="font-semibold text-black">
+                        {data.teamScore}{" "}
+                    </span>{" "}
+                    -{" "}
+                    <span className="font-semibold text-black">
+                        {data.opponentScore}
+                    </span>
                 </h2>
                 <div className="flex flex-col md:flex-row gap-8">
                     {renderTable(
-                        "No Hit Sherlock",
-                        "/images/NoHitSherlockLogo.png",
-                        teamAStats
+                        data.team.name,
+                        data.team.logo,
+                        data.teamPlayers
                     )}
-                    {renderTable("Blooper", "/images/blooper.png", teamBStats)}
+                    {renderTable(
+                        data.opponent.name,
+                        data.opponent.logo,
+                        data.opponentPlayers
+                    )}
                 </div>
             </div>
         </div>

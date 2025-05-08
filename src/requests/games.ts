@@ -1,17 +1,32 @@
 import { UpdateGameRequestDto } from "@/dtos/gameDtos";
-
+import { GameStatsDto } from "@/dtos/gameDtos";
 export async function updateGame(game: UpdateGameRequestDto, token: string) {
-	const response = await fetch(`/api/admin/games`, {
-		method: "PUT",
-		body: JSON.stringify(game),
-		headers: {
-			Authorization: `Bearer ${token}`,
-		},
-	});
+    const response = await fetch(`/api/admin/games`, {
+        method: "PUT",
+        body: JSON.stringify(game),
+        headers: {
+            Authorization: `Bearer ${token}`,
+        },
+    });
 
-	if (!response.ok) {
-		throw new Error("Failed to update game");
-	}
+    if (!response.ok) {
+        throw new Error("Failed to update game");
+    }
 
-	return response.json();
+    return response.json();
+}
+
+export async function getGameStats(gameId: string) {
+    const response = await fetch(`http://localhost:3000/api/games/${gameId}`, {
+        method: "GET",
+        headers: {
+            "Content-Type": "application/json",
+        },
+    });
+
+    if (!response.ok) {
+        throw new Error("Failed to fetch game stats");
+    }
+    const data: GameStatsDto = await response.json();
+    return data;
 }
