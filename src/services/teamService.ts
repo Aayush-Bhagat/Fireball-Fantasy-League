@@ -281,3 +281,11 @@ export async function getTeamLineup(teamId: string) {
 
 	return teamLineup;
 }
+
+export async function getUserTeamLineup(userId: string) {
+	const teamId = await findTeamIdByUserId(userId);
+
+	const lineup = await getTeamLineup(teamId);
+
+	return lineup;
+}
