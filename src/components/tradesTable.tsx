@@ -37,6 +37,7 @@ export default function TradesTable({ tradesData }: Props) {
 						opts={{
 							loop: true,
 							dragFree: false,
+							duration: 64,
 						}}
 					>
 						<CarouselContent>
