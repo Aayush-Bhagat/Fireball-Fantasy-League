@@ -4,7 +4,7 @@ import { games, teamGames } from "@/models/games";
 import { conferences, teams } from "@/models/teams";
 import { seasons } from "@/models/seasons";
 import { playerGamesStats, players } from "@/models/players";
-
+import { teamLineups } from "@/models/teams";
 export function findAllTeams() {
 	const teams = db.query.teams.findMany({
 		with: {
@@ -143,4 +143,22 @@ export async function findRosterStatsByTeam(teamId: string) {
 		.groupBy(players.id);
 
 	return stats;
+}
+
+export async function findTeamLineup(teamId: string) {
+	const lineup = await db
+		.select({
+			playerId: players.id,
+			name: players.name,
+			image: players.image,
+			fieldingPosition: teamLineups.fieldingPosition,
+			battingPosition: teamLineups.battingOrder,
+			battingOrder: teamLineups.battingOrder,
+			isStarred: teamLineups.isStarred,
+		})
+		.from(teamLineups)
+		.leftJoin(players, eq(teamLineups.playerId, players.id))
+		.where(eq(players.teamId, teamId));
+
+	return lineup;
 }

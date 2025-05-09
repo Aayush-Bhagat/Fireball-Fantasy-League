@@ -1,0 +1,1 @@
+ALTER TABLE "team_lineups" ADD COLUMN "is_starred" boolean DEFAULT false NOT NULL;

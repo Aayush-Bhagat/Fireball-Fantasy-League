@@ -125,7 +125,7 @@ export type CareerStatsDto = {
 	outs: number;
 	battingAverage: number;
 	era: number;
-	teamsPlayedFor: string[];
+	teamsPlayedFor: string[] | null;
 };
 
 export type PlayerCareerStatsDto = {

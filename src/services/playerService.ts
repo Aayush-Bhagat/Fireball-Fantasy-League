@@ -194,7 +194,9 @@ export async function getPlayerCareerStats(playerId: string) {
 			inningsPitched: calculateInningsPitched(stat.outsPitched),
 			runsAllowed: Number(stat.runsAllowed),
 			outs: Number(stat.outs),
-			battingAverage: Number(stat.hits) / Number(stat.atBats),
+			battingAverage: Number(stat.hits)
+				? Number(stat.hits) / Number(stat.atBats)
+				: 0,
 			era: calculateEra(stat.runsAllowed, stat.outsPitched),
 			teamsPlayedFor: stat.teamsPlayedFor,
 		})),

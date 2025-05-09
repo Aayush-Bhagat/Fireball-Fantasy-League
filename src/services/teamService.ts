@@ -6,10 +6,18 @@ import {
 	findTeamById,
 	findTeamByUserId,
 	findTeamIdByUserId,
+	findTeamLineup,
 } from "@/repositories/teamRepository";
-import { TeamDto, TeamStandingsDto, TeamWithKeepsDto } from "@/dtos/teamDtos";
+import {
+	BattingOrderDto,
+	FieldingLineupDto,
+	TeamDto,
+	TeamLineupDto,
+	TeamStandingsDto,
+	TeamWithKeepsDto,
+} from "@/dtos/teamDtos";
 import { findPlayersByTeam } from "@/repositories/playerRepository";
-import { PlayerWithStatsDto } from "@/dtos/playerDtos";
+import { BasicPlayerDto, PlayerWithStatsDto } from "@/dtos/playerDtos";
 import { GameDtoMapper } from "@/lib/mappers/gameMappers";
 import { findTeamSchedule } from "@/repositories/gameRepository";
 
@@ -207,4 +215,69 @@ export async function getTeamSchedule(teamId: string, season: string | null) {
 	const teamSchedule = GameDtoMapper(games, records);
 
 	return teamSchedule;
+}
+
+export async function getUserTeamSchedule(userId: string) {
+	const teamId = await findTeamIdByUserId(userId);
+
+	const schedule = await getTeamSchedule(teamId, "current");
+
+	return schedule;
+}
+
+export async function getTeamLineup(teamId: string) {
+	const lineup = await findTeamLineup(teamId);
+
+	const fieldingLineup: FieldingLineupDto = {
+		P: null,
+		C: null,
+		"1B": null,
+		"2B": null,
+		"3B": null,
+		SS: null,
+		LF: null,
+		CF: null,
+		RF: null,
+	};
+
+	lineup.forEach((player) => {
+		if (player.fieldingPosition && player.playerId && player.name) {
+			fieldingLineup[player.fieldingPosition] = {
+				id: player.playerId,
+				name: player.name,
+				image: player.image,
+			};
+		}
+	});
+
+	const battingOrder: BattingOrderDto = Array(9).fill(null);
+
+	lineup.forEach((player) => {
+		if (player.battingOrder && player.playerId && player.name) {
+			battingOrder[player.battingOrder] = {
+				id: player.playerId,
+				name: player.name,
+				image: player.image,
+			};
+		}
+	});
+
+	const starred = lineup.find((p) => p.isStarred);
+
+	const starredPlayer: BasicPlayerDto | null =
+		starred && starred.playerId && starred.name
+			? {
+					id: starred.playerId,
+					name: starred.name,
+					image: starred.image,
+			  }
+			: null;
+
+	const teamLineup: TeamLineupDto = {
+		fieldingLineup,
+		battingOrder,
+		starredPlayer,
+	};
+
+	return teamLineup;
 }

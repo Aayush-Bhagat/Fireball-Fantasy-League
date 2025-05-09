@@ -1,4 +1,4 @@
-import { PlayerWithStatsDto } from "./playerDtos";
+import { BasicPlayerDto, PlayerWithStatsDto } from "./playerDtos";
 
 export type TeamResponseDto = {
 	teams: TeamDto[];
@@ -66,3 +66,26 @@ export type TeamWithKeepsDto = {
 	team: TeamDto;
 	keeps: KeepDto[];
 };
+
+export type TeamLineupPosition =
+	| "P"
+	| "C"
+	| "1B"
+	| "2B"
+	| "3B"
+	| "SS"
+	| "LF"
+	| "CF"
+	| "RF";
+
+export type TeamLineupDto = {
+	fieldingLineup: FieldingLineupDto;
+	battingOrder: BattingOrderDto;
+	starredPlayer: BasicPlayerDto | null;
+};
+
+export type FieldingLineupDto = {
+	[key in TeamLineupPosition]: BasicPlayerDto | null;
+};
+
+export type BattingOrderDto = Array<BasicPlayerDto | null>;
