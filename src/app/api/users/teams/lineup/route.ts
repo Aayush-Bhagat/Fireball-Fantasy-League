@@ -1,16 +1,16 @@
 import { getUserTeamLineup } from "@/services/teamService";
 import { TeamLineupDto } from "@/dtos/teamDtos";
 import { NextRequest, NextResponse } from "next/server";
+import { verifyJwtToken } from "@/lib/authUtils";
 
 export async function GET(request: NextRequest) {
-	const userId = request.nextUrl.searchParams.get("userId");
+	const token = request.headers.get("Authorization")?.split(" ")[1];
 
-	if (!userId) {
-		return NextResponse.json(
-			{ error: "User ID is required" },
-			{ status: 400 }
-		);
+	if (!token) {
+		return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 	}
+
+	const userId = verifyJwtToken(token);
 
 	const lineup: TeamLineupDto = await getUserTeamLineup(userId);
 
