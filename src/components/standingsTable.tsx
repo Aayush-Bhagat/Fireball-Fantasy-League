@@ -35,7 +35,7 @@ export default async function StandingTable({ standingsData }: Props) {
 												<img
 													src={team.logo}
 													alt={`${team.name} logo`}
-													className="w-10 h-10 mr-2 rounded-2xl"
+													className="w-10 h-10 mr-2 rounded-full"
 												/>
 											)}
 
@@ -86,7 +86,7 @@ export default async function StandingTable({ standingsData }: Props) {
 												<img
 													src={team.logo}
 													alt={`${team.name} logo`}
-													className="w-10 h-10 mr-2 rounded-2xl"
+													className="w-10 h-10 mr-2 rounded-full"
 												/>
 											)}
 											{team.name}

@@ -5,20 +5,20 @@ import TeamInfo from "@/components/teamInfo";
 import { getTeambyId } from "@/requests/teams";
 import TeamInfoSkeleton from "@/components/loaders/TeamInfoSkeleton";
 import TeamRosterSkeleton from "@/components/loaders/TeamRosterSkeleton";
-import TeamSchdule from "@/components/teamSchdule";
+import TeamSchedule from "@/components/teamSchedule";
 import { getTeamSchedule } from "@/requests/schedule";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import ViewLineup from "@/components/viewLineup";
 import { getTeamLineup } from "@/requests/lineup";
 import ViewBattingOrder from "@/components/viewBattingOrder";
 import { viewAllPlayers } from "@/requests/players";
-export default async function Page({
-    params,
-}: {
-    params: Promise<{ team: string }>;
-}) {
-    const { team } = await params;
 
+export default async function Page({
+	params,
+}: {
+	params: Promise<{ team: string }>;
+}) {
+	const { team } = await params;
     const roster = getTeamRoster(team);
     const teamInfo = getTeambyId(team);
     const teamSchedule = getTeamSchedule(team);

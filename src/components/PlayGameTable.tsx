@@ -38,7 +38,7 @@ const PlayGameTable = ({ roster, color, dispatch }: Props) => {
 						<th className="text-center px-4 py-2 w-12">RA</th>
 						<th className="text-center px-4 py-2 w-12">SO</th>
 						<th className="text-center px-4 py-2 w-12">Walks</th>
-						<th className="text-center px-4 py-2 w-12">Outs</th>
+						<th className="text-center px-4 py-2 w-12">Put Outs</th>
 					</tr>
 				</thead>
 				<tbody>

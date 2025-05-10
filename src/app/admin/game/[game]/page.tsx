@@ -3,6 +3,8 @@ import AdminGame from "@/components/AdminGame";
 import { createClient } from "@/lib/supabase/server";
 import { redirect } from "next/navigation";
 import { getAdminGame } from "@/requests/admin";
+import { Suspense } from "react";
+import AdminGameSkeleton from "@/components/loaders/AdminGameSkelton";
 
 export default async function page({
 	params,
@@ -41,7 +43,9 @@ export default async function page({
 
 	return (
 		<>
-			<AdminGame gameData={gameData} token={token} />
+			<Suspense fallback={<AdminGameSkeleton />}>
+				<AdminGame gameData={gameData} token={token} />
+			</Suspense>
 		</>
 	);
 }

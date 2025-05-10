@@ -2,36 +2,36 @@ import React from "react";
 import { useQuery } from "@tanstack/react-query";
 import { getCareerStats } from "@/requests/players";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Loader2 } from "lucide-react";
 
 type Props = {
-    player: string;
+	player: string;
 };
 export default function CareerStats({ player }: Props) {
-    const { data: playerCareerStats, isLoading } = useQuery({
-        queryKey: ["player-caereer-stats", player],
-        queryFn: async () => {
-            const res = await getCareerStats(player);
-            return res.careerStats;
-        },
-    });
-    const hasPitchingStats =
-        playerCareerStats?.some(
-            (game) =>
-                game.inningsPitched > 0 || game.runsAllowed > 0 || game.era > 0
-        ) ?? false;
-    return (
-        <div>
-            <Tabs defaultValue="bat" className="w-full">
-                <TabsList>
-                    <TabsTrigger value="bat">Batting</TabsTrigger>
-                    {hasPitchingStats && (
-                        <TabsTrigger value="pitch">Pitching</TabsTrigger>
-                    )}
-                </TabsList>
-                <h2 className="text-lg font-semibold mb-2">
-                    Career Season Stats
-                </h2>
-
+	const { data: playerCareerStats, isLoading } = useQuery({
+		queryKey: ["player-caereer-stats", player],
+		queryFn: async () => {
+			const res = await getCareerStats(player);
+			return res.careerStats;
+		},
+	});
+	const hasPitchingStats =
+		playerCareerStats?.some(
+			(game) =>
+				game.inningsPitched > 0 || game.runsAllowed > 0 || game.era > 0
+		) ?? false;
+	return (
+		<div>
+			<Tabs defaultValue="bat" className="w-full">
+				<TabsList>
+					<TabsTrigger value="bat">Batting</TabsTrigger>
+					{hasPitchingStats && (
+						<TabsTrigger value="pitch">Pitching</TabsTrigger>
+					)}
+				</TabsList>
+				<h2 className="text-lg font-semibold mb-2">
+					Career Season Stats
+				</h2>
                 <TabsContent value="bat">
                     <div className="overflow-x-auto">
                         <table className="w-full table-fixed bg-white border border-gray-100 shadow rounded-lg text-sm">
