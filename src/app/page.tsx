@@ -13,6 +13,8 @@ import StandingsTableSkeleton from "@/components/loaders/StandingTableSkeleton";
 import PlayerStatsTableSkeleton from "@/components/loaders/PlayerStatsTableSkeleton";
 import TradesTable from "@/components/tradesTable";
 import { getTrades } from "@/requests/trade";
+import TradesTableSkeleton from "@/components/loaders/TradeTableSkeleton";
+
 export default async function Home() {
 	const games = getWeeklySchedule(null, "current");
 	const standings = getStandings("current");
@@ -25,7 +27,9 @@ export default async function Home() {
 			{/* <NavBar /> */}
 			<main className="bg-gray-100 min-h-screen pt-24 px-4 md:px-12 lg:px-24 ">
 				<div className="pb-4">
-					<TradesTable tradesData={trades} />
+					<Suspense fallback={<TradesTableSkeleton />}>
+						<TradesTable tradesData={trades} />
+					</Suspense>
 				</div>
 				<div className="grid grid-cols-1 md:grid-cols-2 gap-8 pb-20">
 					<section className="space-y-6">
