@@ -1,5 +1,6 @@
 import { calculateEra, calculateInningsPitched } from "@/lib/statUtils";
 import {
+	editBattingOrder,
 	findAllTeamRecordsBySeason,
 	findAllTeams,
 	findRosterStatsByTeam,
@@ -10,6 +11,8 @@ import {
 } from "@/repositories/teamRepository";
 import {
 	BattingOrderDto,
+	BattingOrderPosition,
+	EditBattingOrderRequestDto,
 	EditLineupRequestDto,
 	FieldingLineupDto,
 	TeamDto,
@@ -301,5 +304,22 @@ export async function editTeamLineup(lineup: EditLineupRequestDto) {
 
 	for (const position of positions) {
 		await editFieldingLineup(position);
+	}
+}
+
+export async function editTeamBattingOrder(lineup: EditBattingOrderRequestDto) {
+	const battingOrderPositions: BattingOrderPosition[] = lineup.battingOrder
+		.map((playerId, index) =>
+			playerId
+				? {
+						battingOrder: index + 1,
+						playerId: playerId,
+				  }
+				: null
+		)
+		.filter((position) => position !== null);
+
+	for (const battingOrder of battingOrderPositions) {
+		await editBattingOrder(battingOrder);
 	}
 }

@@ -109,3 +109,16 @@ export type PlayersPosition = {
 	position: TeamLineupPosition;
 	playerId: string;
 };
+
+export const EditBattingOrderRequestSchema = z.object({
+	battingOrder: z.array(z.string().nullable()),
+});
+
+export type EditBattingOrderRequestDto = z.infer<
+	typeof EditBattingOrderRequestSchema
+>;
+
+export type BattingOrderPosition = {
+	battingOrder: number;
+	playerId: string;
+};
