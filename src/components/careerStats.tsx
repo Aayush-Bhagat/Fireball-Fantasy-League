@@ -58,7 +58,11 @@ export default function CareerStats({ player }: Props) {
                                                 {stat.seasonId}
                                             </td>
                                             <td className="p-2">
-                                                {stat.teamsPlayedFor.join(", ")}
+                                                {stat.teamsPlayedFor
+                                                    ? stat.teamsPlayedFor.join(
+                                                          ", "
+                                                      )
+                                                    : "N/A"}
                                             </td>
                                             <td className="p-2">
                                                 {stat.atBats}
@@ -103,7 +107,11 @@ export default function CareerStats({ player }: Props) {
                                                 {stat.seasonId}
                                             </td>
                                             <td className="p-2">
-                                                {stat.teamsPlayedFor.join(", ")}
+                                                {stat.teamsPlayedFor
+                                                    ? stat.teamsPlayedFor.join(
+                                                          ", "
+                                                      )
+                                                    : "N/A"}
                                             </td>
                                             <td className="p-2">
                                                 {stat.inningsPitched}

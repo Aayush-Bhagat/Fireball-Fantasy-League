@@ -8,7 +8,10 @@ import TeamRosterSkeleton from "@/components/loaders/TeamRosterSkeleton";
 import TeamSchdule from "@/components/teamSchdule";
 import { getTeamSchedule } from "@/requests/schedule";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-
+import ViewLineup from "@/components/viewLineup";
+import { getTeamLineup } from "@/requests/lineup";
+import ViewBattingOrder from "@/components/viewBattingOrder";
+import { viewAllPlayers } from "@/requests/players";
 export default async function Page({
     params,
 }: {
@@ -19,6 +22,8 @@ export default async function Page({
     const roster = getTeamRoster(team);
     const teamInfo = getTeambyId(team);
     const teamSchedule = getTeamSchedule(team);
+    const lineup = getTeamLineup(team);
+    const players = viewAllPlayers();
 
     return (
         <>
@@ -42,6 +47,18 @@ export default async function Page({
                                 >
                                     Schedule
                                 </TabsTrigger>
+                                <TabsTrigger
+                                    value="lineup"
+                                    className="max-w-[120px] w-full px-3 py-2 text-sm font-medium text-gray-700 data-[state=active]:bg-gray-200 data-[state=active]:text-black rounded-md hover:bg-gray-100 transition"
+                                >
+                                    Lineup
+                                </TabsTrigger>
+                                <TabsTrigger
+                                    value="battingOrder"
+                                    className="max-w-[120px] w-full px-3 py-2 text-sm font-medium text-gray-700 data-[state=active]:bg-gray-200 data-[state=active]:text-black rounded-md hover:bg-gray-100 transition"
+                                >
+                                    Batting Order
+                                </TabsTrigger>
                             </TabsList>
                             <TabsContent className="" value="roster">
                                 <Suspense fallback={<TeamRosterSkeleton />}>
@@ -51,6 +68,20 @@ export default async function Page({
                             <TabsContent className="" value="schedule">
                                 <Suspense fallback={<div>Loading...</div>}>
                                     <TeamSchdule teamSchedule={teamSchedule} />
+                                </Suspense>
+                            </TabsContent>
+                            <TabsContent className="" value="lineup">
+                                <Suspense fallback={<div>Loading...</div>}>
+                                    <ViewLineup lineupData={lineup} />
+                                </Suspense>
+                            </TabsContent>
+                            <TabsContent className="" value="battingOrder">
+                                <Suspense fallback={<div>Loading...</div>}>
+                                    <ViewBattingOrder
+                                        battingLineup={lineup}
+                                        lineupData={lineup}
+                                        playersData={players}
+                                    />
                                 </Suspense>
                             </TabsContent>
                         </Tabs>
