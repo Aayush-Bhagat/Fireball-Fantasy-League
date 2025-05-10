@@ -10,9 +10,11 @@ import {
 } from "@/repositories/teamRepository";
 import {
 	BattingOrderDto,
+	EditLineupRequestDto,
 	FieldingLineupDto,
 	TeamDto,
 	TeamLineupDto,
+	TeamLineupPosition,
 	TeamStandingsDto,
 	TeamWithKeepsDto,
 } from "@/dtos/teamDtos";
@@ -20,6 +22,7 @@ import { findPlayersByTeam } from "@/repositories/playerRepository";
 import { BasicPlayerDto, PlayerWithStatsDto } from "@/dtos/playerDtos";
 import { GameDtoMapper } from "@/lib/mappers/gameMappers";
 import { findTeamSchedule } from "@/repositories/gameRepository";
+import { editFieldingLineup } from "@/repositories/teamRepository";
 
 export async function getAllTeams() {
 	const teams = await findAllTeams();
@@ -254,7 +257,7 @@ export async function getTeamLineup(teamId: string) {
 
 	lineup.forEach((player) => {
 		if (player.battingOrder && player.playerId && player.name) {
-			battingOrder[player.battingOrder] = {
+			battingOrder[player.battingOrder - 1] = {
 				id: player.playerId,
 				name: player.name,
 				image: player.image,
@@ -288,4 +291,15 @@ export async function getUserTeamLineup(userId: string) {
 	const lineup = await getTeamLineup(teamId);
 
 	return lineup;
+}
+
+export async function editTeamLineup(lineup: EditLineupRequestDto) {
+	const positions = Object.entries(lineup).map(([position, playerId]) => ({
+		position: position as TeamLineupPosition,
+		playerId: playerId as string,
+	}));
+
+	for (const position of positions) {
+		await editFieldingLineup(position);
+	}
 }

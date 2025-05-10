@@ -1,4 +1,5 @@
 import { BasicPlayerDto, PlayerWithStatsDto } from "./playerDtos";
+import { z } from "zod";
 
 export type TeamResponseDto = {
 	teams: TeamDto[];
@@ -89,3 +90,22 @@ export type FieldingLineupDto = {
 };
 
 export type BattingOrderDto = Array<BasicPlayerDto | null>;
+
+export const EditLineupRequestSchema = z.object({
+	P: z.string().nullable(),
+	C: z.string().nullable(),
+	"1B": z.string().nullable(),
+	"2B": z.string().nullable(),
+	"3B": z.string().nullable(),
+	SS: z.string().nullable(),
+	LF: z.string().nullable(),
+	CF: z.string().nullable(),
+	RF: z.string().nullable(),
+});
+
+export type EditLineupRequestDto = z.infer<typeof EditLineupRequestSchema>;
+
+export type PlayersPosition = {
+	position: TeamLineupPosition;
+	playerId: string;
+};

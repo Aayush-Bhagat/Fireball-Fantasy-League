@@ -5,6 +5,7 @@ import { conferences, teams } from "@/models/teams";
 import { seasons } from "@/models/seasons";
 import { playerGamesStats, players } from "@/models/players";
 import { teamLineups } from "@/models/teams";
+import { PlayersPosition } from "@/dtos/teamDtos";
 export function findAllTeams() {
 	const teams = db.query.teams.findMany({
 		with: {
@@ -161,4 +162,15 @@ export async function findTeamLineup(teamId: string) {
 		.where(eq(players.teamId, teamId));
 
 	return lineup;
+}
+
+export async function editFieldingLineup(lineup: PlayersPosition) {
+	const updatedLineup = await db
+		.update(teamLineups)
+		.set({
+			fieldingPosition: lineup.position,
+		})
+		.where(eq(teamLineups.playerId, lineup.playerId));
+
+	return updatedLineup;
 }
