@@ -122,20 +122,6 @@ export default function AdminGame({ gameData }: Props) {
 		},
 	});
 
-	const clear = () => {
-		dispatch({
-			type: "REPLACE_ALL",
-			payload: initialPlayerStatsState(game.teamRoster),
-		});
-		dispatchOpponent({
-			type: "REPLACE_ALL",
-			payload: initialPlayerStatsState(game.opponentRoster),
-		});
-
-		setTeamScore(0);
-		setOpponentScore(0);
-	};
-
 	return (
 		<div className="pt-20 px-6 max-w-full mx-auto">
 			<div className="flex flex-col items-center justify-center">
@@ -151,12 +137,6 @@ export default function AdminGame({ gameData }: Props) {
 							<Loader2 className="w-4 h-4 mr-2 animate-spin" />
 						)}
 						{isPending ? "Submitting..." : "Submit Game"}
-					</Button>
-					<Button
-						className="py-5 bg-red-600 text-white hover:bg-red-700"
-						onClick={() => clear()}
-					>
-						Clear
 					</Button>
 				</div>
 			</div>

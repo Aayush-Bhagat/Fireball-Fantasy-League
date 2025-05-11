@@ -6,17 +6,14 @@ import { saveBattingOrder } from "@/requests/lineup";
 import { toast } from "sonner";
 import { useMutation } from "@tanstack/react-query";
 import { Loader2 } from "lucide-react";
+import { createClient } from "@/lib/supabase/client";
 
 interface Props {
 	rosterData: Promise<TeamRosterDto>;
 	battingOrderData: Promise<TeamLineupDto>;
-	token: string;
 }
-export default function BattingOrder({
-	rosterData,
-	battingOrderData,
-	token,
-}: Props) {
+export default function BattingOrder({ rosterData, battingOrderData }: Props) {
+	const supabase = createClient();
 	const { roster } = use(rosterData);
 	const { battingOrder } = use(battingOrderData);
 	const orderedRoster = battingOrder.map((player, index) => {
@@ -48,6 +45,21 @@ export default function BattingOrder({
 	};
 
 	const handleSave = async () => {
+		const { data: user } = await supabase.auth.getUser();
+
+		if (!user) {
+			toast.error("You must be logged in to save a batting order");
+			return;
+		}
+
+		const token = (await supabase.auth.getSession()).data.session
+			?.access_token;
+
+		if (!token) {
+			toast.error("You must be logged in to save a batting order");
+			return;
+		}
+
 		const newBattingOrder = battingOrderD.map((player) => player.id);
 		await saveBattingOrder({ battingOrder: newBattingOrder }, token);
 	};
