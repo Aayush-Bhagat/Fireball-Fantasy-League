@@ -11,7 +11,7 @@ export default function StandingsTableSkeleton() {
 					<TabsTrigger value="east">Eastern</TabsTrigger>
 				</TabsList>
 				<TabsContent className="" value="west">
-					<div>
+					<div className="overflow-x-auto">
 						<table className="table-auto w-full text-center">
 							<thead>
 								<tr>
@@ -48,7 +48,7 @@ export default function StandingsTableSkeleton() {
 					</div>
 				</TabsContent>
 				<TabsContent value="east">
-					<div>
+					<div className="overflow-x-auto">
 						<table className="table-auto w-full text-center">
 							<thead>
 								<tr>

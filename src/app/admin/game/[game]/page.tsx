@@ -44,7 +44,7 @@ export default async function page({
 	return (
 		<>
 			<Suspense fallback={<AdminGameSkeleton />}>
-				<AdminGame gameData={gameData} token={token} />
+				<AdminGame gameData={gameData} />
 			</Suspense>
 		</>
 	);

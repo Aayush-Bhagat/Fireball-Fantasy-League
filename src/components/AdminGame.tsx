@@ -13,14 +13,15 @@ import { useMutation } from "@tanstack/react-query";
 import { Button } from "./ui/button";
 import { updateGame } from "@/requests/games";
 import { Loader2 } from "lucide-react";
+import { createClient } from "@/lib/supabase/client";
 
 type Props = {
 	gameData: Promise<AdminGameDto>;
-	token: string;
 };
 
-export default function AdminGame({ gameData, token }: Props) {
+export default function AdminGame({ gameData }: Props) {
 	const game = use(gameData);
+	const supabase = createClient();
 
 	const [teamPlayerStats, dispatch] = useReducer(
 		playerStatsReducer,
@@ -37,15 +38,17 @@ export default function AdminGame({ gameData, token }: Props) {
 
 	// Load saved data from localStorage after component mounts (client-side only)
 	useEffect(() => {
-		const savedTeamStats = localStorage.getItem(
+		const savedTeamStats = sessionStorage.getItem(
 			`teamPlayerStats-${game.gameId}`
 		);
-		const savedOpponentStats = localStorage.getItem(
+		const savedOpponentStats = sessionStorage.getItem(
 			`opponentPlayerStats-${game.gameId}`
 		);
 
-		const savedTeamScore = localStorage.getItem(`teamScore-${game.gameId}`);
-		const savedOpponentScore = localStorage.getItem(
+		const savedTeamScore = sessionStorage.getItem(
+			`teamScore-${game.gameId}`
+		);
+		const savedOpponentScore = sessionStorage.getItem(
 			`opponentScore-${game.gameId}`
 		);
 
@@ -69,8 +72,11 @@ export default function AdminGame({ gameData, token }: Props) {
 	}, [game.gameId]);
 
 	useEffect(() => {
-		localStorage.setItem(`teamScore-${game.gameId}`, teamScore.toString());
-		localStorage.setItem(
+		sessionStorage.setItem(
+			`teamScore-${game.gameId}`,
+			teamScore.toString()
+		);
+		sessionStorage.setItem(
 			`opponentScore-${game.gameId}`,
 			opponentScore.toString()
 		);
@@ -78,11 +84,11 @@ export default function AdminGame({ gameData, token }: Props) {
 
 	// Save data to localStorage when it changes
 	useEffect(() => {
-		localStorage.setItem(
+		sessionStorage.setItem(
 			`teamPlayerStats-${game.gameId}`,
 			JSON.stringify(teamPlayerStats)
 		);
-		localStorage.setItem(
+		sessionStorage.setItem(
 			`opponentPlayerStats-${game.gameId}`,
 			JSON.stringify(opponentPlayerStats)
 		);
@@ -90,6 +96,18 @@ export default function AdminGame({ gameData, token }: Props) {
 
 	const { mutate: updateGameMutation, isPending } = useMutation({
 		mutationFn: async () => {
+			await supabase.auth.getUser();
+
+			const {
+				data: { session },
+			} = await supabase.auth.getSession();
+
+			if (!session) {
+				throw new Error("No session found");
+			}
+
+			const accessToken = session.access_token;
+
 			const updateGameRequest: UpdateGameRequestDto = {
 				gameId: game.gameId,
 				teamScore: teamScore,
@@ -100,9 +118,23 @@ export default function AdminGame({ gameData, token }: Props) {
 				opponentId: game.opponent.id,
 			};
 
-			await updateGame(updateGameRequest, token);
+			await updateGame(updateGameRequest, accessToken);
 		},
 	});
+
+	const clear = () => {
+		dispatch({
+			type: "REPLACE_ALL",
+			payload: initialPlayerStatsState(game.teamRoster),
+		});
+		dispatchOpponent({
+			type: "REPLACE_ALL",
+			payload: initialPlayerStatsState(game.opponentRoster),
+		});
+
+		setTeamScore(0);
+		setOpponentScore(0);
+	};
 
 	return (
 		<div className="pt-20 px-6 max-w-full mx-auto">
@@ -110,15 +142,21 @@ export default function AdminGame({ gameData, token }: Props) {
 				<h1 className="text-3xl font-bold mb-10 text-center">
 					Admin Game
 				</h1>
-				<div className="mb-12">
+				<div className="mb-12 flex flex-row gap-4">
 					<Button
-						className="py-5 bg-violet-700 text-white"
+						className="py-5 bg-violet-600 text-white hover:bg-violet-700"
 						onClick={() => updateGameMutation()}
 					>
 						{isPending && (
 							<Loader2 className="w-4 h-4 mr-2 animate-spin" />
 						)}
 						{isPending ? "Submitting..." : "Submit Game"}
+					</Button>
+					<Button
+						className="py-5 bg-red-600 text-white hover:bg-red-700"
+						onClick={() => clear()}
+					>
+						Clear
 					</Button>
 				</div>
 			</div>
