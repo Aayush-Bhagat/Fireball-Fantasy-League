@@ -4,8 +4,10 @@ import {
 	TeamWithKeepsDto,
 } from "@/dtos/teamDtos";
 
+const API_URL = process.env.NEXT_PUBLIC_API_URL;
+
 export async function getAllTeams() {
-	const response = await fetch("http://localhost:3000/api/teams", {
+	const response = await fetch(`${API_URL}/api/teams`, {
 		method: "GET",
 		headers: {
 			"Content-Type": "application/json",
@@ -22,15 +24,12 @@ export async function getAllTeams() {
 }
 
 export async function getTeamRoster(teamId: string) {
-	const response = await fetch(
-		`http://localhost:3000/api/teams/${teamId}/roster`,
-		{
-			method: "GET",
-			headers: {
-				"Content-Type": "application/json",
-			},
-		}
-	);
+	const response = await fetch(`${API_URL}/api/teams/${teamId}/roster`, {
+		method: "GET",
+		headers: {
+			"Content-Type": "application/json",
+		},
+	});
 
 	if (!response.ok) {
 		throw new Error("Failed to fetch roster");
@@ -42,7 +41,7 @@ export async function getTeamRoster(teamId: string) {
 }
 
 export async function getTeambyId(teamId: string) {
-	const response = await fetch(`http://localhost:3000/api/teams/${teamId}`, {
+	const response = await fetch(`${API_URL}/api/teams/${teamId}`, {
 		method: "GET",
 		headers: {
 			"Content-Type": "application/json",
@@ -59,7 +58,7 @@ export async function getTeambyId(teamId: string) {
 }
 
 export async function getUserTeamById(token: string) {
-	const response = await fetch(`http://localhost:3000/api/users/teams`, {
+	const response = await fetch(`${API_URL}/api/users/teams`, {
 		method: "GET",
 		headers: {
 			"Content-Type": "application/json",
@@ -77,16 +76,13 @@ export async function getUserTeamById(token: string) {
 }
 
 export async function getUserTeamRoster(token: string) {
-	const response = await fetch(
-		`http://localhost:3000/api/users/teams/roster`,
-		{
-			method: "GET",
-			headers: {
-				"Content-Type": "application/json",
-				Authorization: `Bearer ${token}`,
-			},
-		}
-	);
+	const response = await fetch(`${API_URL}/api/users/teams/roster`, {
+		method: "GET",
+		headers: {
+			"Content-Type": "application/json",
+			Authorization: `Bearer ${token}`,
+		},
+	});
 
 	if (!response.ok) {
 		throw new Error("Failed to fetch roster");

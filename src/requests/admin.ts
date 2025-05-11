@@ -1,7 +1,9 @@
 import { AdminGameDto } from "@/dtos/gameDtos";
 
+const API_URL = process.env.NEXT_PUBLIC_API_URL;
+
 export async function getAdminGame(gameId: string, token: string) {
-	const res = await fetch(`http://localhost:3000/api/admin/games/${gameId}`, {
+	const res = await fetch(`${API_URL}/api/admin/games/${gameId}`, {
 		method: "GET",
 		headers: {
 			"Content-Type": "application/json",

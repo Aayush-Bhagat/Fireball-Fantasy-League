@@ -5,16 +5,14 @@ import {
 	PlayerStatsResponseDto,
 } from "@/dtos/playerDtos";
 
+const API_URL = process.env.NEXT_PUBLIC_API_URL;
 export async function getPlayerGameLogs(playerId: string) {
-	const response = await fetch(
-		`http://localhost:3000/api/players/${playerId}/games`,
-		{
-			method: "GET",
-			headers: {
-				"Content-Type": "application/json",
-			},
-		}
-	);
+	const response = await fetch(`${API_URL}/api/players/${playerId}/games`, {
+		method: "GET",
+		headers: {
+			"Content-Type": "application/json",
+		},
+	});
 
 	if (!response.ok) {
 		throw new Error("Failed to fetch game logs");
@@ -26,15 +24,12 @@ export async function getPlayerGameLogs(playerId: string) {
 }
 
 export async function getPlayerHistory(playerId: string) {
-	const response = await fetch(
-		`http://localhost:3000/api/players/${playerId}/history`,
-		{
-			method: "GET",
-			headers: {
-				"Content-Type": "application/json",
-			},
-		}
-	);
+	const response = await fetch(`${API_URL}/api/players/${playerId}/history`, {
+		method: "GET",
+		headers: {
+			"Content-Type": "application/json",
+		},
+	});
 
 	if (!response.ok) {
 		throw new Error("Failed to fetch game logs");
@@ -46,7 +41,7 @@ export async function getPlayerHistory(playerId: string) {
 }
 
 export async function viewAllPlayers() {
-	const response = await fetch("http://localhost:3000/api/players", {
+	const response = await fetch(`${API_URL}/api/players`, {
 		method: "GET",
 		headers: {
 			"Content-Type": "application/json",
@@ -63,15 +58,12 @@ export async function viewAllPlayers() {
 }
 
 export async function getCareerStats(playerId: string) {
-	const response = await fetch(
-		`http://localhost:3000/api/players/${playerId}/career`,
-		{
-			method: "GET",
-			headers: {
-				"Content-Type": "application/json",
-			},
-		}
-	);
+	const response = await fetch(`${API_URL}/api/players/${playerId}/career`, {
+		method: "GET",
+		headers: {
+			"Content-Type": "application/json",
+		},
+	});
 
 	if (!response.ok) {
 		throw new Error("Failed to fetch career stats");
