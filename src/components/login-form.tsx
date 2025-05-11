@@ -11,8 +11,16 @@ import {
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { login } from "@/app/login/actions";
+import { useActionState } from "react";
+import { Loader2 } from "lucide-react";
+
+const initialState = {
+	message: "",
+};
 
 export function LoginForm() {
+	const [state, formAction, pending] = useActionState(login, initialState);
+
 	return (
 		<div
 			className={cn(
@@ -62,13 +70,21 @@ export function LoginForm() {
 									className="rounded-lg border-red-300 focus:ring-2 focus:ring-red-400"
 								/>
 							</div>
+							{state.message && (
+								<div className="text-red-500 text-sm">
+									{state.message}
+								</div>
+							)}
 							<div className="flex flex-col gap-3">
 								<Button
-									formAction={login}
+									formAction={formAction}
 									type="submit"
 									className="w-full bg-red-500 hover:bg-red-600 text-white font-bold text-lg"
 								>
-									⚾ Login
+									{pending && (
+										<Loader2 className="w-4 h-4 mr-2 animate-spin" />
+									)}
+									Login
 								</Button>
 							</div>
 						</div>

@@ -4,7 +4,10 @@ import { createClient } from "@/lib/supabase/server";
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 
-export async function login(formData: FormData) {
+export async function login(
+	prevState: { message: string },
+	formData: FormData
+) {
 	const supabase = await createClient();
 
 	const authData = {
@@ -15,7 +18,7 @@ export async function login(formData: FormData) {
 	const { error } = await supabase.auth.signInWithPassword(authData);
 
 	if (error) {
-		throw new Error(error.message);
+		return { message: "Invalid email or password" };
 	}
 
 	const {
