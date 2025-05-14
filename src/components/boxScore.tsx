@@ -9,13 +9,18 @@ interface Props {
 export const BoxScore = async ({ boxScore }: Props) => {
     const data = await boxScore;
 
-    const convertInningsToOuts = (innings: number) => {
-        const fullInnings = Math.floor(innings);
-        const fractionalInnings = innings - fullInnings;
-        const outsFromFullInnings = (fractionalInnings * 10) / 3;
-        return fullInnings + outsFromFullInnings;
+    const inningsToOuts = (ip: number) => {
+        const full = Math.floor(ip);
+        const decimal = Math.round((ip - full) * 10); // 1.2 means 2 outs
+        return full * 3 + decimal;
     };
 
+    // Helper: Convert total outs back to innings pitched
+    const outsToInnings = (outs: number) => {
+        const innings = Math.floor(outs / 3);
+        const remainder = outs % 3;
+        return parseFloat(`${innings}.${remainder}`);
+    };
     const renderBattingTable = (
         teamName: string,
         icon: string | null,
@@ -108,11 +113,12 @@ export const BoxScore = async ({ boxScore }: Props) => {
         icon: string | null,
         stats: BasicPlayerStatsDto[]
     ) => {
+        let totalOuts = 0;
+
         const pitchingTotals = stats.reduce(
             (acc, p) => {
-                const inningsOuts = convertInningsToOuts(p.inningsPitched);
-
-                acc.ip += inningsOuts;
+                const outs = inningsToOuts(p.inningsPitched);
+                totalOuts += outs;
                 acc.s += p.strikeouts;
                 acc.w += p.walks;
                 acc.er += p.runsAllowed;
@@ -120,9 +126,10 @@ export const BoxScore = async ({ boxScore }: Props) => {
             },
             { ip: 0, s: 0, w: 0, er: 0, era: 0 }
         );
+        const totalInningsPitched = outsToInnings(totalOuts);
 
-        const hasPitchingStats = Object.values(pitchingTotals).some(
-            (value) => value > 0
+        const hasPitchingStats = stats.filter(
+            (player) => player.inningsPitched > 0 || player.runsAllowed > 0
         );
 
         return (
@@ -147,8 +154,7 @@ export const BoxScore = async ({ boxScore }: Props) => {
                                     {[
                                         "Player",
                                         "IP",
-                                        "R",
-                                        "ER",
+                                        "RA",
                                         "BB",
                                         "SO",
                                         "ERA",
@@ -163,7 +169,7 @@ export const BoxScore = async ({ boxScore }: Props) => {
                                 </tr>
                             </thead>
                             <tbody>
-                                {stats.map((p, idx) => (
+                                {hasPitchingStats.map((p, idx) => (
                                     <tr
                                         key={idx}
                                         className="border-t hover:bg-gray-50 transition duration-150"
@@ -177,7 +183,6 @@ export const BoxScore = async ({ boxScore }: Props) => {
                                         <td className="px-4 py-3">
                                             {p.runsAllowed}
                                         </td>
-                                        <td className="px-4 py-3">{p.era}</td>
                                         <td className="px-4 py-3">{p.walks}</td>
                                         <td className="px-4 py-3">
                                             {p.strikeouts}
@@ -188,7 +193,7 @@ export const BoxScore = async ({ boxScore }: Props) => {
                                 <tr className="font-semibold bg-gray-200 border-t">
                                     <td className="px-4 py-3">TOTALS</td>
                                     <td className="px-4 py-3">
-                                        {pitchingTotals.ip}
+                                        {totalInningsPitched}
                                     </td>
                                     <td className="px-4 py-3">
                                         {pitchingTotals.er}
@@ -202,9 +207,7 @@ export const BoxScore = async ({ boxScore }: Props) => {
                                     <td className="px-4 py-3">
                                         {pitchingTotals.er}
                                     </td>
-                                    <td className="px-4 py-3">
-                                        {pitchingTotals.era}
-                                    </td>
+                                    <td className="px-4 py-3"></td>
                                 </tr>
                             </tbody>
                         </table>

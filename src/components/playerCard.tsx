@@ -18,13 +18,13 @@ export default function PlayerCard({ player }: Props) {
     const pitching = player.pitching;
     const running = player.running;
     return (
-        <div className="max-w-xl mx-auto p-6 bg-white border border-gray-200 rounded-2xl shadow-2xl font-sans">
+        <div className="max-w-full md:max-w-xl mx-auto p-4 md:p-6 bg-white border border-gray-200 rounded-2xl shadow-2xl font-sans">
             <div className="bg-purple-600 text-white rounded-xl p-6 flex items-center gap-4 shadow">
                 {player.playerCardImage && (
                     <img
                         src={player.playerCardImage}
                         alt="Player"
-                        className="w-30 h-30 "
+                        className="w-20 h-20 md:w-30 md:h-30"
                     />
                 )}
                 <div className="flex-1">
@@ -78,12 +78,12 @@ export default function PlayerCard({ player }: Props) {
                         <img
                             src={"/images/battingIcon.png"}
                             alt="Batting Icon"
-                            className="w-8 h-8"
+                            className="w-6 h-6 md:w-8 md:h-8"
                         />
                         <Progress
                             value={batting * 10}
                             max={100}
-                            className="w-48 h-2  rounded-lg"
+                            className="w-28 md:w-48 h-2 rounded-lg"
                         />
                         {batting}
                     </div>
@@ -91,12 +91,12 @@ export default function PlayerCard({ player }: Props) {
                         <img
                             src={"/images/fieldingIcon.png"}
                             alt="Fielding Icon"
-                            className="w-8 h-8"
+                            className="w-6 h-6 md:w-8 md:h-8"
                         />
                         <Progress
                             value={fielding * 10}
                             max={100}
-                            className="w-48 h-2   rounded-lg"
+                            className="w-28 md:w-48 h-2 rounded-lg"
                         />
                         {fielding}
                     </div>
@@ -104,12 +104,12 @@ export default function PlayerCard({ player }: Props) {
                         <img
                             src={"/images/pitchingIcon.png"}
                             alt="Pitching Icon"
-                            className="w-8 h-8"
+                            className="w-6 h-6 md:w-8 md:h-8"
                         />
                         <Progress
                             value={pitching * 10}
                             max={100}
-                            className="w-48 h-2 rounded-lg"
+                            className="w-28 md:w-48 h-2 rounded-lg"
                         />
                         {pitching}
                     </div>
@@ -117,12 +117,12 @@ export default function PlayerCard({ player }: Props) {
                         <img
                             src={"/images/runningIcon.png"}
                             alt="Running Icon"
-                            className="w-8 h-8"
+                            className="w-6 h-6 md:w-8 md:h-8"
                         />
                         <Progress
                             value={running * 10}
                             max={100}
-                            className="w-48 h-2   rounded-lg"
+                            className="w-28 md:w-48 h-2 rounded-lg"
                         />
                         {running}
                     </div>

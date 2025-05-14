@@ -100,13 +100,13 @@ export default function NavBar({ isLoggedIn, role }: Props) {
                                             Lineup
                                         </Link>
 
-                                        <Link
+                                        {/* <Link
                                             href="/trade"
                                             className="block px-4 py-2 hover:bg-gray-100 dark:hover:bg-gray-700 md:rounded"
                                             onClick={() => setMenuOpen(false)}
                                         >
                                             Trades
-                                        </Link>
+                                        </Link> */}
                                     </div>
                                 )}
 
