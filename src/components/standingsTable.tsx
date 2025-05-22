@@ -1,5 +1,5 @@
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { GameResponseDto, SeasonScheduleResponseDto } from "@/dtos/gameDtos";
+import { SeasonScheduleResponseDto } from "@/dtos/gameDtos";
 import { StandingsDto } from "@/dtos/teamDtos";
 
 type Props = {
