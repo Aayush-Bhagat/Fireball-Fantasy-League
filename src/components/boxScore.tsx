@@ -127,6 +127,11 @@ export const BoxScore = async ({ boxScore }: Props) => {
             { ip: 0, s: 0, w: 0, er: 0, era: 0 }
         );
         const totalInningsPitched = outsToInnings(totalOuts);
+        // Only if totalInningsPitched > 0
+        const teamEra =
+            totalInningsPitched > 0
+                ? ((pitchingTotals.er * 9) / totalInningsPitched).toFixed(2)
+                : "-";
 
         const hasPitchingStats = stats.filter(
             (player) => player.inningsPitched > 0 || player.runsAllowed > 0
@@ -149,7 +154,7 @@ export const BoxScore = async ({ boxScore }: Props) => {
                 {hasPitchingStats && (
                     <div className="overflow-x-auto">
                         <table className="w-full text-sm text-left">
-                            <thead className="bg-gray-100 text-gray-700 uppercase text-xs">
+                            <thead className="bg-gray-100 text-gray-700 uppercase text-sm">
                                 <tr>
                                     {[
                                         "Player",
@@ -158,6 +163,7 @@ export const BoxScore = async ({ boxScore }: Props) => {
                                         "BB",
                                         "SO",
                                         "ERA",
+                                        "",
                                     ].map((header) => (
                                         <th
                                             key={header}
@@ -204,9 +210,7 @@ export const BoxScore = async ({ boxScore }: Props) => {
                                     <td className="px-4 py-3">
                                         {pitchingTotals.w}
                                     </td>
-                                    <td className="px-4 py-3">
-                                        {pitchingTotals.er}
-                                    </td>
+                                    <td className="px-4 py-3">{teamEra}</td>
                                     <td className="px-4 py-3"></td>
                                 </tr>
                             </tbody>
@@ -269,7 +273,7 @@ export const BoxScore = async ({ boxScore }: Props) => {
                         data.opponentPlayers
                     )}
                 </div>
-                <div className="flex flex-col md:flex-row gap-8 mt-10">
+                <div className="flex flex-col md:flex-row items-start gap-8 mt-10">
                     {renderPitchingTable(
                         data.team.name,
                         data.team.logo,
