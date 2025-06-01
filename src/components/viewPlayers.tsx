@@ -40,15 +40,28 @@ export default function ViewPlayers({ players }: Props) {
 
     const defaultBatters = useMemo(() => {
         const weights = { hr: 2, rbi: 1, avg: 4 };
+
+        const maxHR = Math.max(...players.map((p) => p.stats?.homeRuns ?? 0));
+        const maxRBI = Math.max(...players.map((p) => p.stats?.rbis ?? 0));
+        const maxAVG = Math.max(
+            ...players.map((p) => p.stats?.battingAverage ?? 0)
+        );
+
         return players
             .filter((p) => p.stats && p.stats.battingAverage !== undefined)
-            .map((p) => ({
-                ...p,
-                score:
-                    p.stats.homeRuns * weights.hr +
-                    p.stats.rbis * weights.rbi +
-                    p.stats.battingAverage * weights.avg,
-            }))
+            .map((p) => {
+                const { homeRuns = 0, rbis = 0, battingAverage = 0 } = p.stats;
+                const normalizedHR = maxHR ? homeRuns / maxHR : 0;
+                const normalizedRBI = maxRBI ? rbis / maxRBI : 0;
+                const normalizedAVG = maxAVG ? battingAverage / maxAVG : 0;
+
+                const score =
+                    normalizedHR * weights.hr +
+                    normalizedRBI * weights.rbi +
+                    normalizedAVG * weights.avg;
+
+                return { ...p, score };
+            })
             .sort((a, b) => b.score - a.score)
             .map((p, index) => ({ ...p, rank: index + 1 }));
     }, [players]);

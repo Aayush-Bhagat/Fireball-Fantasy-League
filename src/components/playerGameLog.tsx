@@ -54,44 +54,54 @@ export default function PlayerGameLog({ player }: Props) {
                             </thead>
                             <tbody>
                                 {playerGameLogs &&
-                                    playerGameLogs.map((game, i) => (
-                                        <tr
-                                            key={i}
-                                            className="even:bg-gray-50 text-center"
-                                        >
-                                            <td className="p-2 whitespace-nowrap">
-                                                {(game.playedAt &&
-                                                    format(
-                                                        new Date(game.playedAt),
-                                                        "MM/dd"
-                                                    )) ||
-                                                    "TBD"}
-                                            </td>
-                                            <td className="p-2">
-                                                {game.opponent.abbreviation}
-                                            </td>
-                                            <td className="p-2">
-                                                {game.stats.atBats}
-                                            </td>
-                                            <td className="p-2">
-                                                {game.stats.hits}
-                                            </td>
-                                            <td className="p-2">
-                                                {game.stats.homeRuns}
-                                            </td>
-                                            <td className="p-2">
-                                                {game.stats.rbis}
-                                            </td>
-                                            <td className="p-2">
-                                                {game.stats.runs}
-                                            </td>
-                                            <td className="p-2">
-                                                {game.stats.battingAverage.toFixed(
-                                                    3
-                                                )}
-                                            </td>
-                                        </tr>
-                                    ))}
+                                    [...playerGameLogs]
+                                        .sort(
+                                            (a, b) =>
+                                                new Date(
+                                                    b.playedAt!
+                                                ).getTime() -
+                                                new Date(a.playedAt!).getTime()
+                                        )
+                                        .map((game, i) => (
+                                            <tr
+                                                key={i}
+                                                className="even:bg-gray-50 text-center"
+                                            >
+                                                <td className="p-2 whitespace-nowrap">
+                                                    {(game.playedAt &&
+                                                        format(
+                                                            new Date(
+                                                                game.playedAt
+                                                            ),
+                                                            "MM/dd"
+                                                        )) ||
+                                                        "TBD"}
+                                                </td>
+                                                <td className="p-2">
+                                                    {game.opponent.abbreviation}
+                                                </td>
+                                                <td className="p-2">
+                                                    {game.stats.atBats}
+                                                </td>
+                                                <td className="p-2">
+                                                    {game.stats.hits}
+                                                </td>
+                                                <td className="p-2">
+                                                    {game.stats.homeRuns}
+                                                </td>
+                                                <td className="p-2">
+                                                    {game.stats.rbis}
+                                                </td>
+                                                <td className="p-2">
+                                                    {game.stats.runs}
+                                                </td>
+                                                <td className="p-2">
+                                                    {game.stats.battingAverage.toFixed(
+                                                        3
+                                                    )}
+                                                </td>
+                                            </tr>
+                                        ))}
                             </tbody>
                         </table>
                     </div>
@@ -115,42 +125,60 @@ export default function PlayerGameLog({ player }: Props) {
                                 </thead>
                                 <tbody>
                                     {playerGameLogs &&
-                                        playerGameLogs.map((game, i) => (
-                                            <tr
-                                                key={i}
-                                                className="even:bg-gray-50 text-center"
-                                            >
-                                                <td className="p-2 whitespace-nowrap">
-                                                    {(game.playedAt &&
-                                                        format(
-                                                            new Date(
-                                                                game.playedAt
-                                                            ),
-                                                            "MM/dd"
-                                                        )) ||
-                                                        "TBD"}
-                                                </td>
-                                                <td className="p-2">
-                                                    {game.opponent.abbreviation}
-                                                </td>
-                                                <td className="p-2">
-                                                    {game.stats.inningsPitched}
-                                                </td>
-                                                <td className="p-2">
-                                                    {game.stats.runsAllowed}
-                                                </td>
-                                                <td className="p-2">
-                                                    {game.stats.walks}
-                                                </td>
-                                                <td className="p-2">
-                                                    {game.stats.strikeouts}
-                                                </td>
+                                        [...playerGameLogs]
+                                            .sort(
+                                                (a, b) =>
+                                                    new Date(
+                                                        b.playedAt!
+                                                    ).getTime() -
+                                                    new Date(
+                                                        a.playedAt!
+                                                    ).getTime()
+                                            )
+                                            .map((game, i) => (
+                                                <tr
+                                                    key={i}
+                                                    className="even:bg-gray-50 text-center"
+                                                >
+                                                    <td className="p-2 whitespace-nowrap">
+                                                        {(game.playedAt &&
+                                                            format(
+                                                                new Date(
+                                                                    game.playedAt
+                                                                ),
+                                                                "MM/dd"
+                                                            )) ||
+                                                            "TBD"}
+                                                    </td>
+                                                    <td className="p-2">
+                                                        {
+                                                            game.opponent
+                                                                .abbreviation
+                                                        }
+                                                    </td>
+                                                    <td className="p-2">
+                                                        {
+                                                            game.stats
+                                                                .inningsPitched
+                                                        }
+                                                    </td>
+                                                    <td className="p-2">
+                                                        {game.stats.runsAllowed}
+                                                    </td>
+                                                    <td className="p-2">
+                                                        {game.stats.walks}
+                                                    </td>
+                                                    <td className="p-2">
+                                                        {game.stats.strikeouts}
+                                                    </td>
 
-                                                <td className="p-2">
-                                                    {game.stats.era.toFixed(2)}
-                                                </td>
-                                            </tr>
-                                        ))}
+                                                    <td className="p-2">
+                                                        {game.stats.era.toFixed(
+                                                            2
+                                                        )}
+                                                    </td>
+                                                </tr>
+                                            ))}
                                 </tbody>
                             </table>
                         </div>

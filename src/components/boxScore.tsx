@@ -1,7 +1,12 @@
 import { GameStatsDto } from "@/dtos/gameDtos";
 import { BasicPlayerStatsDto } from "@/dtos/playerDtos";
 import React from "react";
-
+import {
+    Tooltip,
+    TooltipContent,
+    TooltipProvider,
+    TooltipTrigger,
+} from "@/components/ui/tooltip";
 interface Props {
     boxScore: Promise<GameStatsDto>;
 }
@@ -57,22 +62,77 @@ export const BoxScore = async ({ boxScore }: Props) => {
                     <table className="w-full text-sm text-left">
                         <thead className="bg-gray-100 text-gray-700 uppercase text-xs">
                             <tr>
-                                {[
-                                    "Player",
-                                    "AB",
-                                    "H",
-                                    "R",
-                                    "HR",
-                                    "RBI",
-                                    "PO",
-                                ].map((header) => (
-                                    <th
-                                        key={header}
-                                        className="px-4 py-3 text-sm font-medium text-gray-700"
-                                    >
-                                        {header}
+                                <TooltipProvider>
+                                    <th className="px-4 py-3 text-sm font-medium text-gray-700">
+                                        Player
                                     </th>
-                                ))}
+
+                                    <Tooltip>
+                                        <TooltipTrigger asChild>
+                                            <th className="px-4 py-3 text-sm font-medium text-gray-700 text-center">
+                                                AB
+                                            </th>
+                                        </TooltipTrigger>
+                                        <TooltipContent>
+                                            <p>At Bats</p>
+                                        </TooltipContent>
+                                    </Tooltip>
+
+                                    <Tooltip>
+                                        <TooltipTrigger asChild>
+                                            <th className="px-4 py-3 text-sm font-medium text-gray-700 text-center">
+                                                H
+                                            </th>
+                                        </TooltipTrigger>
+                                        <TooltipContent>
+                                            <p>Hits</p>
+                                        </TooltipContent>
+                                    </Tooltip>
+
+                                    <Tooltip>
+                                        <TooltipTrigger asChild>
+                                            <th className="px-4 py-3 text-sm font-medium text-gray-700 text-center">
+                                                R
+                                            </th>
+                                        </TooltipTrigger>
+                                        <TooltipContent>
+                                            <p>Runs</p>
+                                        </TooltipContent>
+                                    </Tooltip>
+
+                                    <Tooltip>
+                                        <TooltipTrigger asChild>
+                                            <th className="px-4 py-3 text-sm font-medium text-gray-700 text-center">
+                                                HR
+                                            </th>
+                                        </TooltipTrigger>
+                                        <TooltipContent>
+                                            <p>Home Runs</p>
+                                        </TooltipContent>
+                                    </Tooltip>
+
+                                    <Tooltip>
+                                        <TooltipTrigger asChild>
+                                            <th className="px-4 py-3 text-sm font-medium text-gray-700 text-center">
+                                                RBI
+                                            </th>
+                                        </TooltipTrigger>
+                                        <TooltipContent>
+                                            <p>Runs Batted In</p>
+                                        </TooltipContent>
+                                    </Tooltip>
+
+                                    <Tooltip>
+                                        <TooltipTrigger asChild>
+                                            <th className="px-4 py-3 text-sm font-medium text-gray-700 text-center">
+                                                PO
+                                            </th>
+                                        </TooltipTrigger>
+                                        <TooltipContent>
+                                            <p>Putouts</p>
+                                        </TooltipContent>
+                                    </Tooltip>
+                                </TooltipProvider>
                             </tr>
                         </thead>
                         <tbody>
@@ -84,22 +144,46 @@ export const BoxScore = async ({ boxScore }: Props) => {
                                     <td className="px-4 py-3 font-medium text-gray-800">
                                         {p.playerName}
                                     </td>
-                                    <td className="px-4 py-3">{p.atBats}</td>
-                                    <td className="px-4 py-3">{p.hits}</td>
-                                    <td className="px-4 py-3">{p.runs}</td>
-                                    <td className="px-4 py-3">{p.homeRuns}</td>
-                                    <td className="px-4 py-3">{p.rbis}</td>
-                                    <td className="px-4 py-3">{p.outs}</td>
+                                    <td className="px-4 py-3 text-center">
+                                        {p.atBats}
+                                    </td>
+                                    <td className="px-4 py-3 text-center">
+                                        {p.hits}
+                                    </td>
+                                    <td className="px-4 py-3 text-center">
+                                        {p.runs}
+                                    </td>
+                                    <td className="px-4 py-3 text-center">
+                                        {p.homeRuns}
+                                    </td>
+                                    <td className="px-4 py-3 text-center">
+                                        {p.rbis}
+                                    </td>
+                                    <td className="px-4 py-3 text-center">
+                                        {p.outs}
+                                    </td>
                                 </tr>
                             ))}
                             <tr className="font-semibold bg-gray-200 border-t">
                                 <td className="px-4 py-3">TOTALS</td>
-                                <td className="px-4 py-3">{totals.ab}</td>
-                                <td className="px-4 py-3">{totals.h}</td>
-                                <td className="px-4 py-3">{totals.r}</td>
-                                <td className="px-4 py-3">{totals.hr}</td>
-                                <td className="px-4 py-3">{totals.rbi}</td>
-                                <td className="px-4 py-3">{totals.po}</td>
+                                <td className="px-4 py-3 text-center">
+                                    {totals.ab}
+                                </td>
+                                <td className="px-4 py-3 text-center">
+                                    {totals.h}
+                                </td>
+                                <td className="px-4 py-3 text-center">
+                                    {totals.r}
+                                </td>
+                                <td className="px-4 py-3 text-center">
+                                    {totals.hr}
+                                </td>
+                                <td className="px-4 py-3 text-center">
+                                    {totals.rbi}
+                                </td>
+                                <td className="px-4 py-3 text-center">
+                                    {totals.po}
+                                </td>
                             </tr>
                         </tbody>
                     </table>
@@ -156,22 +240,73 @@ export const BoxScore = async ({ boxScore }: Props) => {
                         <table className="w-full text-sm text-left">
                             <thead className="bg-gray-100 text-gray-700 uppercase text-sm">
                                 <tr>
-                                    {[
-                                        "Player",
-                                        "IP",
-                                        "RA",
-                                        "BB",
-                                        "SO",
-                                        "ERA",
-                                        "",
-                                    ].map((header) => (
-                                        <th
-                                            key={header}
-                                            className="px-4 py-3 text-sm font-medium text-gray-700"
-                                        >
-                                            {header}
+                                    <TooltipProvider>
+                                        <th className="px-4 py-3 text-sm font-medium text-gray-700">
+                                            Player
                                         </th>
-                                    ))}
+
+                                        <Tooltip>
+                                            <TooltipTrigger asChild>
+                                                <th className="px-4 py-3 text-sm font-medium text-gray-700 text-center">
+                                                    IP
+                                                </th>
+                                            </TooltipTrigger>
+                                            <TooltipContent>
+                                                <p>Innings Pitched</p>
+                                            </TooltipContent>
+                                        </Tooltip>
+
+                                        <Tooltip>
+                                            <TooltipTrigger asChild>
+                                                <th className="px-4 py-3 text-sm font-medium text-gray-700 text-center">
+                                                    RA
+                                                </th>
+                                            </TooltipTrigger>
+                                            <TooltipContent>
+                                                <p>Runs Allowed</p>
+                                            </TooltipContent>
+                                        </Tooltip>
+
+                                        <Tooltip>
+                                            <TooltipTrigger asChild>
+                                                <th className="px-4 py-3 text-sm font-medium text-gray-700 text-center">
+                                                    BB
+                                                </th>
+                                            </TooltipTrigger>
+                                            <TooltipContent>
+                                                <p>Base on Balls (Walks)</p>
+                                            </TooltipContent>
+                                        </Tooltip>
+
+                                        <Tooltip>
+                                            <TooltipTrigger asChild>
+                                                <th className="px-4 py-3 text-sm font-medium text-gray-700 text-center">
+                                                    SO
+                                                </th>
+                                            </TooltipTrigger>
+                                            <TooltipContent>
+                                                <p>Strikeouts</p>
+                                            </TooltipContent>
+                                        </Tooltip>
+
+                                        <Tooltip>
+                                            <TooltipTrigger asChild>
+                                                <th className="px-4 py-3 text-sm font-medium text-gray-700 text-center">
+                                                    ERA
+                                                </th>
+                                            </TooltipTrigger>
+                                            <TooltipContent>
+                                                <p>
+                                                    Earned Run Average
+                                                    <br />
+                                                    Average runs allowed per 9
+                                                    innings
+                                                </p>
+                                            </TooltipContent>
+                                        </Tooltip>
+
+                                        <th className="px-4 py-3 text-sm font-medium text-gray-700"></th>
+                                    </TooltipProvider>
                                 </tr>
                             </thead>
                             <tbody>
@@ -183,35 +318,41 @@ export const BoxScore = async ({ boxScore }: Props) => {
                                         <td className="px-4 py-3 font-medium text-gray-800">
                                             {p.playerName}
                                         </td>
-                                        <td className="px-4 py-3">
+                                        <td className="px-4 py-3 text-center">
                                             {p.inningsPitched}
                                         </td>
-                                        <td className="px-4 py-3">
+                                        <td className="px-4 py-3 text-center">
                                             {p.runsAllowed}
                                         </td>
-                                        <td className="px-4 py-3">{p.walks}</td>
-                                        <td className="px-4 py-3">
+                                        <td className="px-4 py-3 text-center">
+                                            {p.walks}
+                                        </td>
+                                        <td className="px-4 py-3 text-center">
                                             {p.strikeouts}
                                         </td>
-                                        <td className="px-4 py-3">{p.era}</td>
+                                        <td className="px-4 py-3 text-center">
+                                            {p.era}
+                                        </td>
                                     </tr>
                                 ))}
                                 <tr className="font-semibold bg-gray-200 border-t">
                                     <td className="px-4 py-3">TOTALS</td>
-                                    <td className="px-4 py-3">
+                                    <td className="px-4 py-3 text-center">
                                         {totalInningsPitched}
                                     </td>
-                                    <td className="px-4 py-3">
+                                    <td className="px-4 py-3 text-center">
                                         {pitchingTotals.er}
                                     </td>
-                                    <td className="px-4 py-3">
+                                    <td className="px-4 py-3 text-center">
                                         {pitchingTotals.s}
                                     </td>
-                                    <td className="px-4 py-3">
+                                    <td className="px-4 py-3 text-center">
                                         {pitchingTotals.w}
                                     </td>
-                                    <td className="px-4 py-3">{teamEra}</td>
-                                    <td className="px-4 py-3"></td>
+                                    <td className="px-4 py-3 text-center">
+                                        {teamEra}
+                                    </td>
+                                    <td className="px-4 py-3 text-center"></td>
                                 </tr>
                             </tbody>
                         </table>
