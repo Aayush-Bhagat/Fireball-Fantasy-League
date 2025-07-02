@@ -17,7 +17,7 @@ function getTopBatters(players: PlayerWithStatsDto[], count = 5) {
     const weights = {
         hr: 2,
         rbi: 1,
-        avg: 4,
+        avg: 2.5,
     };
 
     const validPlayers = players.filter(
@@ -53,7 +53,7 @@ function getTopPitchers(players: PlayerWithStatsDto[], count = 5) {
     const weights = {
         era: -3,
         so: 2,
-        ip: 2,
+        ip: 1.5,
     };
 
     return players

@@ -1,7 +1,6 @@
 "use client";
 import * as React from "react";
 import { useState } from "react";
-
 import { Button } from "@/components/ui/button";
 import {
     DropdownMenu,
@@ -78,10 +77,18 @@ export default function ScheduleTable({ gamesData }: Props) {
                                 Week {i + 1}
                             </DropdownMenuRadioItem>
                         ))}
+                        <DropdownMenuRadioItem value="11">
+                            Play-Ins
+                        </DropdownMenuRadioItem>
+                        <DropdownMenuRadioItem value="12">
+                            Semifinals
+                        </DropdownMenuRadioItem>
+                        <DropdownMenuRadioItem value="13">
+                            Finals
+                        </DropdownMenuRadioItem>
                     </DropdownMenuRadioGroup>
                 </DropdownMenuContent>
             </DropdownMenu>
-
             <div className="overflow-x-auto">
                 <table className="min-w-full table-auto border-collapse">
                     <thead>

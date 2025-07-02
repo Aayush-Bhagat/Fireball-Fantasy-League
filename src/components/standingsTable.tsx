@@ -63,6 +63,59 @@ export default async function StandingTable({
                 return b.rd - a.rd;
             });
     }
+    function getClinchStatus(
+        team: { id: string; wins: number; losses: number },
+        allTeams: { id: string; wins: number; losses: number }[]
+    ): string {
+        const totalGames = 10;
+        const gamesLeft = totalGames - (team.wins + team.losses);
+        const teamMaxWins = team.wins + gamesLeft;
+
+        const hasClinchedFirst = allTeams.every((other) => {
+            if (other.id === team.id) return true;
+            const otherMaxPossible =
+                other.wins + (totalGames - (other.wins + other.losses));
+            return team.wins > otherMaxPossible;
+        });
+
+        if (hasClinchedFirst) return "Z";
+
+        let countTeamsThatCanFinishAbove = 0;
+
+        for (const other of allTeams) {
+            if (other.id === team.id) continue;
+
+            const otherMaxWins =
+                other.wins + (totalGames - (other.wins + other.losses));
+
+            if (otherMaxWins > teamMaxWins) {
+                countTeamsThatCanFinishAbove++;
+            }
+        }
+
+        if (countTeamsThatCanFinishAbove < allTeams.length - 2) {
+            return "X";
+        }
+
+        return "";
+    }
+    function ClinchLegend() {
+        return (
+            <div className="mt-4 text-sm text-gray-700 flex space-x-6">
+                <div className="flex items-center space-x-1">
+                    <span className="font-bold text-green-600">Z</span>
+                    <span>– Clinched First Round Bye</span>
+                </div>
+                <div className="flex items-center space-x-1">
+                    <span className="font-bold text-blue-600">X</span>
+                    <span>– Clinched Playoffs</span>
+                </div>
+            </div>
+        );
+    }
+    const sortedWest = sortTeams(standings.western, schedule);
+    const sortedEast = sortTeams(standings.eastern, schedule);
+
     return (
         <div className="mx-auto p-4 space-y-4 font-sans border border-gray-300 rounded-lg shadow-md bg-white">
             <div className="text-2xl font-bold">Standings</div>
@@ -84,8 +137,12 @@ export default async function StandingTable({
                                 </tr>
                             </thead>
                             <tbody className="w-full">
-                                {sortTeams(standings.western, schedule).map(
-                                    (team) => (
+                                {sortedWest.map((team) => {
+                                    const clinch = getClinchStatus(
+                                        team,
+                                        sortedWest
+                                    );
+                                    return (
                                         <tr className="border-t" key={team.id}>
                                             <td className="px-4 py-2 whitespace-nowrap flex items-center">
                                                 {team.logo && (
@@ -95,8 +152,23 @@ export default async function StandingTable({
                                                         className="w-10 h-10 mr-2 rounded-full"
                                                     />
                                                 )}
-
-                                                {team.name}
+                                                <span className="flex items-center">
+                                                    <span>{team.name}</span>
+                                                    {clinch && (
+                                                        <sup
+                                                            className={`ml-1 font-bold text-xs align-super ${
+                                                                clinch === "Z"
+                                                                    ? "text-green-600"
+                                                                    : "text-blue-600"
+                                                            }`}
+                                                            style={{
+                                                                lineHeight: 1,
+                                                            }}
+                                                        >
+                                                            {clinch}
+                                                        </sup>
+                                                    )}
+                                                </span>
                                             </td>
                                             <td className="px-8 sm:px-4 py-2">
                                                 {team.wins}
@@ -121,8 +193,8 @@ export default async function StandingTable({
                                                 ) || "-"}
                                             </td>
                                         </tr>
-                                    )
-                                )}
+                                    );
+                                })}
                             </tbody>
                         </table>
                     </div>
@@ -140,8 +212,12 @@ export default async function StandingTable({
                                 </tr>
                             </thead>
                             <tbody>
-                                {sortTeams(standings.eastern, schedule).map(
-                                    (team) => (
+                                {sortedEast.map((team) => {
+                                    const clinch = getClinchStatus(
+                                        team,
+                                        sortedEast
+                                    );
+                                    return (
                                         <tr className="border-t" key={team.id}>
                                             <td className="px-4 py-2 whitespace-nowrap flex items-center">
                                                 {team.logo && (
@@ -151,7 +227,23 @@ export default async function StandingTable({
                                                         className="w-10 h-10 mr-2 rounded-full"
                                                     />
                                                 )}
-                                                {team.name}
+                                                <span className="flex items-center">
+                                                    <span>{team.name}</span>
+                                                    {clinch && (
+                                                        <sup
+                                                            className={`ml-1 font-bold text-xs align-super ${
+                                                                clinch === "Z"
+                                                                    ? "text-green-600"
+                                                                    : "text-blue-600"
+                                                            }`}
+                                                            style={{
+                                                                lineHeight: 1,
+                                                            }}
+                                                        >
+                                                            {clinch}
+                                                        </sup>
+                                                    )}
+                                                </span>
                                             </td>
                                             <td className="px-8 sm:px-4 py-2">
                                                 {team.wins}
@@ -176,12 +268,13 @@ export default async function StandingTable({
                                                 ) || "-"}
                                             </td>
                                         </tr>
-                                    )
-                                )}
+                                    );
+                                })}
                             </tbody>
                         </table>
                     </div>
                 </TabsContent>
+                <ClinchLegend />
             </Tabs>
         </div>
     );

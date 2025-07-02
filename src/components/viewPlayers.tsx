@@ -39,7 +39,7 @@ export default function ViewPlayers({ players }: Props) {
     };
 
     const defaultBatters = useMemo(() => {
-        const weights = { hr: 2, rbi: 1, avg: 4 };
+        const weights = { hr: 2, rbi: 1, avg: 2.5 };
 
         const maxHR = Math.max(...players.map((p) => p.stats?.homeRuns ?? 0));
         const maxRBI = Math.max(...players.map((p) => p.stats?.rbis ?? 0));
@@ -67,7 +67,11 @@ export default function ViewPlayers({ players }: Props) {
     }, [players]);
 
     const defaultPitchers = useMemo(() => {
-        const weights = { era: -3, so: 2, ip: 2 };
+        const weights = {
+            era: -3,
+            so: 1.25,
+            ip: 1.5,
+        };
         return players
             .filter(
                 (p) =>
