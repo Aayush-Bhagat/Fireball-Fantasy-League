@@ -68,37 +68,33 @@ export default async function StandingTable({
         allTeams: { id: string; wins: number; losses: number }[]
     ): string {
         const totalGames = 10;
-        const gamesLeft = totalGames - (team.wins + team.losses);
-        const teamMaxWins = team.wins + gamesLeft;
+        // const gamesLeft = totalGames - (team.wins + team.losses);
+        // const teamMaxWins = team.wins + gamesLeft;
 
-        const hasClinchedFirst = allTeams.every((other) => {
-            if (other.id === team.id) return true;
-            const otherMaxPossible =
-                other.wins + (totalGames - (other.wins + other.losses));
+        // Clinched first seed if no team can possibly match or beat your current wins
+        const hasClinchedFirst = allTeams.every(({ id, wins, losses }) => {
+            if (id === team.id) return true;
+            const otherMaxPossible = wins + (totalGames - (wins + losses));
             return team.wins > otherMaxPossible;
         });
-
         if (hasClinchedFirst) return "Z";
 
-        let countTeamsThatCanFinishAbove = 0;
-
-        for (const other of allTeams) {
-            if (other.id === team.id) continue;
-
-            const otherMaxWins =
-                other.wins + (totalGames - (other.wins + other.losses));
-
-            if (otherMaxWins > teamMaxWins) {
-                countTeamsThatCanFinishAbove++;
+        // Count how many teams have max wins >= this team's current wins
+        const teamsWithMaxWinsAtLeastCurrent = allTeams.filter(
+            ({ id, wins, losses }) => {
+                if (id === team.id) return false;
+                const otherMaxPossible = wins + (totalGames - (wins + losses));
+                return otherMaxPossible >= team.wins;
             }
-        }
+        ).length;
 
-        if (countTeamsThatCanFinishAbove < allTeams.length - 2) {
+        if (teamsWithMaxWinsAtLeastCurrent < 3) {
             return "X";
         }
 
         return "";
     }
+
     function ClinchLegend() {
         return (
             <div className="mt-4 text-sm text-gray-700 flex space-x-6">
@@ -116,6 +112,26 @@ export default async function StandingTable({
     const sortedWest = sortTeams(standings.western, schedule);
     const sortedEast = sortTeams(standings.eastern, schedule);
 
+    // type Team = { id: string; wins: number; losses: number };
+
+    // const mockWesternTeams: Team[] = [
+    //     { id: "teamA", wins: 7, losses: 1 },
+    //     { id: "teamB", wins: 6, losses: 4 },
+    //     { id: "teamC", wins: 4, losses: 6 },
+    //     { id: "teamD", wins: 4, losses: 6 },
+    // ];
+
+    // function testClinchStatus() {
+    //     console.log("Testing clinch status for Western Conference teams:");
+    //     for (const team of mockWesternTeams) {
+    //         const status = getClinchStatus(team, mockWesternTeams);
+    //         console.log(
+    //             `${team.id} (${team.wins}-${team.losses}): ${status || "None"}`
+    //         );
+    //     }
+    // }
+
+    // testClinchStatus();
     return (
         <div className="mx-auto p-4 space-y-4 font-sans border border-gray-300 rounded-lg shadow-md bg-white">
             <div className="text-2xl font-bold">Standings</div>
