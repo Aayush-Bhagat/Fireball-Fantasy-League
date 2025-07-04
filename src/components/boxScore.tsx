@@ -43,7 +43,7 @@ export const BoxScore = async ({ boxScore }: Props) => {
             },
             { ab: 0, h: 0, r: 0, hr: 0, rbi: 0, po: 0 }
         );
-
+        const teamBA = totals.ab > 0 ? (totals.h / totals.ab).toFixed(3) : "-";
         return (
             <div className="bg-white rounded-xl shadow-lg w-full border border-gray-200 overflow-hidden">
                 <div className="flex items-center justify-between px-6 py-4 bg-violet-200 ">
@@ -132,6 +132,16 @@ export const BoxScore = async ({ boxScore }: Props) => {
                                             <p>Putouts</p>
                                         </TooltipContent>
                                     </Tooltip>
+                                    <Tooltip>
+                                        <TooltipTrigger asChild>
+                                            <th className="px-4 py-3 text-sm font-medium text-gray-700 text-center">
+                                                BA
+                                            </th>
+                                        </TooltipTrigger>
+                                        <TooltipContent>
+                                            <p>Batting Average</p>
+                                        </TooltipContent>
+                                    </Tooltip>
                                 </TooltipProvider>
                             </tr>
                         </thead>
@@ -162,6 +172,9 @@ export const BoxScore = async ({ boxScore }: Props) => {
                                     <td className="px-4 py-3 text-center">
                                         {p.outs}
                                     </td>
+                                    <td className="px-4 py-3 text-center">
+                                        {(p.hits / p.atBats).toFixed(3)}
+                                    </td>
                                 </tr>
                             ))}
                             <tr className="font-semibold bg-gray-200 border-t">
@@ -183,6 +196,9 @@ export const BoxScore = async ({ boxScore }: Props) => {
                                 </td>
                                 <td className="px-4 py-3 text-center">
                                     {totals.po}
+                                </td>
+                                <td className="px-4 py-3 text-center">
+                                    {teamBA}
                                 </td>
                             </tr>
                         </tbody>

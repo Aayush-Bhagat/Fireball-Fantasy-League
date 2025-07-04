@@ -68,8 +68,8 @@ export default function ViewPlayers({ players }: Props) {
 
     const defaultPitchers = useMemo(() => {
         const weights = {
-            era: -3,
-            so: 1.25,
+            era: -4,
+            so: 0.15,
             ip: 1.5,
         };
         return players

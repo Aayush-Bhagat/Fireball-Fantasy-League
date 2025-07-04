@@ -109,29 +109,35 @@ export default async function StandingTable({
             </div>
         );
     }
+    function hasAnyClinch(teams: typeof sortedWest) {
+        return teams.some((team) => {
+            const clinch = getClinchStatus(team, teams);
+            return clinch === "Z" || clinch === "X";
+        });
+    }
     const sortedWest = sortTeams(standings.western, schedule);
     const sortedEast = sortTeams(standings.eastern, schedule);
 
-    // type Team = { id: string; wins: number; losses: number };
+    type Team = { id: string; wins: number; losses: number };
 
-    // const mockWesternTeams: Team[] = [
-    //     { id: "teamA", wins: 7, losses: 1 },
-    //     { id: "teamB", wins: 6, losses: 4 },
-    //     { id: "teamC", wins: 4, losses: 6 },
-    //     { id: "teamD", wins: 4, losses: 6 },
-    // ];
+    const mockWesternTeams: Team[] = [
+        { id: "teamA", wins: 7, losses: 1 },
+        { id: "teamB", wins: 6, losses: 4 },
+        { id: "teamC", wins: 4, losses: 6 },
+        { id: "teamD", wins: 4, losses: 6 },
+    ];
 
-    // function testClinchStatus() {
-    //     console.log("Testing clinch status for Western Conference teams:");
-    //     for (const team of mockWesternTeams) {
-    //         const status = getClinchStatus(team, mockWesternTeams);
-    //         console.log(
-    //             `${team.id} (${team.wins}-${team.losses}): ${status || "None"}`
-    //         );
-    //     }
-    // }
+    function testClinchStatus() {
+        console.log("Testing clinch status for Western Conference teams:");
+        for (const team of mockWesternTeams) {
+            const status = getClinchStatus(team, mockWesternTeams);
+            console.log(
+                `${team.id} (${team.wins}-${team.losses}): ${status || "None"}`
+            );
+        }
+    }
 
-    // testClinchStatus();
+    testClinchStatus();
     return (
         <div className="mx-auto p-4 space-y-4 font-sans border border-gray-300 rounded-lg shadow-md bg-white">
             <div className="text-2xl font-bold">Standings</div>
@@ -290,7 +296,9 @@ export default async function StandingTable({
                         </table>
                     </div>
                 </TabsContent>
-                <ClinchLegend />
+                {(hasAnyClinch(sortedWest) || hasAnyClinch(sortedEast)) && (
+                    <ClinchLegend />
+                )}
             </Tabs>
         </div>
     );

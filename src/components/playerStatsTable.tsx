@@ -51,8 +51,8 @@ function getTopBatters(players: PlayerWithStatsDto[], count = 5) {
 
 function getTopPitchers(players: PlayerWithStatsDto[], count = 5) {
     const weights = {
-        era: -3,
-        so: 2,
+        era: -4,
+        so: 0.15,
         ip: 1.5,
     };
 
