@@ -1,4 +1,5 @@
 import { TeamDto } from "./teamDtos";
+import { TeamLineupPosition } from "./teamDtos";
 
 export type PlayerDto = {
 	id: string;
@@ -73,6 +74,7 @@ export type PlayerWithStatsDto = {
 	starPitch: string | null;
 	fieldingAbility: string | null;
 	playerCardImage: string | null;
+	position: TeamLineupPosition | null;
 	stats: PlayerStatsDto;
 };
 

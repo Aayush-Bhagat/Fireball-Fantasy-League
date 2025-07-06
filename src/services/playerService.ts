@@ -122,6 +122,7 @@ export async function getAllPlayerStats() {
 				starSwing: player.starSwing,
 				starPitch: player.starPitch,
 				fieldingAbility: player.fieldingAbility,
+				position: player.teamLineups?.fieldingPosition || null,
 				stats: {
 					atBats: Number(stat?.atBats) || 0,
 					hits: Number(stat?.hits) || 0,

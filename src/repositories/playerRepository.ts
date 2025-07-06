@@ -9,6 +9,7 @@ export async function findPlayersByTeam(teamId: string) {
 	const teamPlayers = await db.query.players.findMany({
 		with: {
 			team: { with: { conference: { columns: { name: true } } } },
+			teamLineups: true,
 		},
 		where: eq(players.teamId, teamId),
 	});
@@ -31,6 +32,7 @@ export async function findAllPlayers() {
 	const allPlayers = await db.query.players.findMany({
 		with: {
 			team: { with: { conference: { columns: { name: true } } } },
+			teamLineups: true,
 		},
 	});
 

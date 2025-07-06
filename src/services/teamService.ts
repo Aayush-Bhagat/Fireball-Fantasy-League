@@ -152,6 +152,7 @@ export async function getTeamRoster(teamId: string) {
 			starPitch: player.starPitch,
 			fieldingAbility: player.fieldingAbility,
 			playerCardImage: player.playerCardImage,
+			position: player.teamLineups?.fieldingPosition || null,
 			stats: {
 				atBats: Number(stat?.atBats) || 0,
 				hits: Number(stat?.hits) || 0,
@@ -170,6 +171,7 @@ export async function getTeamRoster(teamId: string) {
 					Number(stat?.runsAllowed) || 0,
 					Number(stat?.outsPitched) || 0
 				),
+				gamesPlayed: stat?.gamesPlayed || 0,
 			},
 		};
 	});
