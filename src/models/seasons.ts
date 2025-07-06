@@ -14,6 +14,8 @@ import { keepSlots, teams } from "./teams";
 import { games, playoffSeries } from "./games";
 import { trades } from "./trades";
 import { playerHistory } from "./players";
+import { recaps } from "./recaps";
+import { rankings } from "./rankings";
 
 export const seasons = pgTable(
 	"seasons",
@@ -38,6 +40,8 @@ export const seasonRelations = relations(seasons, ({ many }) => ({
 	trades: many(trades),
 	keeps: many(keepSlots),
 	playerHistory: many(playerHistory),
+	recaps: many(recaps),
+	rankings: many(rankings),
 }));
 
 export const awardCategories = pgEnum("award_categories", [

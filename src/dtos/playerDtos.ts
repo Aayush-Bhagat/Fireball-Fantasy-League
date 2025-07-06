@@ -38,6 +38,7 @@ export type PlayerStatsDto = {
 	outs: number;
 	battingAverage: number;
 	era: number;
+	gamesPlayed: number;
 };
 
 export type BasicPlayerStatsDto = {

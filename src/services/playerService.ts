@@ -55,6 +55,7 @@ export async function getPlayerGames(playerId: string) {
 				outs: game.outs,
 				battingAverage: game.hits / game.atBats,
 				era: calculateEra(game.runsAllowed, game.outsPitched),
+				gamesPlayed: 1,
 			},
 		};
 	});
@@ -140,6 +141,7 @@ export async function getAllPlayerStats() {
 						Number(stat?.runsAllowed) || 0,
 						Number(stat?.outsPitched) || 0
 					),
+					gamesPlayed: stat?.gamesPlayed || 0,
 				},
 			};
 		}

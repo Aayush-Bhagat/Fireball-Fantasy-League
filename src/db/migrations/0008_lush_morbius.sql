@@ -1,0 +1,2 @@
+ALTER TABLE "rankings" ADD CONSTRAINT "rankings_season_seasons_id_fk" FOREIGN KEY ("season") REFERENCES "public"."seasons"("id") ON DELETE no action ON UPDATE no action;--> statement-breakpoint
+ALTER TABLE "recaps" ADD CONSTRAINT "recaps_season_seasons_id_fk" FOREIGN KEY ("season") REFERENCES "public"."seasons"("id") ON DELETE no action ON UPDATE no action;
