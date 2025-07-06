@@ -1,4 +1,5 @@
 import { TeamDto } from "./teamDtos";
+import { TeamLineupPosition } from "./teamDtos";
 
 export type PlayerDto = {
 	id: string;
@@ -38,6 +39,7 @@ export type PlayerStatsDto = {
 	outs: number;
 	battingAverage: number;
 	era: number;
+	gamesPlayed: number;
 };
 
 export type BasicPlayerStatsDto = {
@@ -72,6 +74,7 @@ export type PlayerWithStatsDto = {
 	starPitch: string | null;
 	fieldingAbility: string | null;
 	playerCardImage: string | null;
+	position: TeamLineupPosition | null;
 	stats: PlayerStatsDto;
 };
 

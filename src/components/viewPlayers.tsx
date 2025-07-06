@@ -10,6 +10,7 @@ type Props = {
 
 type BattingStatKey = "battingAverage" | "homeRuns" | "hits" | "rbis";
 type PitchingStatKey = "era" | "runsAllowed" | "strikeouts" | "inningsPitched";
+type FieldingStatKey = "outs";
 
 type SortDirection = "desc" | "asc" | null;
 
@@ -27,6 +28,13 @@ export default function ViewPlayers({ players }: Props) {
     });
     const [pitchSort, setPitchSort] = useState<{
         key: PitchingStatKey | null;
+        direction: SortDirection;
+    }>({
+        key: null,
+        direction: null,
+    });
+    const [fieldSort, setFieldSort] = useState<{
+        key: FieldingStatKey | null;
         direction: SortDirection;
     }>({
         key: null,
@@ -70,14 +78,14 @@ export default function ViewPlayers({ players }: Props) {
         const weights = {
             era: -4,
             so: 0.15,
-            ip: 1.5,
+            ip: 2,
         };
         return players
             .filter(
                 (p) =>
                     p.stats &&
                     p.stats.era !== undefined &&
-                    p.stats.inningsPitched > 0
+                    p.stats.inningsPitched >= p.stats.gamesPlayed
             )
             .map((p) => ({
                 ...p,
@@ -89,6 +97,44 @@ export default function ViewPlayers({ players }: Props) {
             .sort((a, b) => b.score - a.score)
             .map((p, index) => ({ ...p, rank: index + 1 }));
     }, [players]);
+
+    const defaultFielders = useMemo(() => {
+        const maxOuts = Math.max(...players.map((p) => p.stats?.outs ?? 0));
+
+        return players
+            .filter((p) => p.stats && p.stats.outs !== undefined)
+            .map((p) => {
+                const { outs = 0 } = p.stats;
+                const normalizedOuts = maxOuts ? outs / maxOuts : 0;
+
+                return {
+                    ...p,
+                    score: normalizedOuts,
+                };
+            })
+            .sort((a, b) => b.score - a.score)
+            .map((p, index) => ({ ...p, rank: index + 1 }));
+    }, [players]);
+    const sortedFielders = useMemo(() => {
+        if (!fieldSort.key || !fieldSort.direction) return defaultFielders;
+
+        const sorted = [...defaultFielders].sort((a, b) => {
+            const valA = a.stats[fieldSort.key!];
+            const valB = b.stats[fieldSort.key!];
+
+            return fieldSort.direction === "asc" ? valA - valB : valB - valA;
+        });
+
+        return sorted.map((p, index) => ({ ...p, rank: index + 1 }));
+    }, [defaultFielders, fieldSort]);
+
+    const filteredFielders = useMemo(
+        () =>
+            sortedFielders.filter((p) =>
+                p.name.toLowerCase().includes(searchQuery.toLowerCase())
+            ),
+        [sortedFielders, searchQuery]
+    );
 
     const sortedBatters = useMemo(() => {
         if (!batSort.key || !batSort.direction) return defaultBatters;
@@ -133,10 +179,12 @@ export default function ViewPlayers({ players }: Props) {
     );
 
     const toggleSort = (
-        key: BattingStatKey | PitchingStatKey,
-        type: "bat" | "pitch"
+        key: BattingStatKey | PitchingStatKey | FieldingStatKey,
+        type: "bat" | "pitch" | "field"
     ) => {
-        const current = type === "bat" ? batSort : pitchSort;
+        const current =
+            type === "bat" ? batSort : type === "pitch" ? pitchSort : fieldSort;
+
         const newDir: SortDirection =
             current.key !== key
                 ? "desc"
@@ -146,20 +194,26 @@ export default function ViewPlayers({ players }: Props) {
                 ? null
                 : "desc";
 
-        if (type === "bat")
+        if (type === "bat") {
             setBatSort({
                 key: newDir ? (key as BattingStatKey) : null,
                 direction: newDir,
             });
-        else
+        } else if (type === "pitch") {
             setPitchSort({
                 key: newDir ? (key as PitchingStatKey) : null,
                 direction: newDir,
             });
+        } else if (type === "field") {
+            setFieldSort({
+                key: newDir ? (key as FieldingStatKey) : null,
+                direction: newDir,
+            });
+        }
     };
 
     const renderTableRows = (
-        type: "bat" | "pitch",
+        type: "bat" | "pitch" | "field",
         playerList: (PlayerWithStatsDto & { rank: number })[]
     ) =>
         playerList.map((player) => (
@@ -197,7 +251,8 @@ export default function ViewPlayers({ players }: Props) {
                     </div>
                 </td>
 
-                {type === "bat" ? (
+                {/* Stats Columns */}
+                {type === "bat" && player.stats ? (
                     <>
                         <td className="px-6 py-4 font-mono">
                             {player.stats.battingAverage.toFixed(3)}
@@ -212,7 +267,7 @@ export default function ViewPlayers({ players }: Props) {
                             {player.stats.rbis}
                         </td>
                     </>
-                ) : (
+                ) : type === "pitch" && player.stats ? (
                     <>
                         <td className="px-6 py-4 font-mono">
                             {player.stats.era.toFixed(2)}
@@ -227,6 +282,22 @@ export default function ViewPlayers({ players }: Props) {
                             {player.stats.inningsPitched}
                         </td>
                     </>
+                ) : type === "field" && player.stats ? (
+                    <>
+                        <td className="px-6 py-4 font-mono">
+                            {player.position}
+                        </td>
+                        <td className="px-6 py-4 font-mono">
+                            {player.stats.outs}
+                        </td>
+                    </>
+                ) : (
+                    <td
+                        className="px-6 py-4 font-mono text-gray-400"
+                        colSpan={4}
+                    >
+                        No stats available
+                    </td>
                 )}
             </tr>
         ));
@@ -257,7 +328,7 @@ export default function ViewPlayers({ players }: Props) {
                 </p>
             </div>
 
-            <div className="px-4 md:px-12">
+            <div className="px-4 md:px-12 mb-16">
                 <div className="flex items-center justify-between mb-4">
                     <input
                         type="text"
@@ -281,6 +352,12 @@ export default function ViewPlayers({ players }: Props) {
                             className="py-2 px-4 text-lg font-semibold"
                         >
                             Top Pitchers
+                        </TabsTrigger>
+                        <TabsTrigger
+                            value="field"
+                            className="py-2 px-4 text-lg font-semibold"
+                        >
+                            Top Fielders
                         </TabsTrigger>
                     </TabsList>
 
@@ -440,6 +517,46 @@ export default function ViewPlayers({ players }: Props) {
                                 </thead>
                                 <tbody className="divide-y divide-gray-100 text-sm">
                                     {renderTableRows("pitch", filteredPitchers)}
+                                </tbody>
+                            </table>
+                        </div>
+                    </TabsContent>
+                    <TabsContent value="field">
+                        <div className="mb-2 text-gray-700 font-semibold">
+                            Top Fielders
+                        </div>
+                        <div className="overflow-x-auto bg-white rounded-lg shadow border border-gray-200">
+                            <table className="w-full table-auto">
+                                <thead className="bg-blue-50 text-blue-800 text-sm">
+                                    <tr>
+                                        <th className="px-6 py-3 text-left w-1/64">
+                                            Rank
+                                        </th>
+                                        <th className="px-6 py-3 text-left w-1/5">
+                                            Player
+                                        </th>
+                                        <th className="px-6 py-3 text-left w-1/5">
+                                            Team
+                                        </th>
+                                        <th className="px-6 py-3 text-left w-1/6">
+                                            Position
+                                        </th>
+                                        <th
+                                            className="px-6 py-3 text-left w-1/6 cursor-pointer"
+                                            onClick={() =>
+                                                toggleSort("outs", "field")
+                                            }
+                                        >
+                                            Put Outs
+                                            {fieldSort.key === "outs" &&
+                                                (fieldSort.direction === "asc"
+                                                    ? " ▲"
+                                                    : " ▼")}
+                                        </th>
+                                    </tr>
+                                </thead>
+                                <tbody className="divide-y divide-gray-100 text-sm">
+                                    {renderTableRows("field", filteredFielders)}
                                 </tbody>
                             </table>
                         </div>

@@ -53,7 +53,7 @@ function getTopPitchers(players: PlayerWithStatsDto[], count = 5) {
     const weights = {
         era: -4,
         so: 0.15,
-        ip: 1.5,
+        ip: 2,
     };
 
     return players
@@ -61,7 +61,7 @@ function getTopPitchers(players: PlayerWithStatsDto[], count = 5) {
             (p) =>
                 p.stats &&
                 p.stats.era !== undefined &&
-                p.stats.inningsPitched > 0
+                p.stats.inningsPitched >= p.stats.gamesPlayed
         )
         .sort((a, b) => {
             const aScore =

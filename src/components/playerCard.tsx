@@ -30,7 +30,7 @@ export default function PlayerCard({ player }: Props) {
                 <div className="flex-1">
                     <h1 className="text-2xl font-bold">{player.name}</h1>
                     <p className="text-sm text-purple-200 mb-2">
-                        {player.team?.abbreviation} · OF
+                        {player.team?.abbreviation} · {player.position}
                     </p>
                     <div className="flex space-x-6">
                         <div className="text-center">

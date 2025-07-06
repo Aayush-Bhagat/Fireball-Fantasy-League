@@ -55,6 +55,7 @@ export async function getPlayerGames(playerId: string) {
 				outs: game.outs,
 				battingAverage: game.hits / game.atBats,
 				era: calculateEra(game.runsAllowed, game.outsPitched),
+				gamesPlayed: 1,
 			},
 		};
 	});
@@ -121,6 +122,7 @@ export async function getAllPlayerStats() {
 				starSwing: player.starSwing,
 				starPitch: player.starPitch,
 				fieldingAbility: player.fieldingAbility,
+				position: player.teamLineups?.fieldingPosition || null,
 				stats: {
 					atBats: Number(stat?.atBats) || 0,
 					hits: Number(stat?.hits) || 0,
@@ -140,6 +142,7 @@ export async function getAllPlayerStats() {
 						Number(stat?.runsAllowed) || 0,
 						Number(stat?.outsPitched) || 0
 					),
+					gamesPlayed: stat?.gamesPlayed || 0,
 				},
 			};
 		}

@@ -1,4 +1,4 @@
-import { sql, eq, and, sum } from "drizzle-orm";
+import { sql, eq, and, sum, countDistinct } from "drizzle-orm";
 import { db } from "@/db";
 import { games, teamGames } from "@/models/games";
 import { conferences, teams } from "@/models/teams";
@@ -136,6 +136,9 @@ export async function findRosterStatsByTeam(teamId: string) {
 			outsPitched: sum(playerGamesStats.outsPitched).as("outsPitched"),
 			runsAllowed: sum(playerGamesStats.runsAllowed).as("runsAllowed"),
 			outs: sum(playerGamesStats.outs).as("outs"),
+			gamesPlayed: countDistinct(playerGamesStats.gameId).as(
+				"gamesPlayed"
+			),
 		})
 		.from(players)
 		.leftJoin(playerGamesStats, eq(players.id, playerGamesStats.playerId))
