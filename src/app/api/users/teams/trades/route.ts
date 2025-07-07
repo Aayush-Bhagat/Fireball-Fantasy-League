@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { verifyJwtToken } from "@/lib/authUtils";
 import { getTeamTrades } from "@/services/tradeService";
-import { TradeDto } from "@/dtos/tradeDtos";
+import { TradeResponseDto } from "@/dtos/tradeDtos";
 
 export async function GET(request: NextRequest) {
 	const token = request.headers.get("Authorization")?.split(" ")[1];
@@ -12,7 +12,11 @@ export async function GET(request: NextRequest) {
 
 	const userId = verifyJwtToken(token);
 
-	const teamTrades: TradeDto[] = await getTeamTrades(userId);
+	const teamTrades = await getTeamTrades(userId);
 
-	return NextResponse.json(teamTrades);
+	const response: TradeResponseDto = {
+		trades: teamTrades,
+	};
+
+	return NextResponse.json(response, { status: 200 });
 }
