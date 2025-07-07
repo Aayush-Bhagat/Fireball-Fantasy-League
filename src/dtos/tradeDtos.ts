@@ -1,4 +1,4 @@
-import { KeepDto, TeamGameDto } from "./teamDtos";
+import { KeepDto, TeamDto, TeamGameDto } from "./teamDtos";
 import { BasicPlayerDto } from "./playerDtos";
 
 export type TradeAssetDto = {
@@ -20,4 +20,14 @@ export type TradeDto = {
 
 export type TradeResponseDto = {
 	trades: TradeDto[];
+};
+
+export type TeamTradeAsset = TeamDto & {
+	players: BasicPlayerDto[];
+	keeps: KeepDto[];
+};
+
+export type TeamTradeAssetsDto = {
+	teamAssets: TeamTradeAsset;
+	availableAssets: TeamTradeAsset[];
 };

@@ -188,3 +188,15 @@ export async function editBattingOrder(battingOrder: BattingOrderPosition) {
 
 	return updatedLineup;
 }
+
+export async function findAllTeamAssets() {
+	const assets = await db.query.teams.findMany({
+		with: {
+			players: true,
+			keeps: true,
+			conference: true,
+		},
+	});
+
+	return assets;
+}

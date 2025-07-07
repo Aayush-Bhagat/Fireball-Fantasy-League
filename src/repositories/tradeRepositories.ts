@@ -33,3 +33,27 @@ export async function findCompletedTrades() {
 
 	return completedTrades;
 }
+
+export async function findTradeByTeamId(teamId: string) {
+	const teamTrades = await db.query.trades.findMany({
+		where: and(
+			eq(trades.proposingTeamId, teamId),
+			eq(trades.receivingTeamId, teamId)
+		),
+		with: {
+			proposingTeam: true,
+			receivingTeam: true,
+			tradeAssets: {
+				with: {
+					player: true,
+					fromTeam: true,
+					toTeam: true,
+					keep: true,
+				},
+			},
+		},
+		orderBy: (trades, { desc }) => [desc(trades.proposedAt)],
+	});
+
+	return teamTrades;
+}
