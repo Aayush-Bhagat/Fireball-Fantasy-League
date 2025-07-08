@@ -3,7 +3,7 @@ import {
 	findTradeByTeamId,
 } from "@/repositories/tradeRepositories";
 import { findTeamByUserId } from "@/repositories/teamRepository";
-import { TradeDto } from "@/dtos/tradeDtos";
+import { TeamTradeResponseDto, TradeDto } from "@/dtos/tradeDtos";
 
 export async function getCurrentSeasonTrades() {
 	const completedTrades = await findCompletedTrades();
@@ -66,5 +66,10 @@ export async function getTeamTrades(userId: string) {
 		resolvedAt: trade.resolvedAt,
 	}));
 
-	return teamTrades;
+	const response: TeamTradeResponseDto = {
+		trades: teamTrades,
+		teamId: team.id,
+	};
+
+	return response;
 }

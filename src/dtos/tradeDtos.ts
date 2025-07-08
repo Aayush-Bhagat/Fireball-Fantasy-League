@@ -22,6 +22,11 @@ export type TradeResponseDto = {
 	trades: TradeDto[];
 };
 
+export type TeamTradeResponseDto = {
+	trades: TradeDto[];
+	teamId: string;
+};
+
 export type TeamTradeAsset = TeamDto & {
 	players: BasicPlayerDto[];
 	keeps: KeepDto[];
