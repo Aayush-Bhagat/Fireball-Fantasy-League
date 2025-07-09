@@ -108,12 +108,15 @@ export async function findTradeById(tradeId: string) {
 	return trade;
 }
 
-export async function updateTradeToAccepted(tradeId: string) {
+export async function updateTradeStatus(
+	status: "Accepted" | "Declined" | "Countered" | "Canceled",
+	tradeId: string
+) {
 	const updatedTrade = await db
 		.update(trades)
 		.set({
-			status: "Accepted",
-			resolvedAt: new Date(),
+			status: status,
+			resolvedAt: status === "Accepted" ? new Date() : null,
 		})
 		.where(eq(trades.id, tradeId))
 		.returning();

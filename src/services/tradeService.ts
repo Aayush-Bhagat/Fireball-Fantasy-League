@@ -12,7 +12,7 @@ import {
 	findTradeById,
 	findTradeByTeamId,
 	saveTrade,
-	updateTradeToAccepted,
+	updateTradeStatus,
 } from "@/repositories/tradeRepositories";
 import {
 	findTeamByUserId,
@@ -300,5 +300,55 @@ export async function acceptTrade(userId: string, tradeId: string) {
 		}
 	});
 
-	await updateTradeToAccepted(tradeId);
+	await updateTradeStatus("Accepted", tradeId);
+}
+
+export async function declineTrade(userId: string, tradeId: string) {
+	const team = await findTeamByUserId(userId);
+
+	if (!team) {
+		throw new Error("Team not found");
+	}
+
+	const trade = await findTradeById(tradeId);
+
+	if (!trade) {
+		throw new Error("Trade not found");
+	}
+
+	if (trade.status !== "Pending") {
+		throw new Error("Trade is not pending");
+	}
+
+	// Check if the team declining the trade is the receiving team of the trade
+	if (team.id !== trade.receivingTeamId) {
+		throw new Error("Unauthorized to decline this trade");
+	}
+
+	await updateTradeStatus("Declined", tradeId);
+}
+
+export async function cancelTrade(userId: string, tradeId: string) {
+	const team = await findTeamByUserId(userId);
+
+	if (!team) {
+		throw new Error("Team not found");
+	}
+
+	const trade = await findTradeById(tradeId);
+
+	if (!trade) {
+		throw new Error("Trade not found");
+	}
+
+	if (trade.status !== "Pending") {
+		throw new Error("Trade is not pending");
+	}
+
+	// Check if the team canceling the trade is the proposing team of the trade
+	if (team.id !== trade.proposingTeamId) {
+		throw new Error("Unauthorized to cancel this trade");
+	}
+
+	await updateTradeStatus("Canceled", tradeId);
 }
