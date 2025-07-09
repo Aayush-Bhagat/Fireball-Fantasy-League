@@ -186,19 +186,26 @@ export async function savePlayerHistory(
 	id: string,
 	playerId: string,
 	teamId: string,
-	seasonId: number,
 	type: "Trade" | "Draft",
 	tradeId: string | null = null,
 	draftRound: number | null = null,
 	draftPick: number | null = null
 ) {
+	const seasonQuery = await db
+		.select({
+			id: sql<number>`max(${seasons.id})`.as("id"),
+		})
+		.from(seasons);
+
+	const season = seasonQuery[0]?.id;
+
 	const playerHistoryEntry = await db
 		.insert(playerHistory)
 		.values({
 			id: id,
 			playerId,
 			teamId,
-			seasonId,
+			seasonId: season,
 			type,
 			tradeId,
 			draftRound,

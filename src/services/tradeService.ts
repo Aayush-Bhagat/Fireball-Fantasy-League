@@ -1,13 +1,25 @@
-import { findPlayersByTeam } from "@/repositories/playerRepository";
+import {
+	findPlayersByTeam,
+	updatePlayerTeam,
+	updatePlayerPosition,
+	savePlayerHistory,
+} from "@/repositories/playerRepository";
 import { CreateTradeAsset } from "./../models/trades";
 import { CreateTradeDto } from "./../dtos/tradeDtos";
 import {
 	addTradeAssets,
 	findCompletedTrades,
+	findTradeById,
 	findTradeByTeamId,
 	saveTrade,
+	updateTradeToAccepted,
 } from "@/repositories/tradeRepositories";
-import { findTeamByUserId, findTeamKeeps } from "@/repositories/teamRepository";
+import {
+	findTeamByUserId,
+	findTeamKeeps,
+	resetTeamBattingOrder,
+	updateKeepTeam,
+} from "@/repositories/teamRepository";
 import { TeamTradeResponseDto, TradeDto } from "@/dtos/tradeDtos";
 import { v7 as uuidV7 } from "uuid";
 
@@ -210,25 +222,83 @@ export async function acceptTrade(userId: string, tradeId: string) {
 		throw new Error("Team not found");
 	}
 
-	const [trade] = await findTradeByTeamId(tradeId);
+	const trade = await findTradeById(tradeId);
 
 	if (!trade) {
 		throw new Error("Trade not found");
 	}
 
+	if (trade.status !== "Pending") {
+		throw new Error("Trade is not pending");
+	}
+	// Check if the team accepting the trade is the receiving team of the trade
 	if (team.id !== trade.receivingTeamId) {
 		throw new Error("Unauthorized to accept this trade");
 	}
 
-	trade.tradeAssets.forEach(async (asset) => {
-		// if the asset is a player, update their team
-		// update position the player to null
-		// reset toTeam batting order
-		// update player history
-		if (asset.assetType === "Player") {
-		} else {
-		}
+	// Check if all players and keeps are still part of their respective teams
 
-		// if asset is a keep, assign keep slot to new team
+	const proposingTeamPlayers = await findPlayersByTeam(trade.proposingTeamId);
+
+	const proposingTeamPlayerIds = proposingTeamPlayers.map(
+		(player) => player.id
+	);
+	const receivingTeamPlayers = await findPlayersByTeam(trade.receivingTeamId);
+
+	const receivingTeamPlayerIds = receivingTeamPlayers.map(
+		(player) => player.id
+	);
+
+	const proposingTeamKeeps = await findTeamKeeps(trade.proposingTeamId);
+
+	const proposingTeamKeepIds = proposingTeamKeeps.map((keep) => keep.id);
+
+	const receivingTeamKeeps = await findTeamKeeps(trade.receivingTeamId);
+
+	const receivingTeamKeepIds = receivingTeamKeeps.map((keep) => keep.id);
+
+	const isValidTrade = trade.tradeAssets.every((asset) => {
+		if (asset.assetType === "Player" && asset.playerId) {
+			if (asset.fromTeamId === trade.proposingTeamId) {
+				return proposingTeamPlayerIds.includes(asset.playerId);
+			} else {
+				return receivingTeamPlayerIds.includes(asset.playerId);
+			}
+		} else if (asset.assetType === "Keep" && asset.keepId) {
+			if (asset.fromTeamId === trade.proposingTeamId) {
+				return proposingTeamKeepIds.includes(asset.keepId);
+			} else {
+				return receivingTeamKeepIds.includes(asset.keepId);
+			}
+		}
 	});
+
+	if (!isValidTrade) {
+		throw new Error("Invalid trade assets");
+	}
+
+	// Process the trade assets
+	trade.tradeAssets.forEach(async (asset) => {
+		if (asset.assetType === "Player" && asset.playerId) {
+			// Update player team and position
+			await updatePlayerTeam(asset.playerId, asset.toTeamId);
+			await updatePlayerPosition(asset.playerId, null);
+			// Reset batting order for the team receiving the player
+			await resetTeamBattingOrder(asset.toTeamId);
+			// Updating player history
+			const playerHistoryId = uuidV7();
+			await savePlayerHistory(
+				playerHistoryId,
+				asset.playerId,
+				asset.toTeamId,
+				"Trade",
+				tradeId
+			);
+		} else if (asset.assetType === "Keep" && asset.keepId) {
+			// Update keep team
+			await updateKeepTeam(asset.keepId, asset.toTeamId);
+		}
+	});
+
+	await updateTradeToAccepted(tradeId);
 }

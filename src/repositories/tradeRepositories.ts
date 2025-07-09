@@ -107,3 +107,20 @@ export async function findTradeById(tradeId: string) {
 
 	return trade;
 }
+
+export async function updateTradeToAccepted(tradeId: string) {
+	const updatedTrade = await db
+		.update(trades)
+		.set({
+			status: "Accepted",
+			resolvedAt: new Date(),
+		})
+		.where(eq(trades.id, tradeId))
+		.returning();
+
+	if (updatedTrade.length === 0) {
+		throw new Error("Trade not found or update failed");
+	}
+
+	return updatedTrade[0];
+}
