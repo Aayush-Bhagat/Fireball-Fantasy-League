@@ -1,7 +1,7 @@
-import { sql, eq, and, sum, countDistinct } from "drizzle-orm";
+import { sql, eq, and, sum, countDistinct, inArray } from "drizzle-orm";
 import { db } from "@/db";
 import { games, teamGames } from "@/models/games";
-import { conferences, teams } from "@/models/teams";
+import { conferences, keepSlots, teams } from "@/models/teams";
 import { seasons } from "@/models/seasons";
 import { playerGamesStats, players } from "@/models/players";
 import { teamLineups } from "@/models/teams";
@@ -187,4 +187,71 @@ export async function editBattingOrder(battingOrder: BattingOrderPosition) {
 		.where(eq(teamLineups.playerId, battingOrder.playerId));
 
 	return updatedLineup;
+}
+
+export async function findAllTeamAssets() {
+	const seasonQuery = db
+		.select({
+			id: sql<number>`max(${seasons.id})`.as("id"),
+		})
+		.from(seasons);
+
+	const assets = await db.query.teams.findMany({
+		with: {
+			players: true,
+			keeps: {
+				where: (keeps, { eq }) => eq(keeps.seasonId, seasonQuery),
+			},
+			conference: true,
+		},
+	});
+
+	return assets;
+}
+
+export async function findTeamKeeps(teamId: string) {
+	const seasonQuery = db
+		.select({
+			id: sql<number>`max(${seasons.id})`.as("id"),
+		})
+		.from(seasons);
+
+	const keeps = await db.query.keepSlots.findMany({
+		where: (keeps, { eq, and }) =>
+			and(eq(keeps.teamId, teamId), eq(keeps.seasonId, seasonQuery)),
+	});
+
+	return keeps;
+}
+
+export async function resetTeamBattingOrder(teamId: string) {
+	const teamPlayerQuery = db
+		.select({
+			id: players.id,
+		})
+		.from(players)
+		.where(eq(players.teamId, teamId));
+
+	const updatedLineup = await db
+		.update(teamLineups)
+		.set({
+			battingOrder: null,
+		})
+		.where(inArray(teamLineups.playerId, teamPlayerQuery));
+
+	return updatedLineup;
+}
+
+export async function updateKeepTeam(keepId: string, newTeamId: string) {
+	const updatedKeep = await db
+		.update(keepSlots)
+		.set({ teamId: newTeamId })
+		.where(eq(keepSlots.id, keepId))
+		.returning();
+
+	if (updatedKeep.length === 0) {
+		throw new Error("Keep not found or update failed");
+	}
+
+	return updatedKeep[0];
 }

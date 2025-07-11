@@ -3,7 +3,8 @@ import { eq, sql, sum, and, countDistinct } from "drizzle-orm";
 import { players, playerHistory, playerGamesStats } from "@/models/players";
 import { games } from "@/models/games";
 import { seasons } from "@/models/seasons";
-import { teams } from "@/models/teams";
+import { teamLineups, teams } from "@/models/teams";
+import { TeamLineupPosition } from "@/dtos/teamDtos";
 
 export async function findPlayersByTeam(teamId: string) {
 	const teamPlayers = await db.query.players.findMany({
@@ -133,4 +134,88 @@ export async function findPlayersByTeamId(teamId: string) {
 	});
 
 	return teamPlayers;
+}
+
+export async function findPlayerPosition(playerId: string) {
+	const player = await db.query.players.findFirst({
+		where: eq(players.id, playerId),
+		with: {
+			teamLineups: true,
+		},
+	});
+
+	if (!player || !player.teamLineups) {
+		return null;
+	}
+
+	return player.teamLineups;
+}
+
+export async function updatePlayerTeam(playerId: string, newTeamId: string) {
+	const updatedPlayer = await db
+		.update(players)
+		.set({ teamId: newTeamId })
+		.where(eq(players.id, playerId))
+		.returning();
+
+	if (updatedPlayer.length === 0) {
+		throw new Error("Player not found or update failed");
+	}
+
+	return updatedPlayer[0];
+}
+
+export async function updatePlayerPosition(
+	playerId: string,
+	newPosition: TeamLineupPosition | null
+) {
+	const updatedPlayer = await db
+		.update(teamLineups)
+		.set({ fieldingPosition: newPosition })
+		.where(eq(teamLineups.playerId, playerId))
+		.returning();
+
+	if (updatedPlayer.length === 0) {
+		throw new Error("Player not found or update failed");
+	}
+
+	return updatedPlayer[0];
+}
+
+export async function savePlayerHistory(
+	id: string,
+	playerId: string,
+	teamId: string,
+	type: "Trade" | "Draft",
+	tradeId: string | null = null,
+	draftRound: number | null = null,
+	draftPick: number | null = null
+) {
+	const seasonQuery = await db
+		.select({
+			id: sql<number>`max(${seasons.id})`.as("id"),
+		})
+		.from(seasons);
+
+	const season = seasonQuery[0]?.id;
+
+	const playerHistoryEntry = await db
+		.insert(playerHistory)
+		.values({
+			id: id,
+			playerId,
+			teamId,
+			seasonId: season,
+			type,
+			tradeId,
+			draftRound,
+			draftPick,
+		})
+		.returning();
+
+	if (playerHistoryEntry.length === 0) {
+		throw new Error("Failed to save player history");
+	}
+
+	return playerHistoryEntry[0];
 }

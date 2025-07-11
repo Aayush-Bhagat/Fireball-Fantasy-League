@@ -8,6 +8,7 @@ import {
 	findTeamByUserId,
 	findTeamIdByUserId,
 	findTeamLineup,
+	findAllTeamAssets,
 } from "@/repositories/teamRepository";
 import {
 	BattingOrderDto,
@@ -26,6 +27,7 @@ import { BasicPlayerDto, PlayerWithStatsDto } from "@/dtos/playerDtos";
 import { GameDtoMapper } from "@/lib/mappers/gameMappers";
 import { findTeamSchedule } from "@/repositories/gameRepository";
 import { editFieldingLineup } from "@/repositories/teamRepository";
+import { TeamTradeAssetsDto } from "@/dtos/tradeDtos";
 
 export async function getAllTeams() {
 	const teams = await findAllTeams();
@@ -324,4 +326,62 @@ export async function editTeamBattingOrder(lineup: EditBattingOrderRequestDto) {
 	for (const battingOrder of battingOrderPositions) {
 		await editBattingOrder(battingOrder);
 	}
+}
+
+export async function getAllTeamAssets(userId: string) {
+	const assets = await findAllTeamAssets();
+
+	const teamAssets = assets.find((a) => a.userId === userId);
+	const availableAssets = assets.filter((a) => a.userId !== userId);
+
+	if (!teamAssets) {
+		throw new Error("Team Not Found");
+	}
+
+	const response: TeamTradeAssetsDto = {
+		teamAssets: {
+			id: teamAssets.id,
+			logo: teamAssets.logo,
+			name: teamAssets.name,
+			userId: teamAssets.userId,
+			abbreviation: teamAssets.abbreviation,
+			conference: teamAssets.conference.name,
+			players: teamAssets.players.map((player) => ({
+				id: player.id,
+				name: player.name,
+				image: player.image,
+			})),
+			keeps: teamAssets.keeps.map((keep) => ({
+				id: keep.id,
+				teamId: keep.teamId,
+				odds: keep.odds,
+				value: keep.value,
+				seasonId: keep.seasonId,
+				originalTeamId: keep.originalTeamId,
+			})),
+		},
+		availableAssets: availableAssets.map((team) => ({
+			id: team.id,
+			logo: team.logo,
+			name: team.name,
+			userId: team.userId,
+			abbreviation: team.abbreviation,
+			conference: team.conference.name,
+			players: team.players.map((player) => ({
+				id: player.id,
+				name: player.name,
+				image: player.image,
+			})),
+			keeps: team.keeps.map((keep) => ({
+				id: keep.id,
+				teamId: keep.teamId,
+				odds: keep.odds,
+				value: keep.value,
+				seasonId: keep.seasonId,
+				originalTeamId: keep.originalTeamId,
+			})),
+		})),
+	};
+
+	return response;
 }
