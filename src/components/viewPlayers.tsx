@@ -6,6 +6,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
 type Props = {
     players: PlayerWithStatsDto[];
+    freeAgents?: boolean;
 };
 
 type BattingStatKey = "battingAverage" | "homeRuns" | "hits" | "rbis";
@@ -14,7 +15,7 @@ type FieldingStatKey = "outs";
 
 type SortDirection = "desc" | "asc" | null;
 
-export default function ViewPlayers({ players }: Props) {
+export default function ViewPlayers({ players, freeAgents = false }: Props) {
     const [selectedPlayer, setSelectedPlayer] =
         useState<PlayerWithStatsDto | null>(null);
     const [showCard, setShowCard] = useState(false);
@@ -238,18 +239,20 @@ export default function ViewPlayers({ players }: Props) {
                         {player.name}
                     </span>
                 </td>
-                <td className="px-6 py-4">
-                    <div className="flex items-center gap-2">
-                        {player.team?.logo && (
-                            <img
-                                src={player.team.logo}
-                                alt={`${player.team.name} logo`}
-                                className="w-6 h-6 rounded-full"
-                            />
-                        )}
-                        <span>{player.team?.name}</span>
-                    </div>
-                </td>
+                {!freeAgents && (
+                    <td className="px-6 py-4">
+                        <div className="flex items-center gap-2">
+                            {player.team?.logo && (
+                                <img
+                                    src={player.team.logo}
+                                    alt={`${player.team.name} logo`}
+                                    className="w-6 h-6 rounded-full"
+                                />
+                            )}
+                            <span>{player.team?.name}</span>
+                        </div>
+                    </td>
+                )}
 
                 {/* Stats Columns */}
                 {type === "bat" && player.stats ? (
@@ -321,8 +324,9 @@ export default function ViewPlayers({ players }: Props) {
 
             <div className="text-center mb-10">
                 <h1 className="text-4xl font-bold text-blue-800 tracking-tight">
-                    All Players
+                    {freeAgents ? "Free Agents" : "All Players"}
                 </h1>
+
                 <p className="text-gray-600 mt-2">
                     Click on a player to view detailed stats
                 </p>
@@ -375,9 +379,11 @@ export default function ViewPlayers({ players }: Props) {
                                         <th className="px-6 py-3 text-left w-1/5">
                                             Player
                                         </th>
-                                        <th className="px-6 py-3 text-left w-1/5">
-                                            Team
-                                        </th>
+                                        {!freeAgents && (
+                                            <th className="px-6 py-3 text-left w-1/5">
+                                                Team
+                                            </th>
+                                        )}
                                         <th
                                             className="px-6 py-3 text-left w-1/6 cursor-pointer"
                                             onClick={() =>
@@ -452,9 +458,11 @@ export default function ViewPlayers({ players }: Props) {
                                         <th className="px-6 py-3 text-left w-1/5">
                                             Player
                                         </th>
-                                        <th className="px-6 py-3 text-left w-1/5">
-                                            Team
-                                        </th>
+                                        {!freeAgents && (
+                                            <th className="px-6 py-3 text-left w-1/5">
+                                                Team
+                                            </th>
+                                        )}
                                         <th
                                             className="px-6 py-3 text-left w-1/6 cursor-pointer"
                                             onClick={() =>
@@ -535,9 +543,11 @@ export default function ViewPlayers({ players }: Props) {
                                         <th className="px-6 py-3 text-left w-1/5">
                                             Player
                                         </th>
-                                        <th className="px-6 py-3 text-left w-1/5">
-                                            Team
-                                        </th>
+                                        {!freeAgents && (
+                                            <th className="px-6 py-3 text-left w-1/5">
+                                                Team
+                                            </th>
+                                        )}
                                         <th className="px-6 py-3 text-left w-1/6">
                                             Position
                                         </th>

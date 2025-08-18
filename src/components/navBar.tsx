@@ -54,6 +54,15 @@ export default function NavBar({ isLoggedIn, role }: Props) {
                     <ul className="flex flex-col md:flex-row md:items-center gap-4 p-4 md:p-0 text-gray-900 dark:text-white">
                         <li className="py-2 md:py-0">
                             <Link
+                                href="/freeAgents"
+                                className="block w-full hover:text-blue-600 dark:hover:text-blue-400"
+                                onClick={() => setMenuOpen(false)}
+                            >
+                                Free Agents
+                            </Link>
+                        </li>
+                        <li className="py-2 md:py-0">
+                            <Link
                                 href="/schedule"
                                 className="block w-full hover:text-blue-600 dark:hover:text-blue-400"
                                 onClick={() => setMenuOpen(false)}
