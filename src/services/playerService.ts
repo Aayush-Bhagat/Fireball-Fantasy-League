@@ -9,6 +9,7 @@ import { findPlayerGames } from "@/repositories/gameRepository";
 import {
 	findAllPlayers,
 	findAllPlayerStats,
+	findFreeAgents,
 	findPlayerCareerStats,
 	findPlayerHistoryByPlayer,
 	findPlayerInfo,
@@ -151,6 +152,57 @@ export async function getAllPlayerStats() {
 	return allPlayersWithStats;
 }
 
+export async function getAllFreeAgents() {
+	const freeAgents = await findFreeAgents();
+
+	const stats = await findAllPlayerStats();
+
+	const freeAgentsWithStats: PlayerWithStatsDto[] = freeAgents.map(
+		(player) => {
+			const stat = stats.find((s) => s.playerId === player.id);
+			return {
+				id: player.id,
+				name: player.name,
+				image: player.image,
+				isCaptain: player.isCaptain,
+				playerCardImage: player.playerCardImage,
+				team: null,
+				batting: player.batting,
+				pitching: player.pitching,
+				running: player.running,
+				fielding: player.fielding,
+				starSwing: player.starSwing,
+				starPitch: player.starPitch,
+				fieldingAbility: player.fieldingAbility,
+				position: null,
+				stats: {
+					atBats: Number(stat?.atBats) || 0,
+					hits: Number(stat?.hits) || 0,
+					runs: Number(stat?.runs) || 0,
+					rbis: Number(stat?.rbis) || 0,
+					walks: Number(stat?.walks) || 0,
+					strikeouts: Number(stat?.strikeouts) || 0,
+					homeRuns: Number(stat?.homeRuns) || 0,
+					inningsPitched: calculateInningsPitched(
+						Number(stat?.outsPitched) || 0
+					),
+					runsAllowed: Number(stat?.runsAllowed) || 0,
+					outs: Number(stat?.outs) || 0,
+					battingAverage:
+						Number(stat?.hits) / Number(stat?.atBats) || 0,
+					era: calculateEra(
+						Number(stat?.runsAllowed) || 0,
+						Number(stat?.outsPitched) || 0
+					),
+					gamesPlayed: stat?.gamesPlayed || 0,
+				},
+			};
+		}
+	);
+
+	return freeAgentsWithStats;
+}
+
 export async function getPlayerCareerStats(playerId: string) {
 	const stats = await findPlayerCareerStats(playerId);
 
@@ -207,3 +259,5 @@ export async function getPlayerCareerStats(playerId: string) {
 
 	return playerCareerStats;
 }
+
+export async function getFreeAgents() {}

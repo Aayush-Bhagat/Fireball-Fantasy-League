@@ -58,9 +58,7 @@ export const playerGamesStats = pgTable(
 		playerId: uuid("player_id")
 			.notNull()
 			.references(() => players.id),
-		teamId: uuid("team_id")
-			.notNull()
-			.references(() => teams.id),
+		teamId: uuid("team_id").references(() => teams.id),
 		atBats: integer("at_bats").notNull(),
 		hits: integer("hits").notNull(),
 		runs: integer("runs").notNull(),

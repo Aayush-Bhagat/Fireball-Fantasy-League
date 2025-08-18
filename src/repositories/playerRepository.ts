@@ -1,5 +1,5 @@
 import { db } from "@/db";
-import { eq, sql, sum, and, countDistinct } from "drizzle-orm";
+import { eq, sql, sum, and, countDistinct, isNull } from "drizzle-orm";
 import { players, playerHistory, playerGamesStats } from "@/models/players";
 import { games } from "@/models/games";
 import { seasons } from "@/models/seasons";
@@ -38,6 +38,14 @@ export async function findAllPlayers() {
 	});
 
 	return allPlayers;
+}
+
+export async function findFreeAgents() {
+	const freeAgents = await db.query.players.findMany({
+		where: eq(isNull(players.teamId), true),
+	});
+
+	return freeAgents;
 }
 
 export async function findAllPlayerStats() {
