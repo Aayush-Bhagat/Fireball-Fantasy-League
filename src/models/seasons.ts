@@ -6,7 +6,6 @@ import {
 	timestamp,
 	pgEnum,
 	text,
-	primaryKey,
 	index,
 } from "drizzle-orm/pg-core";
 import { relations } from "drizzle-orm";

@@ -2,7 +2,7 @@ import { db } from "@/db";
 import { eq, sql, sum, and, countDistinct, isNull } from "drizzle-orm";
 import { players, playerHistory, playerGamesStats } from "@/models/players";
 import { games } from "@/models/games";
-import { awards, seasonAwards, seasons } from "@/models/seasons";
+import { seasonAwards, seasons } from "@/models/seasons";
 import { teamLineups, teams } from "@/models/teams";
 import { TeamLineupPosition } from "@/dtos/teamDtos";
 
