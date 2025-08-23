@@ -16,3 +16,23 @@ export type PlayerAward = {
 export type PlayerAwardsResponse = {
 	awards: PlayerAward[];
 };
+
+export type TeamAward = {
+	seasonId: number;
+	awardId: string;
+	playerId: string | null;
+	teamId: string | null;
+	awardedAt: Date;
+	id: string;
+	award: {
+		id: string;
+		name: string;
+		description: string;
+		category: string;
+		icon: string | null;
+	};
+};
+
+export type TeamAwardsResponse = {
+	awards: TeamAward[];
+};

@@ -1,3 +1,4 @@
+import { TeamAward } from "./awardDtos";
 import { BasicPlayerDto, PlayerWithStatsDto } from "./playerDtos";
 import { z } from "zod";
 
@@ -66,6 +67,7 @@ export type KeepDto = {
 export type TeamWithKeepsDto = {
 	team: TeamDto;
 	keeps: KeepDto[];
+	awards: TeamAward[];
 };
 
 export type TeamLineupPosition =
