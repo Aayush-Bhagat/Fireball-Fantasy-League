@@ -90,3 +90,20 @@ export async function getPlayerAwards(playerId: string) {
 
     return data;
 }
+
+export async function viewFreeAgents() {
+    const response = await fetch(`${API_URL}/api/players/free-agents`, {
+        method: "GET",
+        headers: {
+            "Content-Type": "application/json",
+        },
+    });
+
+    if (!response.ok) {
+        throw new Error("Failed to fetch players");
+    }
+
+    const data: PlayerStatsResponseDto = await response.json();
+
+    return data;
+}
