@@ -119,6 +119,7 @@ export async function getTeamById(id: string) {
 			userId: team.userId,
 		},
 		keeps: team.keeps,
+		awards: team.seasonAwards,
 	};
 
 	return teamDto;
@@ -198,6 +199,7 @@ export async function getUserTeam(userId: string) {
 			userId: team.userId,
 		},
 		keeps: team.keeps,
+		awards: team.seasonAwards,
 	};
 
 	return teamDto;

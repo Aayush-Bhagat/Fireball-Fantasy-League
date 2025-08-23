@@ -6,14 +6,13 @@ import {
 	timestamp,
 	pgEnum,
 	text,
-	primaryKey,
 	index,
 } from "drizzle-orm/pg-core";
 import { relations } from "drizzle-orm";
 import { keepSlots, teams } from "./teams";
 import { games, playoffSeries } from "./games";
 import { trades } from "./trades";
-import { playerHistory } from "./players";
+import { playerHistory, players } from "./players";
 import { recaps } from "./recaps";
 import { rankings } from "./rankings";
 
@@ -55,6 +54,7 @@ export const awards = pgTable("awards", {
 	name: text("name").notNull().unique(),
 	description: text("description").notNull(),
 	category: awardCategories("category").notNull(),
+	icon: text("icon"),
 });
 
 export type Award = typeof awards.$inferSelect;
@@ -67,20 +67,20 @@ export const awardsRelations = relations(awards, ({ many }) => ({
 export const seasonAwards = pgTable(
 	"season_awards",
 	{
+		id: uuid("id").primaryKey(),
 		seasonId: integer("season_id")
 			.notNull()
 			.references(() => seasons.id),
 		awardId: uuid("award_id")
 			.notNull()
 			.references(() => awards.id),
-		playerId: uuid("player_id"),
+		playerId: uuid("player_id").references(() => players.id),
 		teamId: uuid("team_id").references(() => teams.id),
 		awardedAt: timestamp("awarded_at", { withTimezone: true })
 			.defaultNow()
 			.notNull(),
 	},
 	(table) => [
-		primaryKey({ columns: [table.seasonId, table.awardId] }),
 		index("idx_season_awards_player").on(table.playerId),
 		index("idx_season_awards_team").on(table.teamId),
 		index("idx_season_awards_season").on(table.seasonId),
@@ -102,5 +102,9 @@ export const seasonAwardsRelations = relations(seasonAwards, ({ one }) => ({
 	team: one(teams, {
 		fields: [seasonAwards.teamId],
 		references: [teams.id],
+	}),
+	player: one(players, {
+		fields: [seasonAwards.playerId],
+		references: [players.id],
 	}),
 }));

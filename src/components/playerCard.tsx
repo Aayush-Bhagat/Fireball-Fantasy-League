@@ -5,7 +5,7 @@ import { PlayerWithStatsDto } from "@/dtos/playerDtos";
 import PlayerGameLog from "./playerGameLog";
 import PlayerHistory from "./playerHistory";
 import CareerStats from "./careerStats";
-
+import PlayerAwards from "./playerAwards";
 type Props = {
     player: PlayerWithStatsDto;
 };
@@ -134,6 +134,7 @@ export default function PlayerCard({ player }: Props) {
                     <TabsTrigger value="recent">Game Log</TabsTrigger>
                     <TabsTrigger value="career">Career Stats</TabsTrigger>
                     <TabsTrigger value="history">History</TabsTrigger>
+                    <TabsTrigger value="awards">Awards</TabsTrigger>
                 </TabsList>
                 <div className="mt-4 w-full min-h-[320px]">
                     {/* History Tab */}
@@ -149,6 +150,9 @@ export default function PlayerCard({ player }: Props) {
                     {/* Career Stats */}
                     <TabsContent value="career" className="mt-4">
                         <CareerStats player={player.id} />
+                    </TabsContent>
+                    <TabsContent value="awards" className="mt-4">
+                        <PlayerAwards player={player.id} />
                     </TabsContent>
                 </div>
             </Tabs>

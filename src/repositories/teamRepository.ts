@@ -30,6 +30,12 @@ export async function findTeamByUserId(userId: string) {
 			keeps: {
 				where: (keeps, { eq }) => eq(keeps.seasonId, seasonQuery),
 			},
+			seasonAwards: {
+				where: (awards, { eq }) => eq(awards.seasonId, seasonQuery),
+				with: {
+					award: true,
+				},
+			},
 		},
 	});
 
@@ -71,6 +77,12 @@ export async function findTeamById(id: string) {
 			conference: true,
 			keeps: {
 				where: (keeps, { eq }) => eq(keeps.seasonId, seasonQuery),
+			},
+			seasonAwards: {
+				where: (awards, { eq }) => eq(awards.seasonId, seasonQuery),
+				with: {
+					award: true,
+				},
 			},
 		},
 	});

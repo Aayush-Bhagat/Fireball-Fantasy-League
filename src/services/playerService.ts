@@ -1,3 +1,4 @@
+import { PlayerAward } from "@/dtos/awardDtos";
 import {
 	PlayerCareerStatsDto,
 	PlayerGameStatsDto,
@@ -10,6 +11,7 @@ import {
 	findAllPlayers,
 	findAllPlayerStats,
 	findFreeAgents,
+	findPlayerAwards,
 	findPlayerCareerStats,
 	findPlayerHistoryByPlayer,
 	findPlayerInfo,
@@ -260,4 +262,35 @@ export async function getPlayerCareerStats(playerId: string) {
 	return playerCareerStats;
 }
 
-export async function getFreeAgents() {}
+export async function getPlayerAwards(playerId: string) {
+	const awards = await findPlayerAwards(playerId);
+
+	const groupedAwards = Object.values(
+		awards.reduce((acc, curr) => {
+			const { award, season, awardedAt } = curr;
+
+			if (!acc[award.id]) {
+				acc[award.id] = {
+					awardId: award.id,
+					name: award.name,
+					description: award.description,
+					category: award.category,
+					icon: award.icon,
+					wins: [],
+				};
+			}
+
+			acc[award.id].wins.push({
+				seasonId: season.id,
+				awardedAt,
+				seasonStart: season.startDate,
+				seasonEnd: season.endDate,
+				currentWeek: season.currentWeek,
+			});
+
+			return acc;
+		}, {} as Record<string, PlayerAward>)
+	);
+
+	return groupedAwards;
+}

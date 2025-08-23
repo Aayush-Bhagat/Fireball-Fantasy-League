@@ -4,7 +4,7 @@ import {
     PlayerHistoryResponseDto,
     PlayerStatsResponseDto,
 } from "@/dtos/playerDtos";
-
+import { PlayerAwardsResponse } from "@/dtos/awardDtos";
 const API_URL = process.env.NEXT_PUBLIC_API_URL;
 export async function getPlayerGameLogs(playerId: string) {
     const response = await fetch(`${API_URL}/api/players/${playerId}/games`, {
@@ -70,6 +70,23 @@ export async function getCareerStats(playerId: string) {
     }
 
     const data: PlayerCareerStatsDto = await response.json();
+
+    return data;
+}
+
+export async function getPlayerAwards(playerId: string) {
+    const response = await fetch(`${API_URL}/api/players/${playerId}/awards`, {
+        method: "GET",
+        headers: {
+            "Content-Type": "application/json",
+        },
+    });
+
+    if (!response.ok) {
+        throw new Error("Failed to fetch player awards");
+    }
+
+    const data: PlayerAwardsResponse = await response.json();
 
     return data;
 }
