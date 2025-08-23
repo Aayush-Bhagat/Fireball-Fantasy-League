@@ -2,7 +2,7 @@ import { db } from "@/db";
 import { eq, sql, sum, and, countDistinct, isNull } from "drizzle-orm";
 import { players, playerHistory, playerGamesStats } from "@/models/players";
 import { games } from "@/models/games";
-import { seasons } from "@/models/seasons";
+import { awards, seasonAwards, seasons } from "@/models/seasons";
 import { teamLineups, teams } from "@/models/teams";
 import { TeamLineupPosition } from "@/dtos/teamDtos";
 
@@ -226,4 +226,14 @@ export async function savePlayerHistory(
 	}
 
 	return playerHistoryEntry[0];
+}
+
+export function findPlayerAwards(playerId: string) {
+	return db.query.seasonAwards.findMany({
+		where: eq(seasonAwards.playerId, playerId),
+		with: {
+			season: true,
+			award: true,
+		},
+	});
 }
