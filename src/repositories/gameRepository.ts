@@ -331,7 +331,7 @@ export async function updateTeamGameById(
 	gameId: string,
 	teamId: string,
 	score: number,
-	outcome: "Win" | "Loss"
+	outcome: "Win" | "Loss" | "Tie"
 ) {
 	const game = await db
 		.update(teamGames)

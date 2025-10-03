@@ -109,6 +109,7 @@ export async function findAllTeamRecordsBySeason(season: number | null) {
 			season: games.seasonId,
 			wins: sql<number>`sum(case when ${teamGames.outcome} = 'Win' then 1 else 0 end)`,
 			losses: sql<number>`sum(case when ${teamGames.outcome} = 'Loss' then 1 else 0 end)`,
+			ties: sql<number>`sum(case when ${teamGames.outcome} = 'Tie' then 1 else 0 end)`,
 		})
 		.from(teamGames)
 		.innerJoin(games, eq(teamGames.gameId, games.id))

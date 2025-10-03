@@ -89,7 +89,7 @@ export const gameRelations = relations(games, ({ one, many }) => ({
 	playerGamesStats: many(playerGamesStats),
 }));
 
-export const gameOutcome = pgEnum("game_outcome", ["Win", "Loss"]);
+export const gameOutcome = pgEnum("game_outcome", ["Win", "Loss", "Tie"]);
 
 export const teamGames = pgTable(
 	"team_games",

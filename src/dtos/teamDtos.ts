@@ -28,6 +28,7 @@ export type TeamStandingsDto = {
 	conference: string;
 	wins: number;
 	losses: number;
+	ties: number;
 	season: number;
 };
 

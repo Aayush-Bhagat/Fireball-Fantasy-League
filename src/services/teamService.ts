@@ -82,6 +82,7 @@ export async function getStandings(season: string) {
 			conference: standing.conferenceName,
 			wins: Number(standing.wins),
 			losses: Number(standing.losses),
+			ties: Number(standing.ties),
 			season: Number(standing.season),
 		})
 	);
@@ -95,6 +96,7 @@ export async function getStandings(season: string) {
 			conference: standing.conferenceName,
 			wins: Number(standing.wins),
 			losses: Number(standing.losses),
+			ties: Number(standing.ties),
 			season: Number(standing.season),
 		})
 	);

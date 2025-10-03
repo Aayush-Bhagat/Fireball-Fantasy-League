@@ -107,9 +107,18 @@ export async function getGameById(gameId: string) {
 export const updateGame = async (game: UpdateGameRequestDto) => {
 	try {
 		const teamOutcome =
-			game.teamScore > game.opponentScore ? "Win" : "Loss";
+			game.teamScore > game.opponentScore
+				? "Win"
+				: game.teamScore === game.opponentScore
+				? "Tie"
+				: "Loss";
+
 		const opponentOutcome =
-			game.opponentScore > game.teamScore ? "Win" : "Loss";
+			game.opponentScore > game.teamScore
+				? "Win"
+				: game.opponentScore === game.teamScore
+				? "Tie"
+				: "Loss";
 
 		await updateTeamGameById(
 			game.gameId,
