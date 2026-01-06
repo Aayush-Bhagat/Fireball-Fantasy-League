@@ -48,7 +48,7 @@ export async function findFreeAgents() {
 	return freeAgents;
 }
 
-export async function findAllPlayerStats() {
+export async function findAllPlayerStats(season?: string) {
 	const seasonQuery = db
 		.select({
 			id: sql<number>`max(${seasons.id})`.as("id"),
@@ -76,7 +76,7 @@ export async function findAllPlayerStats() {
 		.from(players)
 		.leftJoin(playerGamesStats, eq(players.id, playerGamesStats.playerId))
 		.leftJoin(games, eq(playerGamesStats.gameId, games.id))
-		.where(eq(games.seasonId, seasonQuery))
+		.where(eq(games.seasonId, season ? Number(season) : seasonQuery))
 		.groupBy(players.id);
 
 	return stats;
