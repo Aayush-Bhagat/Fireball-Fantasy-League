@@ -1,5 +1,3 @@
-import { Season } from "./../models/seasons";
-
 export type SeasonDto = {
 	id: number;
 	startDate: Date;

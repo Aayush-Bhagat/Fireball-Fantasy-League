@@ -1,8 +1,8 @@
 import { SeasonDto, SeasonResponseDto } from "@/dtos/seasonDtos";
 import { getAllSeasons } from "@/services/seasonService";
-import { NextRequest, NextResponse } from "next/server";
+import { NextResponse } from "next/server";
 
-export async function GET(req: NextRequest) {
+export async function GET() {
 	const seasons: SeasonDto[] = await getAllSeasons();
 
 	const res: SeasonResponseDto = {
