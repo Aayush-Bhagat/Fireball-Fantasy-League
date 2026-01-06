@@ -13,3 +13,6 @@ node_modules
 /coverage
 
 /data
+
+**/.DS_Store
+.DS_Store

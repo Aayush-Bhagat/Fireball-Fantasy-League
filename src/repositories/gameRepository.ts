@@ -168,7 +168,7 @@ export async function findTeamSchedule(
 	return result;
 }
 
-export async function findPlayerGames(playerId: string) {
+export async function findPlayerGames(playerId: string, season?: string) {
 	const seasonQuery = db
 		.select({
 			id: sql<number>`max(${seasons.id})`.as("id"),
@@ -252,7 +252,7 @@ export async function findPlayerGames(playerId: string) {
 		.where(
 			and(
 				eq(playerGamesStats.playerId, playerId),
-				eq(seasons.id, seasonQuery)
+				eq(seasons.id, season ? Number(season) : seasonQuery)
 			)
 		)
 		.orderBy(asc(games.week), asc(games.playedAt));

@@ -7,7 +7,12 @@ export async function GET(
 	{ params }: { params: Promise<{ playerId: string }> }
 ) {
 	const { playerId } = await params;
-	const playerGames = await getPlayerGames(playerId);
+
+	const { searchParams } = new URL(request.url);
+
+	const season = searchParams.get("season") || undefined;
+
+	const playerGames = await getPlayerGames(playerId, season);
 
 	const response: PlayerGameResponseDto = {
 		games: playerGames,

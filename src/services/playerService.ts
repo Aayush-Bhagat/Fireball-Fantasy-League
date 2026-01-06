@@ -17,8 +17,8 @@ import {
 	findPlayerInfo,
 } from "@/repositories/playerRepository";
 
-export async function getPlayerGames(playerId: string) {
-	const games = await findPlayerGames(playerId);
+export async function getPlayerGames(playerId: string, season?: string) {
+	const games = await findPlayerGames(playerId, season);
 
 	const playerGames: PlayerGameStatsDto[] = games.map((game) => {
 		return {
@@ -94,8 +94,8 @@ export async function getPlayerHistory(playerId: string) {
 	return playerHistory;
 }
 
-export async function getAllPlayerStats() {
-	const stats = await findAllPlayerStats();
+export async function getAllPlayerStats(season?: string) {
+	const stats = await findAllPlayerStats(season);
 
 	const allPlayers = await findAllPlayers();
 
