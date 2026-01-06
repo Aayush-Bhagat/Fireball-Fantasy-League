@@ -1,23 +1,44 @@
-import React from "react";
+import React, { useState } from "react";
 import { getPlayerGameLogs } from "@/requests/players";
 import { useQuery } from "@tanstack/react-query";
-import { format } from "date-fns";
+import { format, set } from "date-fns";
 import { Loader2 } from "lucide-react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-
+import { getAllSeasons } from "@/requests/season";
+import {
+    DropdownMenu,
+    DropdownMenuContent,
+    DropdownMenuLabel,
+    DropdownMenuRadioGroup,
+    DropdownMenuRadioItem,
+    DropdownMenuSeparator,
+    DropdownMenuTrigger,
+} from "./ui/dropdown-menu";
+import { Button } from "./ui/button";
 type Props = {
     player: string;
 };
 
 export default function PlayerGameLog({ player }: Props) {
+    const [selectedSeason, setSelectedSeason] = useState<string | undefined>(
+        undefined
+    );
+
     const { data: playerGameLogs, isLoading } = useQuery({
-        queryKey: ["player-game-logs", player],
+        queryKey: ["player-game-logs", player, selectedSeason],
         queryFn: async () => {
-            const res = await getPlayerGameLogs(player);
+            const res = await getPlayerGameLogs(player, selectedSeason);
             return res.games;
         },
     });
-
+    const { data: seasons } = useQuery({
+        queryKey: ["seasons"],
+        queryFn: async () => {
+            const res = await getAllSeasons();
+            setSelectedSeason(res.seasons[0].id.toString());
+            return res.seasons;
+        },
+    });
     const hasPitchingStats =
         playerGameLogs?.some(
             (game) =>
@@ -29,14 +50,39 @@ export default function PlayerGameLog({ player }: Props) {
     return (
         <div>
             <Tabs defaultValue="bat" className="w-full">
-                <TabsList>
-                    <TabsTrigger value="bat">Batting</TabsTrigger>
-                    {hasPitchingStats && (
-                        <TabsTrigger value="pitch">Pitching</TabsTrigger>
-                    )}
-                </TabsList>
+                <div className="flex justify-between">
+                    <TabsList>
+                        <TabsTrigger value="bat">Batting</TabsTrigger>
+                        {hasPitchingStats && (
+                            <TabsTrigger value="pitch">Pitching</TabsTrigger>
+                        )}
+                    </TabsList>
+                    <DropdownMenu>
+                        <DropdownMenuTrigger asChild>
+                            <Button variant="outline">
+                                Season {selectedSeason}
+                            </Button>
+                        </DropdownMenuTrigger>
+                        <DropdownMenuContent className="w-56">
+                            <DropdownMenuLabel>Select Season</DropdownMenuLabel>
+                            <DropdownMenuSeparator />
+                            <DropdownMenuRadioGroup
+                                value={selectedSeason}
+                                onValueChange={setSelectedSeason}
+                            >
+                                {seasons?.map((season) => (
+                                    <DropdownMenuRadioItem
+                                        key={season.id}
+                                        value={season.id.toString()}
+                                    >
+                                        Season {season.id}
+                                    </DropdownMenuRadioItem>
+                                ))}
+                            </DropdownMenuRadioGroup>
+                        </DropdownMenuContent>
+                    </DropdownMenu>
+                </div>
                 <h2 className="text-lg font-semibold mb-2">Recent Game Log</h2>
-
                 <TabsContent value="bat">
                     <div className="overflow-x-auto rounded-lg">
                         <table className="w-full table-fixed bg-white border border-gray-100 shadow text-sm">
@@ -106,7 +152,6 @@ export default function PlayerGameLog({ player }: Props) {
                         </table>
                     </div>
                 </TabsContent>
-
                 {hasPitchingStats && (
                     <TabsContent value="pitch">
                         <div className="overflow-x-auto rounded-lg">

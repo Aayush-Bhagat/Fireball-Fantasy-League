@@ -6,8 +6,11 @@ import {
 } from "@/dtos/playerDtos";
 import { PlayerAwardsResponse } from "@/dtos/awardDtos";
 const API_URL = process.env.NEXT_PUBLIC_API_URL;
-export async function getPlayerGameLogs(playerId: string) {
-    const response = await fetch(`${API_URL}/api/players/${playerId}/games`, {
+export async function getPlayerGameLogs(playerId: string, season?: string) {
+    const url = season
+        ? `${API_URL}/api/players/${playerId}/games?season=${season}`
+        : `${API_URL}/api/players/${playerId}/games`;
+    const response = await fetch(url, {
         method: "GET",
         headers: {
             "Content-Type": "application/json",
