@@ -79,7 +79,6 @@ export async function findTeamById(id: string) {
 				where: (keeps, { eq }) => eq(keeps.seasonId, seasonQuery),
 			},
 			seasonAwards: {
-				where: (awards, { eq }) => eq(awards.seasonId, seasonQuery),
 				with: {
 					award: true,
 				},

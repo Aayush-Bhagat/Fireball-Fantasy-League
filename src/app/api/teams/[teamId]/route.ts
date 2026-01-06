@@ -1,5 +1,6 @@
 import { NextRequest } from "next/server";
 import { getTeamById } from "@/services/teamService";
+import { TeamWithKeepsDto } from "@/dtos/teamDtos";
 
 export async function GET(
 	req: NextRequest,
@@ -12,7 +13,7 @@ export async function GET(
 	}
 
 	try {
-		const team = await getTeamById(teamId as string);
+		const team: TeamWithKeepsDto = await getTeamById(teamId as string);
 
 		if (!team) {
 			return new Response("Team not found", { status: 404 });
