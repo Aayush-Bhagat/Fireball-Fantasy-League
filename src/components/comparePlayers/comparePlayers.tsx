@@ -16,6 +16,48 @@ import CareerStatsComparison from "@/components/comparePlayers/careerStatsCompar
 /* ===================== */
 /* Utils for IP/ERA      */
 /* ===================== */
+interface CareerSeasonStats {
+    atBats?: number;
+    hits?: number;
+    homeRuns?: number;
+    rbis?: number;
+    inningsPitched?: number;
+    runsAllowed?: number;
+    walks?: number;
+    strikeouts?: number;
+    era?: number;
+}
+
+interface CareerTotals {
+    atBats: number;
+    hits: number;
+    homeRuns: number;
+    rbis: number;
+    outsPitched: number;
+    runsAllowed: number;
+    walks: number;
+    strikeouts: number;
+    weightedEraSum: number;
+}
+
+interface CareerSummary {
+    atBats: number;
+    hits: number;
+    homeRuns: number;
+    rbis: number;
+    outsPitched: number;
+    runsAllowed: number;
+    walks: number;
+    strikeouts: number;
+    careerAVG: number;
+    careerRBI: number;
+    careerHR: number;
+    careerERA: number;
+    ip: number;
+    avg: number;
+    era: number;
+}
+
 function inningsToOuts(ip: number): number {
     const whole = Math.floor(ip);
     const decimal = Number((ip - whole).toFixed(1));
@@ -30,30 +72,32 @@ function outsToInnings(outs: number): number {
     return Number(`${whole}.${remainder}`);
 }
 
-function calculateCareerTotals(careerStats: any) {
+function calculateCareerTotals(
+    careerStats: CareerSeasonStats[] | null,
+): CareerSummary | null {
     if (!careerStats) return null;
 
     const playedSeasons = careerStats.filter(
-        (s: any) =>
-            s.atBats > 0 ||
-            s.hits > 0 ||
-            s.inningsPitched > 0 ||
-            s.runsAllowed > 0,
+        (s) =>
+            (s.atBats ?? 0) > 0 ||
+            (s.hits ?? 0) > 0 ||
+            (s.inningsPitched ?? 0) > 0 ||
+            (s.runsAllowed ?? 0) > 0,
     );
 
-    const totals = playedSeasons.reduce(
-        (acc: any, season: any) => {
-            acc.atBats += season.atBats || 0;
-            acc.hits += season.hits || 0;
-            acc.homeRuns += season.homeRuns || 0;
-            acc.rbis += season.rbis || 0;
+    const totals = playedSeasons.reduce<CareerTotals>(
+        (acc, season) => {
+            acc.atBats += season.atBats ?? 0;
+            acc.hits += season.hits ?? 0;
+            acc.homeRuns += season.homeRuns ?? 0;
+            acc.rbis += season.rbis ?? 0;
 
-            const outs = inningsToOuts(season.inningsPitched || 0);
+            const outs = inningsToOuts(season.inningsPitched ?? 0);
             acc.outsPitched += outs;
-            acc.runsAllowed += season.runsAllowed || 0;
-            acc.walks += season.walks || 0;
-            acc.strikeouts += season.strikeouts || 0;
-            acc.weightedEraSum += (season.era || 0) * outs;
+            acc.runsAllowed += season.runsAllowed ?? 0;
+            acc.walks += season.walks ?? 0;
+            acc.strikeouts += season.strikeouts ?? 0;
+            acc.weightedEraSum += (season.era ?? 0) * outs;
 
             return acc;
         },

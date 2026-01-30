@@ -1,5 +1,4 @@
 import React from "react";
-import { BasicPlayerDto } from "@/dtos/playerDtos";
 import { Loader2 } from "lucide-react";
 
 interface CareerTotals {
