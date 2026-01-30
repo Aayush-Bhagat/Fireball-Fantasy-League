@@ -11,9 +11,6 @@ export type PlayerWithAwards = {
 	history: PlayerHistoryDto[];
 };
 
-// Revalidate every 15 minutes
-export const revalidate = 3 * 300;
-
 async function HallOfFameContent() {
 	// Fetch all players
 	const { players } = await viewAllPlayers();
