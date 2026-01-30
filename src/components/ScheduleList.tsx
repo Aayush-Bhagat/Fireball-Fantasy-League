@@ -27,7 +27,7 @@ export default function ScheduleList({ schedule }: Props) {
                                                 {(game.playedAt &&
                                                     format(
                                                         new Date(game.playedAt),
-                                                        "EEEE, MMMM do"
+                                                        "EEEE, MMMM do",
                                                     )) ||
                                                     "TBD"}{" "}
                                             </div>
@@ -36,7 +36,7 @@ export default function ScheduleList({ schedule }: Props) {
                                                 {(game.playedAt &&
                                                     format(
                                                         new Date(game.playedAt),
-                                                        "p"
+                                                        "p",
                                                     )) ||
                                                     "TBD"}
                                             </div>
