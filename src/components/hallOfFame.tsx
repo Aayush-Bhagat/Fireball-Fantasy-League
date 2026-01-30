@@ -421,7 +421,7 @@ export default function HallOfFame({ playersWithAwards }: Props) {
 				</div>
 			) : (
 				<div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-					{sortedPlayers.map((playerData, index) => (
+					{sortedPlayers.map((playerData) => (
 						<Card
 							key={playerData.player.id}
 							className="hover:shadow-lg transition-shadow cursor-pointer"

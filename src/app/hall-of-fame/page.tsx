@@ -20,23 +20,19 @@ async function HallOfFameContent() {
 
 	// Fetch awards and history for all players
 	const playersWithAwardsPromises = players.map(async (player) => {
-		try {
-			const [{ awards }, { history }] = await Promise.all([
-				getPlayerAwards(player.id),
-				getPlayerHistory(player.id),
-			]);
-			return {
-				player,
-				awards,
-				history,
-			};
-		} catch (error) {
-			return {
-				player,
-				awards: [],
-				history: [],
-			};
-		}
+
+		const [{ awards }, { history }] = await Promise.all([
+			getPlayerAwards(player.id),
+			getPlayerHistory(player.id),
+		]);
+		return {
+			player,
+			awards,
+			history,
+		};
+
+
+
 	});
 
 	const playersWithAwards = await Promise.all(playersWithAwardsPromises);
