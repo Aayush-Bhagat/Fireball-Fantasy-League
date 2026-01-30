@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useMemo } from "react";
+import React, { useState, useMemo, useEffect } from "react";
 import Image from "next/image";
 import { PlayerWithAwards } from "@/app/hall-of-fame/page";
 import { Input } from "@/components/ui/input";
@@ -40,6 +40,23 @@ export default function HallOfFame({ playersWithAwards }: Props) {
 		setSelectedPlayer(player);
 		setShowCard(true);
 	};
+
+	const handleCloseModal = () => {
+		setShowCard(false);
+		setSelectedPlayer(null);
+	};
+
+	// Handle escape key to close modal
+	useEffect(() => {
+		const handleEscape = (e: KeyboardEvent) => {
+			if (e.key === "Escape" && showCard) {
+				handleCloseModal();
+			}
+		};
+
+		document.addEventListener("keydown", handleEscape);
+		return () => document.removeEventListener("keydown", handleEscape);
+	}, [showCard]);
 
 	const toggleAwardFilter = (awardId: string) => {
 		const newSelected = new Set(selectedAwardIds);
@@ -154,12 +171,15 @@ export default function HallOfFame({ playersWithAwards }: Props) {
 		<div className="container mx-auto px-4 pt-20 pb-8">
 			{/* Player Modal */}
 			{showCard && selectedPlayer && (
-				<div className="fixed inset-0 z-50 bg-black/30 backdrop-blur-sm flex items-center justify-center">
-					<div className="relative">
+				<div
+					className="fixed inset-0 z-50 bg-black/30 backdrop-blur-sm flex items-center justify-center"
+					onClick={handleCloseModal}
+				>
+					<div className="relative" onClick={(e) => e.stopPropagation()}>
 						<PlayerCard player={selectedPlayer} />
 						<button
 							className="absolute top-2 right-2 bg-red-500 text-white rounded-full w-8 h-8"
-							onClick={() => setShowCard(false)}
+							onClick={handleCloseModal}
 						>
 							✕
 						</button>
