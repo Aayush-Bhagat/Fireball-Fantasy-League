@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useEffect, useMemo, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { createClient } from "@/lib/supabase/client";
 import { getTradeAssets } from "@/requests/trade";
@@ -140,9 +140,16 @@ function calculateCareerTotals(
 /* ===================== */
 /* Main Component        */
 /* ===================== */
-export default function ComparePlayers() {
+export default function ComparePlayers({
+    rightPlayerId,
+    setRightPlayerId,
+}: {
+    rightPlayerId?: string | null;
+    setRightPlayerId?: (id: string | null) => void;
+}) {
     const [playerA, setPlayerA] = useState<BasicPlayerDto | null>(null);
     const [playerB, setPlayerB] = useState<BasicPlayerDto | null>(null);
+    const [hasPrefilled, setHasPrefilled] = useState(false);
 
     const { data: tradeAssets, isLoading } = useQuery({
         queryKey: ["compare-player-assets"],
@@ -158,6 +165,25 @@ export default function ComparePlayers() {
             return getTradeAssets(token);
         },
     });
+
+    const allPlayers: BasicPlayerDto[] = useMemo(() => {
+        if (!tradeAssets) return [];
+        return [
+            ...tradeAssets.teamAssets.players,
+            ...tradeAssets.availableAssets.flatMap((t) => t.players),
+        ];
+    }, [tradeAssets]);
+    const handleSelectPlayerA = (player: BasicPlayerDto | null) => {
+        setPlayerA(player);
+        if (setRightPlayerId) setRightPlayerId(player?.id ?? null);
+    };
+    useEffect(() => {
+        if (!hasPrefilled && allPlayers.length > 0 && rightPlayerId) {
+            const urlPlayer = allPlayers.find((p) => p.id === rightPlayerId);
+            if (urlPlayer) setPlayerA(urlPlayer);
+            setHasPrefilled(true);
+        }
+    }, [allPlayers, rightPlayerId, hasPrefilled]);
 
     const { data: careerA } = useQuery({
         queryKey: ["career-stats", playerA?.id],
@@ -195,11 +221,6 @@ export default function ComparePlayers() {
         );
     }
 
-    const allPlayers: BasicPlayerDto[] = [
-        ...tradeAssets.teamAssets.players,
-        ...tradeAssets.availableAssets.flatMap((t) => t.players),
-    ];
-
     const swapPlayers = () => {
         setPlayerA(playerB);
         setPlayerB(playerA);
@@ -225,7 +246,7 @@ export default function ComparePlayers() {
                         label="Player A"
                         players={allPlayers}
                         selected={playerA}
-                        onSelect={setPlayerA}
+                        onSelect={handleSelectPlayerA} // use new handler
                         disabledId={playerB?.id}
                     />
                 </div>
