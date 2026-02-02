@@ -2,8 +2,7 @@
 
 import React, { useEffect, useMemo, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
-import { createClient } from "@/lib/supabase/client";
-import { getTradeAssets } from "@/requests/trade";
+import { viewAllPlayers } from "@/requests/players";
 import { getCareerStats } from "@/requests/players";
 import { BasicPlayerDto } from "@/dtos/playerDtos";
 import { Button } from "@/components/ui/button";
@@ -135,49 +134,37 @@ function calculateCareerTotals(
 }
 
 export default function ComparePlayers({
-    rightPlayerId,
-    setRightPlayerId,
+    PlayerAId,
+    setPlayerAId,
 }: {
-    rightPlayerId?: string | null;
-    setRightPlayerId?: (id: string | null) => void;
+    PlayerAId?: string | null;
+    setPlayerAId?: (id: string | null) => void;
 }) {
     const [playerA, setPlayerA] = useState<BasicPlayerDto | null>(null);
     const [playerB, setPlayerB] = useState<BasicPlayerDto | null>(null);
     const [hasPrefilled, setHasPrefilled] = useState(false);
 
-    const { data: tradeAssets, isLoading } = useQuery({
-        queryKey: ["compare-player-assets"],
-        queryFn: async () => {
-            const supabase = createClient();
-            const { data: user } = await supabase.auth.getUser();
-            if (!user) return null;
-
-            const token = (await supabase.auth.getSession()).data.session
-                ?.access_token;
-            if (!token) return null;
-
-            return getTradeAssets(token);
-        },
+    const { data, isLoading } = useQuery({
+        queryKey: ["all-players"],
+        queryFn: viewAllPlayers,
     });
 
     const allPlayers: BasicPlayerDto[] = useMemo(() => {
-        if (!tradeAssets) return [];
-        return [
-            ...tradeAssets.teamAssets.players,
-            ...tradeAssets.availableAssets.flatMap((t) => t.players),
-        ];
-    }, [tradeAssets]);
+        return data?.players ?? [];
+    }, [data]);
+
     const handleSelectPlayerA = (player: BasicPlayerDto | null) => {
         setPlayerA(player);
-        if (setRightPlayerId) setRightPlayerId(player?.id ?? null);
+        if (setPlayerAId) setPlayerAId(player?.id ?? null);
     };
+
     useEffect(() => {
-        if (!hasPrefilled && allPlayers.length > 0 && rightPlayerId) {
-            const urlPlayer = allPlayers.find((p) => p.id === rightPlayerId);
+        if (!hasPrefilled && allPlayers.length > 0 && PlayerAId) {
+            const urlPlayer = allPlayers.find((p) => p.id === PlayerAId);
             if (urlPlayer) setPlayerA(urlPlayer);
             setHasPrefilled(true);
         }
-    }, [allPlayers, rightPlayerId, hasPrefilled]);
+    }, [allPlayers, PlayerAId, hasPrefilled]);
 
     const { data: careerA } = useQuery({
         queryKey: ["career-stats", playerA?.id],
@@ -207,10 +194,10 @@ export default function ComparePlayers({
         );
     }
 
-    if (!tradeAssets) {
+    if (!allPlayers.length) {
         return (
             <div className="text-center mt-20 text-gray-500">
-                Please log in to compare players.
+                No players available.
             </div>
         );
     }
@@ -222,7 +209,6 @@ export default function ComparePlayers({
 
     return (
         <div className="mt-12 container mx-auto px-4">
-            {/* Header */}
             <div className="text-center mb-8">
                 <h1 className="text-4xl font-bold text-purple-700">
                     Compare Players
@@ -268,40 +254,21 @@ export default function ComparePlayers({
 
             {careerA && careerB && playerA && playerB && (
                 <div className="flex flex-col md:flex-row gap-6 mb-8">
-                    {/* Career Stats Comparison */}
-                    <div className="flex-1 h-full">
-                        <div className="h-full">
-                            <CareerStatsComparison
-                                playerA={{
-                                    ...careerA,
-                                    name: playerA.name,
-                                }}
-                                playerB={{
-                                    ...careerB,
-                                    name: playerB.name,
-                                }}
-                            />
-                        </div>
+                    <div className="flex-1">
+                        <CareerStatsComparison
+                            playerA={{ ...careerA, name: playerA.name }}
+                            playerB={{ ...careerB, name: playerB.name }}
+                        />
                     </div>
-                    {/* Stat Delta Summary */}
-                    <div className="flex-1 h-full">
-                        <div className="h-full">
-                            <StatDeltaSummary
-                                playerA={{
-                                    ...careerA,
-                                    image: playerA.image ?? undefined,
-                                }}
-                                playerB={{
-                                    ...careerB,
-                                    image: playerB.image ?? undefined,
-                                }}
-                            />
-                        </div>
+                    <div className="flex-1">
+                        <StatDeltaSummary
+                            playerA={{ ...careerA, image: playerA.image }}
+                            playerB={{ ...careerB, image: playerB.image }}
+                        />
                     </div>
                 </div>
             )}
 
-            {/* Compare Columns */}
             <div className="grid grid-cols-1 md:grid-cols-2 gap-8 mt-10 mb-20">
                 <CompareColumn player={playerA} />
                 <CompareColumn player={playerB} />

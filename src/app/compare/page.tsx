@@ -10,7 +10,7 @@ export default async function ComparePlayersPage({
 
     return (
         <div className="pt-20">
-            <ComparePlayers rightPlayerId={rightPlayerId} />
+            <ComparePlayers PlayerAId={rightPlayerId} />
         </div>
     );
 }
