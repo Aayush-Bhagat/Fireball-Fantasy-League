@@ -13,9 +13,6 @@ import StatDeltaSummary from "@/components/comparePlayers/statDeltaSummary";
 import { ArrowLeftRight, Loader2 } from "lucide-react";
 import CareerStatsComparison from "@/components/comparePlayers/careerStatsComparison";
 
-/* ===================== */
-/* Utils for IP/ERA      */
-/* ===================== */
 interface CareerSeasonStats {
     atBats?: number;
     hits?: number;
@@ -137,9 +134,6 @@ function calculateCareerTotals(
     };
 }
 
-/* ===================== */
-/* Main Component        */
-/* ===================== */
 export default function ComparePlayers({
     rightPlayerId,
     setRightPlayerId,
@@ -238,20 +232,17 @@ export default function ComparePlayers({
                 </p>
             </div>
 
-            {/* Player Selects with Swap Button */}
             <div className="flex flex-col md:flex-row items-start justify-center gap-4 mb-6">
-                {/* Player A Select */}
                 <div className="flex-1">
                     <PlayerSelect
                         label="Player A"
                         players={allPlayers}
                         selected={playerA}
-                        onSelect={handleSelectPlayerA} // use new handler
+                        onSelect={handleSelectPlayerA}
                         disabledId={playerB?.id}
                     />
                 </div>
 
-                {/* Swap Button */}
                 <div className="flex justify-center md:self-center md:mt-6">
                     <Button
                         variant="outline"
@@ -264,7 +255,6 @@ export default function ComparePlayers({
                     </Button>
                 </div>
 
-                {/* Player B Select */}
                 <div className="flex-1">
                     <PlayerSelect
                         label="Player B"

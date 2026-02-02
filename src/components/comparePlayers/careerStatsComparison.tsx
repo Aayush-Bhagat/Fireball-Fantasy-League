@@ -38,7 +38,7 @@ export default function CareerStatsComparison({
         label: string;
         valA: number | string;
         valB: number | string;
-        inverse?: boolean; // lower is better
+        inverse?: boolean;
     }[] = [
         { label: "At Bats", valA: playerA.atBats, valB: playerB.atBats },
         { label: "Hits", valA: playerA.hits, valB: playerB.hits },
@@ -111,12 +111,10 @@ export default function CareerStatsComparison({
                         const aNumber = Number(valA);
                         const bNumber = Number(valB);
 
-                        // Determine better player, but no highlight if tied
                         let betterA: boolean | null = null;
                         if (aNumber > bNumber) betterA = inverse ? false : true;
                         else if (aNumber < bNumber)
                             betterA = inverse ? true : false;
-                        // else leave betterA as null if tied
 
                         return (
                             <tr

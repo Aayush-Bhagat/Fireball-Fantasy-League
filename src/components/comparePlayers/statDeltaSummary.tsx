@@ -111,7 +111,7 @@ function Delta({
             >
                 {formatValue(label, value)}
             </span>
-            {isBetter !== null && // show arrows only if not tied
+            {isBetter !== null &&
                 (isBetter ? (
                     <ArrowUp
                         className={`w-4 h-4 ${isBetter ? "text-green-600" : ""}`}
