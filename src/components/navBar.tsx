@@ -120,6 +120,13 @@ export default function NavBar({ isLoggedIn, role }: Props) {
                                         >
                                             Trades
                                         </Link>
+                                        <Link
+                                            href="/compare"
+                                            className="block px-4 py-2 hover:bg-gray-100 dark:hover:bg-gray-700 md:rounded"
+                                            onClick={() => setMenuOpen(false)}
+                                        >
+                                            Compare
+                                        </Link>
                                     </div>
                                 )}
 
@@ -144,6 +151,13 @@ export default function NavBar({ isLoggedIn, role }: Props) {
                                         className="block px-4 py-2 hover:bg-gray-100 dark:hover:bg-gray-700 rounded"
                                     >
                                         Trades
+                                    </Link>
+                                    <Link
+                                        href="/compare"
+                                        className="block px-4 py-2 hover:bg-gray-100 dark:hover:bg-gray-700 md:rounded"
+                                        onClick={() => setMenuOpen(false)}
+                                    >
+                                        Compare
                                     </Link>
                                 </div>
                             </li>

@@ -3,6 +3,7 @@ import React, { useState, useMemo } from "react";
 import { PlayerWithStatsDto } from "@/dtos/playerDtos";
 import PlayerCard from "./playerCard";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import Link from "next/link";
 
 type Props = {
     players: PlayerWithStatsDto[];
@@ -53,7 +54,7 @@ export default function ViewPlayers({ players, freeAgents = false }: Props) {
         const maxHR = Math.max(...players.map((p) => p.stats?.homeRuns ?? 0));
         const maxRBI = Math.max(...players.map((p) => p.stats?.rbis ?? 0));
         const maxAVG = Math.max(
-            ...players.map((p) => p.stats?.battingAverage ?? 0)
+            ...players.map((p) => p.stats?.battingAverage ?? 0),
         );
 
         return players
@@ -86,7 +87,7 @@ export default function ViewPlayers({ players, freeAgents = false }: Props) {
                 (p) =>
                     p.stats &&
                     p.stats.era !== undefined &&
-                    p.stats.inningsPitched >= p.stats.gamesPlayed
+                    p.stats.inningsPitched >= p.stats.gamesPlayed,
             )
             .map((p) => ({
                 ...p,
@@ -132,9 +133,9 @@ export default function ViewPlayers({ players, freeAgents = false }: Props) {
     const filteredFielders = useMemo(
         () =>
             sortedFielders.filter((p) =>
-                p.name.toLowerCase().includes(searchQuery.toLowerCase())
+                p.name.toLowerCase().includes(searchQuery.toLowerCase()),
             ),
-        [sortedFielders, searchQuery]
+        [sortedFielders, searchQuery],
     );
 
     const sortedBatters = useMemo(() => {
@@ -166,22 +167,22 @@ export default function ViewPlayers({ players, freeAgents = false }: Props) {
     const filteredBatters = useMemo(
         () =>
             sortedBatters.filter((p) =>
-                p.name.toLowerCase().includes(searchQuery.toLowerCase())
+                p.name.toLowerCase().includes(searchQuery.toLowerCase()),
             ),
-        [sortedBatters, searchQuery]
+        [sortedBatters, searchQuery],
     );
 
     const filteredPitchers = useMemo(
         () =>
             sortedPitchers.filter((p) =>
-                p.name.toLowerCase().includes(searchQuery.toLowerCase())
+                p.name.toLowerCase().includes(searchQuery.toLowerCase()),
             ),
-        [sortedPitchers, searchQuery]
+        [sortedPitchers, searchQuery],
     );
 
     const toggleSort = (
         key: BattingStatKey | PitchingStatKey | FieldingStatKey,
-        type: "bat" | "pitch" | "field"
+        type: "bat" | "pitch" | "field",
     ) => {
         const current =
             type === "bat" ? batSort : type === "pitch" ? pitchSort : fieldSort;
@@ -190,10 +191,10 @@ export default function ViewPlayers({ players, freeAgents = false }: Props) {
             current.key !== key
                 ? "desc"
                 : current.direction === "desc"
-                ? "asc"
-                : current.direction === "asc"
-                ? null
-                : "desc";
+                  ? "asc"
+                  : current.direction === "asc"
+                    ? null
+                    : "desc";
 
         if (type === "bat") {
             setBatSort({
@@ -215,7 +216,7 @@ export default function ViewPlayers({ players, freeAgents = false }: Props) {
 
     const renderTableRows = (
         type: "bat" | "pitch" | "field",
-        playerList: (PlayerWithStatsDto & { rank: number })[]
+        playerList: (PlayerWithStatsDto & { rank: number })[],
     ) =>
         playerList.map((player) => (
             <tr
@@ -302,6 +303,18 @@ export default function ViewPlayers({ players, freeAgents = false }: Props) {
                         No stats available
                     </td>
                 )}
+                <td
+                    className="px-4 py-4 text-center"
+                    onClick={(e) => e.stopPropagation()}
+                >
+                    <Link
+                        href={`/compare?rightPlayer=${player.id}`}
+                        className="inline-block px-3 py-1 text-sm font-semibold rounded-lg  
+                   bg-blue-100 text-blue-700 hover:bg-blue-300 transition"
+                    >
+                        Compare
+                    </Link>
+                </td>
             </tr>
         ));
 
@@ -389,7 +402,7 @@ export default function ViewPlayers({ players, freeAgents = false }: Props) {
                                             onClick={() =>
                                                 toggleSort(
                                                     "battingAverage",
-                                                    "bat"
+                                                    "bat",
                                                 )
                                             }
                                         >
@@ -434,6 +447,9 @@ export default function ViewPlayers({ players, freeAgents = false }: Props) {
                                                 (batSort.direction === "asc"
                                                     ? " ▲"
                                                     : " ▼")}
+                                        </th>
+                                        <th className="px-4 py-3 text-center w-1/6">
+                                            Compare
                                         </th>
                                     </tr>
                                 </thead>
@@ -480,7 +496,7 @@ export default function ViewPlayers({ players, freeAgents = false }: Props) {
                                             onClick={() =>
                                                 toggleSort(
                                                     "runsAllowed",
-                                                    "pitch"
+                                                    "pitch",
                                                 )
                                             }
                                         >
@@ -495,7 +511,7 @@ export default function ViewPlayers({ players, freeAgents = false }: Props) {
                                             onClick={() =>
                                                 toggleSort(
                                                     "strikeouts",
-                                                    "pitch"
+                                                    "pitch",
                                                 )
                                             }
                                         >
@@ -510,7 +526,7 @@ export default function ViewPlayers({ players, freeAgents = false }: Props) {
                                             onClick={() =>
                                                 toggleSort(
                                                     "inningsPitched",
-                                                    "pitch"
+                                                    "pitch",
                                                 )
                                             }
                                         >
@@ -520,6 +536,9 @@ export default function ViewPlayers({ players, freeAgents = false }: Props) {
                                                 (pitchSort.direction === "asc"
                                                     ? " ▲"
                                                     : " ▼")}
+                                        </th>
+                                        <th className="px-4 py-3 text-center w-1/6">
+                                            Compare
                                         </th>
                                     </tr>
                                 </thead>
@@ -562,6 +581,9 @@ export default function ViewPlayers({ players, freeAgents = false }: Props) {
                                                 (fieldSort.direction === "asc"
                                                     ? " ▲"
                                                     : " ▼")}
+                                        </th>
+                                        <th className="px-4 py-3 text-center w-1/6">
+                                            Compare
                                         </th>
                                     </tr>
                                 </thead>
