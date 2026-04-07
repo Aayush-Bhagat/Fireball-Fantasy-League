@@ -192,7 +192,7 @@ export default function ProposeTrade() {
 										</div>
 
 										<span className="text-lg">
-											Pick {pick.round} (Season:{" "}
+											Pick: Round {pick.round} (Season:{" "}
 											{pick.seasonId})
 										</span>
 									</div>
@@ -332,7 +332,7 @@ export default function ProposeTrade() {
 										</div>
 
 										<span className="text-lg">
-											Pick {pick.round} (Season:{" "}
+											Pick: Round {pick.round} (Season:{" "}
 											{pick.seasonId})
 										</span>
 									</div>

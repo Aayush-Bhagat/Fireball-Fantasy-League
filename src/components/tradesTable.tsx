@@ -124,19 +124,19 @@ export default function TradesTable({ tradesData }: Props) {
 																	)}
 																	{a.draftPick && (
 																		<span className="text-xs">
-																			Pick
+																			Round
+																			{
+																				a
+																					.draftPick
+																					.round
+																			}
 																			(Season{" "}
 																			{
 																				a
 																					.draftPick
 																					.seasonId
 																			}
-																			) :{" "}
-																			{
-																				a
-																					.draftPick
-																					.round
-																			}
+																			)
 																		</span>
 																	)}
 																</div>
@@ -240,19 +240,19 @@ export default function TradesTable({ tradesData }: Props) {
 																	)}
 																	{a.draftPick && (
 																		<span className="text-xs">
-																			Pick
+																			Round
+																			{
+																				a
+																					.draftPick
+																					.round
+																			}
 																			(Season{" "}
 																			{
 																				a
 																					.draftPick
 																					.seasonId
 																			}
-																			) :{" "}
-																			{
-																				a
-																					.draftPick
-																					.round
-																			}
+																			)
 																		</span>
 																	)}
 																</div>
