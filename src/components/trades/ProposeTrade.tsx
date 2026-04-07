@@ -1,6 +1,6 @@
 "use client";
 import { BasicPlayerDto } from "@/dtos/playerDtos";
-import { KeepDto } from "@/dtos/teamDtos";
+import { BasicDraftPickDto } from "@/dtos/teamDtos";
 import { TeamTradeAsset } from "@/dtos/tradeDtos";
 import { createClient } from "@/lib/supabase/client";
 import { getTradeAssets, sendTradeRequest } from "@/requests/trade";
@@ -23,20 +23,22 @@ import ProposeTradeSkeleton from "../loaders/ProposeTradeSkeleton";
 
 export default function ProposeTrade() {
 	const [selectedTeam, setSelectedTeam] = useState<TeamTradeAsset | null>(
-		null
+		null,
 	);
 	const [selectedTeamId, setSelectedTeamId] = useState<string>("");
 
 	const [selectedTeamPlayers, setSelectedTeamPlayers] = useState<
 		BasicPlayerDto[]
 	>([]);
-	const [selectedTeamKeeps, setSelectedTeamKeeps] = useState<KeepDto[]>([]);
+	const [selectedTeamPicks, setSelectedTeamPicks] = useState<
+		BasicDraftPickDto[]
+	>([]);
 
 	const [selectedOtherTeamPlayers, setSelectedOtherTeamPlayers] = useState<
 		BasicPlayerDto[]
 	>([]);
-	const [selectedOtherTeamKeeps, setSelectedOtherTeamKeeps] = useState<
-		KeepDto[]
+	const [selectedOtherTeamPicks, setSelectedOtherTeamPicks] = useState<
+		BasicDraftPickDto[]
 	>([]);
 	const [open, setOpen] = useState(false);
 
@@ -83,9 +85,9 @@ export default function ProposeTrade() {
 			await sendTradeRequest(token, {
 				receivingTeamId: selectedTeamId,
 				proposingTeamPlayers: selectedTeamPlayers.map((p) => p.id),
-				proposingTeamKeeps: selectedTeamKeeps.map((k) => k.id),
+				proposingTeamPicks: selectedTeamPicks.map((p) => p.id),
 				receivingTeamPlayers: selectedOtherTeamPlayers.map((p) => p.id),
-				receivingTeamKeeps: selectedOtherTeamKeeps.map((k) => k.id),
+				receivingTeamPicks: selectedOtherTeamPicks.map((p) => p.id),
 			});
 		},
 		onSuccess: () => {
@@ -97,14 +99,14 @@ export default function ProposeTrade() {
 
 	const clearTrade = () => {
 		setSelectedTeamPlayers([]);
-		setSelectedTeamKeeps([]);
+		setSelectedTeamPicks([]);
 		setSelectedOtherTeamPlayers([]);
-		setSelectedOtherTeamKeeps([]);
+		setSelectedOtherTeamPicks([]);
 	};
 
 	useEffect(() => {
 		setSelectedOtherTeamPlayers([]);
-		setSelectedOtherTeamKeeps([]);
+		setSelectedOtherTeamPicks([]);
 	}, [selectedTeam]);
 
 	if (isLoading) {
@@ -134,8 +136,8 @@ export default function ProposeTrade() {
 										) {
 											setSelectedTeamPlayers(
 												selectedTeamPlayers.filter(
-													(p) => p.id !== player.id
-												)
+													(p) => p.id !== player.id,
+												),
 											);
 										} else {
 											setSelectedTeamPlayers([
@@ -159,44 +161,44 @@ export default function ProposeTrade() {
 									</div>
 									<Checkbox
 										checked={selectedTeamPlayers.includes(
-											player
+											player,
 										)}
 										className="border border-black"
 									/>
 								</li>
 							))}
-							{tradeAssets?.teamAssets.keeps.map((keep) => (
+							{tradeAssets?.teamAssets.draftPicks.map((pick) => (
 								<li
 									className="flex items-center justify-between p-3 rounded shadow transition-transform transform hover:scale-100 cursor-pointer"
-									key={keep.id}
+									key={pick.id}
 									onClick={() => {
-										if (selectedTeamKeeps.includes(keep)) {
-											setSelectedTeamKeeps(
-												selectedTeamKeeps.filter(
-													(k) => k.id !== keep.id
-												)
+										if (selectedTeamPicks.includes(pick)) {
+											setSelectedTeamPicks(
+												selectedTeamPicks.filter(
+													(p) => p.id !== pick.id,
+												),
 											);
 										} else {
-											setSelectedTeamKeeps([
-												...selectedTeamKeeps,
-												keep,
+											setSelectedTeamPicks([
+												...selectedTeamPicks,
+												pick,
 											]);
 										}
 									}}
 								>
 									<div className="flex items-center gap-4">
 										<div className="rounded-full bg-blue-100 h-12 w-12 text-center flex items-center justify-center font-bold text-l">
-											{keep.odds}
+											{pick.round}
 										</div>
 
 										<span className="text-lg">
-											Keep {keep.odds} (Season:{" "}
-											{keep.seasonId})
+											Pick {pick.round} (Season:{" "}
+											{pick.seasonId})
 										</span>
 									</div>
 									<Checkbox
-										checked={selectedTeamKeeps.includes(
-											keep
+										checked={selectedTeamPicks.includes(
+											pick,
 										)}
 										className="border border-black"
 									/>
@@ -216,7 +218,7 @@ export default function ProposeTrade() {
 							onValueChange={(val: string) => {
 								const selected =
 									tradeAssets?.availableAssets.find(
-										(t) => t.id === val
+										(t) => t.id === val,
 									);
 								setSelectedTeam(selected || null);
 								setSelectedTeamId(val);
@@ -250,7 +252,7 @@ export default function ProposeTrade() {
 												</div>
 												{team.name}
 											</SelectItem>
-										)
+										),
 									)}
 								</SelectGroup>
 							</SelectContent>
@@ -265,13 +267,13 @@ export default function ProposeTrade() {
 									onClick={() => {
 										if (
 											selectedOtherTeamPlayers.includes(
-												player
+												player,
 											)
 										) {
 											setSelectedOtherTeamPlayers(
 												selectedOtherTeamPlayers.filter(
-													(p) => p.id !== player.id
-												)
+													(p) => p.id !== player.id,
+												),
 											);
 										} else {
 											setSelectedOtherTeamPlayers([
@@ -295,48 +297,48 @@ export default function ProposeTrade() {
 									</div>
 									<Checkbox
 										checked={selectedOtherTeamPlayers.includes(
-											player
+											player,
 										)}
 										className="border border-black"
 									/>
 								</li>
 							))}
-							{selectedTeam?.keeps.map((keep) => (
+							{selectedTeam?.draftPicks.map((pick) => (
 								<li
 									className="flex items-center justify-between p-3 rounded shadow transition-transform transform hover:scale-100 cursor-pointer"
-									key={keep.id}
+									key={pick.id}
 									onClick={() => {
 										if (
-											selectedOtherTeamKeeps.includes(
-												keep
+											selectedOtherTeamPicks.includes(
+												pick,
 											)
 										) {
-											setSelectedOtherTeamKeeps(
-												selectedOtherTeamKeeps.filter(
-													(k) => k.id !== keep.id
-												)
+											setSelectedOtherTeamPicks(
+												selectedOtherTeamPicks.filter(
+													(p) => p.id !== pick.id,
+												),
 											);
 										} else {
-											setSelectedOtherTeamKeeps([
-												...selectedOtherTeamKeeps,
-												keep,
+											setSelectedOtherTeamPicks([
+												...selectedOtherTeamPicks,
+												pick,
 											]);
 										}
 									}}
 								>
 									<div className="flex items-center gap-4">
 										<div className="rounded-full bg-pink-200 h-12 w-12 text-center flex items-center justify-center font-bold text-l">
-											{keep.odds}
+											{pick.round}
 										</div>
 
 										<span className="text-lg">
-											Keep {keep.odds} (Season:{" "}
-											{keep.seasonId})
+											Pick {pick.round} (Season:{" "}
+											{pick.seasonId})
 										</span>
 									</div>
 									<Checkbox
-										checked={selectedOtherTeamKeeps.includes(
-											keep
+										checked={selectedOtherTeamPicks.includes(
+											pick,
 										)}
 										className="border border-black"
 									/>
@@ -369,9 +371,9 @@ export default function ProposeTrade() {
 					submitTrade={handleSubmitTrade.mutate}
 					selectedTeam={selectedTeam}
 					selectedTeamPlayers={selectedTeamPlayers}
-					selectedTeamKeeps={selectedTeamKeeps}
+					selectedTeamPicks={selectedTeamPicks}
 					selectedOtherTeamPlayers={selectedOtherTeamPlayers}
-					selectedOtherTeamKeeps={selectedOtherTeamKeeps}
+					selectedOtherTeamPicks={selectedOtherTeamPicks}
 					isLoading={handleSubmitTrade.isPending}
 				/>
 			)}

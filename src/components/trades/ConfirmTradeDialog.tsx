@@ -10,7 +10,7 @@ import {
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { BasicPlayerDto } from "@/dtos/playerDtos";
-import { KeepDto } from "@/dtos/teamDtos";
+import { BasicDraftPickDto } from "@/dtos/teamDtos";
 import { TeamTradeAsset } from "@/dtos/tradeDtos";
 import { Loader2 } from "lucide-react";
 
@@ -20,9 +20,9 @@ type Props = {
 	submitTrade: () => void;
 	selectedTeam: TeamTradeAsset;
 	selectedTeamPlayers: BasicPlayerDto[];
-	selectedTeamKeeps: KeepDto[];
+	selectedTeamPicks: BasicDraftPickDto[];
 	selectedOtherTeamPlayers: BasicPlayerDto[];
-	selectedOtherTeamKeeps: KeepDto[];
+	selectedOtherTeamPicks: BasicDraftPickDto[];
 	isLoading?: boolean;
 };
 
@@ -32,9 +32,9 @@ export default function ConfirmTradeDialog({
 	submitTrade,
 	selectedTeam,
 	selectedTeamPlayers,
-	selectedTeamKeeps,
+	selectedTeamPicks,
 	selectedOtherTeamPlayers,
-	selectedOtherTeamKeeps,
+	selectedOtherTeamPicks,
 	isLoading = false,
 }: Props) {
 	return (
@@ -68,22 +68,22 @@ export default function ConfirmTradeDialog({
 											</span>
 										</li>
 									))}
-									{selectedOtherTeamKeeps.map((k) => (
+									{selectedOtherTeamPicks.map((p) => (
 										<li
-											key={k.id}
+											key={p.id}
 											className="flex items-center gap-3 bg-orange-100 p-2 rounded-md"
 										>
 											<div className="h-10 w-10 flex items-center justify-center rounded-full bg-pink-300 text-white font-bold">
-												{k.odds}
+												{p.round}
 											</div>
 											<span className="text-gray-800">
-												Keep {k.odds} (Season{" "}
-												{k.seasonId})
+												Pick {p.round} (Season{" "}
+												{p.seasonId})
 											</span>
 										</li>
 									))}
 									{selectedOtherTeamPlayers.length === 0 &&
-										selectedOtherTeamKeeps.length === 0 && (
+										selectedOtherTeamPicks.length === 0 && (
 											<li className="italic text-gray-500">
 												Nothing
 											</li>
@@ -112,22 +112,22 @@ export default function ConfirmTradeDialog({
 											</span>
 										</li>
 									))}
-									{selectedTeamKeeps.map((k) => (
+									{selectedTeamPicks.map((p) => (
 										<li
-											key={k.id}
+											key={p.id}
 											className="flex items-center gap-3 bg-green-100 p-2 rounded-md"
 										>
 											<div className="h-10 w-10 flex items-center justify-center rounded-full bg-blue-300 text-white font-bold">
-												{k.odds}
+												{p.round}
 											</div>
 											<span className="text-gray-800">
-												Keep {k.odds} (Season{" "}
-												{k.seasonId})
+												Pick {p.round} (Season{" "}
+												{p.seasonId})
 											</span>
 										</li>
 									))}
 									{selectedTeamPlayers.length === 0 &&
-										selectedTeamKeeps.length === 0 && (
+										selectedTeamPicks.length === 0 && (
 											<li className="italic text-gray-500">
 												Nothing
 											</li>
