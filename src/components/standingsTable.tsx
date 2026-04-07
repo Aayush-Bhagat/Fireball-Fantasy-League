@@ -65,37 +65,73 @@ export default async function StandingTable({
             });
     }
     function getClinchStatus(
-        team: { id: string; wins: number; losses: number },
-        allTeams: { id: string; wins: number; losses: number }[],
+        team: { id: string; wins: number; losses: number; ties: number },
+        allTeams: { id: string; wins: number; losses: number; ties: number }[],
+        scheduleData: SeasonScheduleResponseDto,
     ): string {
         const totalGames = 10;
-        // const gamesLeft = totalGames - (team.wins + team.losses);
-        // const teamMaxWins = team.wins + gamesLeft;
 
-        // Clinched first seed if no team can possibly match or beat your current wins
-        const hasClinchedFirst = allTeams.every(({ id, wins, losses }) => {
-            if (id === team.id) return true;
-            const otherMaxPossible = wins + (totalGames - (wins + losses));
-            return team.wins > otherMaxPossible;
+        const getPct = (t: typeof team) => {
+            const games = t.wins + t.losses + t.ties;
+            if (games === 0) return 0;
+            return (t.wins + 0.5 * t.ties) / games;
+        };
+
+        const getRD = (t: typeof team) => {
+            const rd = calculateRunDifferential(scheduleData, t.id);
+            return typeof rd === "number" ? rd : -Infinity;
+        };
+
+        const getMaxTeam = (t: typeof team) => {
+            const gamesPlayed = t.wins + t.losses + t.ties;
+            const gamesLeft = totalGames - gamesPlayed;
+
+            return {
+                ...t,
+                wins: t.wins + gamesLeft, // assume all wins
+                ties: 0,
+            };
+        };
+
+        const teamCurrentPct = getPct(team);
+        const teamRD = getRD(team);
+
+        const hasClinchedFirst = allTeams.every((other) => {
+            if (other.id === team.id) return true;
+
+            const maxOther = getMaxTeam(other);
+            const otherPct = getPct(maxOther);
+
+            if (otherPct > teamCurrentPct) return false;
+            if (otherPct === teamCurrentPct) {
+                return getRD(maxOther) < teamRD;
+            }
+
+            return true;
         });
+
         if (hasClinchedFirst) return "Z";
 
-        // Count how many teams have max wins >= this team's current wins
-        const teamsWithMaxWinsAtLeastCurrent = allTeams.filter(
-            ({ id, wins, losses }) => {
-                if (id === team.id) return false;
-                const otherMaxPossible = wins + (totalGames - (wins + losses));
-                return otherMaxPossible >= team.wins;
-            },
-        ).length;
+        const teamsThatCanPass = allTeams.filter((other) => {
+            if (other.id === team.id) return false;
 
-        if (teamsWithMaxWinsAtLeastCurrent < 3) {
+            const maxOther = getMaxTeam(other);
+            const otherPct = getPct(maxOther);
+
+            if (otherPct > teamCurrentPct) return true;
+            if (otherPct === teamCurrentPct) {
+                return getRD(maxOther) >= teamRD;
+            }
+
+            return false;
+        });
+
+        if (teamsThatCanPass.length < 3) {
             return "X";
         }
 
         return "";
     }
-
     function ClinchLegend() {
         return (
             <div className="mt-4 text-sm text-gray-700 flex space-x-6">
@@ -112,7 +148,7 @@ export default async function StandingTable({
     }
     function hasAnyClinch(teams: typeof sortedWest) {
         return teams.some((team) => {
-            const clinch = getClinchStatus(team, teams);
+            const clinch = getClinchStatus(team, teams, schedule);
             return clinch === "Z" || clinch === "X";
         });
     }
@@ -145,6 +181,7 @@ export default async function StandingTable({
                                     const clinch = getClinchStatus(
                                         team,
                                         sortedWest,
+                                        schedule,
                                     );
                                     return (
                                         <tr className="border-t" key={team.id}>
@@ -228,6 +265,7 @@ export default async function StandingTable({
                                     const clinch = getClinchStatus(
                                         team,
                                         sortedEast,
+                                        schedule,
                                     );
                                     return (
                                         <tr className="border-t" key={team.id}>
