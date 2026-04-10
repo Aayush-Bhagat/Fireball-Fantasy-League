@@ -29,7 +29,7 @@ const teams: Team[] = [
     { id: "8", name: "Team 8" },
 ];
 
-// ---------------- DRAFT DATA ----------------
+// ---------------- DATA ----------------
 const rounds: Round[] = [
     {
         roundNumber: 1,
@@ -90,46 +90,106 @@ const rounds: Round[] = [
 ];
 
 // ---------------- HELPERS ----------------
-function getPicksForTeam(round: Round, teamId: string) {
-    return round.picks.filter((p) => p.teamId === teamId);
+const formatPick = (p: Pick) => `${p.round}.${p.pickInRound}`;
+
+// ---------------- COMPONENTS ----------------
+
+function PickCard({ pick }: { pick: Pick }) {
+    const isActive = !pick.player;
+
+    return (
+        <div
+            className={`rounded-lg p-2 text-xs border min-h-[70px]
+            ${isActive ? "bg-blue-50 border-blue-400" : "bg-gray-50"}`}
+        >
+            <div className="flex justify-between">
+                <span className="font-bold text-gray-700">
+                    {formatPick(pick)}
+                </span>
+
+                {/* {isActive && (
+                    <span className="text-[10px] bg-blue-600 text-white px-2 rounded-full">
+                        OTC
+                    </span>
+                )} */}
+            </div>
+
+            <div className="text-gray-500 truncate mt-1">
+                {pick.player || "On the clock"}
+            </div>
+        </div>
+    );
 }
 
-function isCompPick(pickInRound: number) {
-    return pickInRound > 8;
+function CompPickCard({ pick }: { pick: Pick }) {
+    return (
+        <div className="rounded-md p-1 text-xs bg-yellow-100 border border-yellow-400 min-h-[70px]">
+            <div className="flex justify-between">
+                <span className="font-bold">{formatPick(pick)}</span>
+            </div>
+            <div className="text-gray-600 truncate">
+                {pick.player || "Comp Pick"}
+            </div>
+        </div>
+    );
 }
 
-function formatPickLabel(pick: Pick) {
-    return `${pick.round}.${pick.pickInRound}`;
+function TeamColumn({
+    picks,
+    isComp = false,
+}: {
+    picks: Pick[];
+    isComp?: boolean;
+}) {
+    if (picks.length === 0) {
+        return (
+            <div
+                className={
+                    isComp
+                        ? "min-h-[70px]"
+                        : "min-h-[110px] flex items-center justify-center text-gray-300 text-xs"
+                }
+            ></div>
+        );
+    }
+
+    return (
+        <div className="space-y-2">
+            {picks.map((p, i) =>
+                isComp ? (
+                    <CompPickCard key={i} pick={p} />
+                ) : (
+                    <PickCard key={i} pick={p} />
+                ),
+            )}
+        </div>
+    );
 }
 
-// ---------------- MAIN COMPONENT ----------------
+// ---------------- MAIN ----------------
 export default async function DraftBoard() {
     const { players } = await viewFreeAgents();
 
     return (
         <div className="min-h-screen bg-gradient-to-br from-slate-50 via-gray-100 to-slate-200 flex flex-col lg:flex-row">
-            {/* LEFT SIDE */}
-            <div className="flex-1 p-4 lg:p-8 overflow-hidden">
-                {/* TITLE */}
+            {/* LEFT */}
+            <div className="flex-1 p-4 lg:p-8">
                 <div className="mb-6 text-center">
-                    <h1 className="text-3xl lg:text-4xl font-extrabold text-gray-800 tracking-tight">
-                        Fireball Season 3 Draft
+                    <h1 className="text-3xl lg:text-4xl font-extrabold text-gray-800">
+                        Fireball League Draft
                     </h1>
-                    <p className="text-sm text-gray-500 mt-1">
-                        Live draft board
-                    </p>
+                    <p className="text-sm text-gray-500">Season 4</p>
                 </div>
 
-                {/* SCROLL AREA */}
-                <div className="overflow-x-auto rounded-2xl border border-gray-200 bg-white shadow-lg">
+                <div className="overflow-x-auto rounded-2xl border bg-white shadow-lg">
                     <div className="min-w-[950px] p-4">
-                        {/* TEAM HEADER */}
-                        <div className="grid grid-cols-8 gap-3 sticky top-0 z-20 bg-white/80 backdrop-blur-md border-b border-gray-200 pb-3">
-                            {teams.map((team) => (
-                                <div key={team.id} className="text-center">
-                                    <div className="w-11 h-11 mx-auto mb-1 rounded-full bg-gradient-to-br from-indigo-500 to-blue-600 shadow-md" />
-                                    <div className="text-xs font-semibold text-gray-700 truncate">
-                                        {team.name}
+                        {/* HEADER */}
+                        <div className="grid grid-cols-8 gap-3 sticky top-0 bg-white/80 backdrop-blur border-b pb-3">
+                            {teams.map((t) => (
+                                <div key={t.id} className="text-center">
+                                    <div className="w-11 h-11 mx-auto mb-1 rounded-full bg-gradient-to-br from-indigo-500 to-blue-600" />
+                                    <div className="text-xs font-semibold text-gray-700">
+                                        {t.name}
                                     </div>
                                 </div>
                             ))}
@@ -137,105 +197,77 @@ export default async function DraftBoard() {
 
                         {/* ROUNDS */}
                         <div className="space-y-5 mt-4">
-                            {rounds.map((round) => (
-                                <div
-                                    key={round.roundNumber}
-                                    className="rounded-xl border border-gray-100 bg-gray-50 p-3 shadow-sm"
-                                >
-                                    {/* GRID */}
-                                    <div className="grid grid-cols-8 gap-3">
-                                        {teams.map((team) => {
-                                            const picks = getPicksForTeam(
-                                                round,
-                                                team.id,
-                                            );
+                            {rounds.map((round) => {
+                                const normal = round.picks.filter(
+                                    (p) => p.pickInRound <= 8,
+                                );
+                                const comp = round.picks.filter(
+                                    (p) => p.pickInRound > 8,
+                                );
 
-                                            return (
-                                                <div
-                                                    key={team.id}
-                                                    className="rounded-xl bg-white border border-gray-200 p-2 min-h-[110px] shadow-sm hover:shadow-md transition"
-                                                >
-                                                    {picks.length > 0 ? (
-                                                        <div className="space-y-2">
-                                                            {picks.map(
-                                                                (pick, idx) => {
-                                                                    const comp =
-                                                                        isCompPick(
-                                                                            pick.pickInRound,
-                                                                        );
+                                return (
+                                    <div
+                                        key={round.roundNumber}
+                                        className="rounded-xl border bg-gray-50 p-3"
+                                    >
+                                        <div className="mb-2 font-semibold text-gray-700">
+                                            Round {round.roundNumber}
+                                        </div>
 
-                                                                    const isActive =
-                                                                        !pick.player;
-
-                                                                    return (
-                                                                        <div
-                                                                            key={
-                                                                                idx
-                                                                            }
-                                                                            className={`rounded-lg p-2 text-xs border transition-all
-                                                                            ${
-                                                                                isActive
-                                                                                    ? "bg-blue-50 border-blue-400 ring-1 ring-blue-200"
-                                                                                    : "bg-gray-50 border-gray-200"
-                                                                            }
-                                                                            ${
-                                                                                comp
-                                                                                    ? "border-yellow-400 bg-yellow-50"
-                                                                                    : ""
-                                                                            }`}
-                                                                        >
-                                                                            <div className="flex justify-between items-center">
-                                                                                <span className="font-bold text-gray-700">
-                                                                                    {formatPickLabel(
-                                                                                        pick,
-                                                                                    )}
-                                                                                </span>
-
-                                                                                {isActive && (
-                                                                                    <span className="text-[10px] px-2 py-0.5 rounded-full bg-blue-600 text-white">
-                                                                                        OTC
-                                                                                    </span>
-                                                                                )}
-                                                                            </div>
-
-                                                                            <div className="text-gray-500 truncate mt-1">
-                                                                                {pick.player ||
-                                                                                    "On the clock"}
-                                                                            </div>
-                                                                        </div>
-                                                                    );
-                                                                },
-                                                            )}
-                                                        </div>
-                                                    ) : (
-                                                        <div className="h-full flex items-center justify-center text-gray-300 text-xs">
-                                                            No picks
-                                                        </div>
+                                        {/* NORMAL */}
+                                        <div className="grid grid-cols-8 gap-3">
+                                            {teams.map((t) => (
+                                                <TeamColumn
+                                                    key={t.id}
+                                                    picks={normal.filter(
+                                                        (p) =>
+                                                            p.teamId === t.id,
                                                     )}
+                                                />
+                                            ))}
+                                        </div>
+
+                                        {/* COMP */}
+                                        {comp.length > 0 && (
+                                            <>
+                                                <div className="text-[11px] text-yellow-700 font-semibold mt-3 mb-1">
+                                                    Compensatory Picks
                                                 </div>
-                                            );
-                                        })}
+
+                                                <div className="grid grid-cols-8 gap-3">
+                                                    {teams.map((t) => (
+                                                        <TeamColumn
+                                                            key={t.id}
+                                                            picks={comp.filter(
+                                                                (p) =>
+                                                                    p.teamId ===
+                                                                    t.id,
+                                                            )}
+                                                            isComp
+                                                        />
+                                                    ))}
+                                                </div>
+                                            </>
+                                        )}
                                     </div>
-                                </div>
-                            ))}
+                                );
+                            })}
                         </div>
                     </div>
                 </div>
             </div>
 
             {/* RIGHT PANEL */}
-            <div className="w-full lg:w-[520px] border-t lg:border-t-0 lg:border-l bg-white shadow-xl">
-                <div className="sticky top-0 p-4 border-b bg-white/80 backdrop-blur-md">
-                    <h2 className="text-lg font-bold text-gray-800">
-                        Player Board
-                    </h2>
+            <div className="w-full lg:w-[520px] border-t lg:border-l bg-white shadow-xl">
+                <div className="sticky top-0 p-4 border-b bg-white/80 backdrop-blur">
+                    <h2 className="text-lg font-bold">Player Board</h2>
                     <p className="text-xs text-gray-500">
                         Free agents & available players
                     </p>
                 </div>
 
                 <div className="p-3">
-                    <PlayerPanel players={players} freeAgents={true} />
+                    <PlayerPanel players={players} freeAgents />
                 </div>
             </div>
         </div>
