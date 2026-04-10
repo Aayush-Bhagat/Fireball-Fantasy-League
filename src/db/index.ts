@@ -7,6 +7,7 @@ import * as playerSchema from "@/models/players";
 import * as gameSchema from "@/models/games";
 import * as tradeSchema from "@/models/trades";
 import * as seasonSchema from "@/models/seasons";
+import * as draftSchema from "@/models/draft";
 
 const pool = new Pool({
 	connectionString: process.env.DATABASE_URL!,
@@ -21,5 +22,6 @@ export const db = drizzle({
 		...gameSchema,
 		...tradeSchema,
 		...seasonSchema,
+		...draftSchema,
 	},
 });

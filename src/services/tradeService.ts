@@ -16,9 +16,9 @@ import {
 } from "@/repositories/tradeRepositories";
 import {
 	findTeamByUserId,
-	findTeamKeeps,
+	findTeamDraftPicks,
 	resetTeamBattingOrder,
-	updateKeepTeam,
+	updateDraftPickTeam,
 } from "@/repositories/teamRepository";
 import { TeamTradeResponseDto, TradeDto } from "@/dtos/tradeDtos";
 import { v7 as uuidV7 } from "uuid";
@@ -35,6 +35,7 @@ export async function getCurrentSeasonTrades() {
 			.map((asset) => ({
 				player: asset.player,
 				keep: asset.keep,
+				draftPick: asset.draftPick,
 				type: asset.assetType,
 			})),
 		proposingTeamReceivedAssets: trade.tradeAssets
@@ -42,6 +43,7 @@ export async function getCurrentSeasonTrades() {
 			.map((asset) => ({
 				player: asset.player,
 				keep: asset.keep,
+				draftPick: asset.draftPick,
 				type: asset.assetType,
 			})),
 		status: trade.status,
@@ -70,6 +72,7 @@ export async function getTeamTrades(userId: string) {
 			.map((asset) => ({
 				player: asset.player,
 				keep: asset.keep,
+				draftPick: asset.draftPick,
 				type: asset.assetType,
 			})),
 		proposingTeamReceivedAssets: trade.tradeAssets
@@ -77,6 +80,7 @@ export async function getTeamTrades(userId: string) {
 			.map((asset) => ({
 				player: asset.player,
 				keep: asset.keep,
+				draftPick: asset.draftPick,
 				type: asset.assetType,
 			})),
 		status: trade.status,
@@ -98,7 +102,7 @@ export async function createTrade(userId: string, trade: CreateTradeDto) {
 		trade.proposingTeamPlayers.length != trade.receivingTeamPlayers.length
 	) {
 		throw new Error(
-			"Proposing team players and receiving team players must be of equal length"
+			"Proposing team players and receiving team players must be of equal length",
 		);
 	}
 
@@ -113,40 +117,40 @@ export async function createTrade(userId: string, trade: CreateTradeDto) {
 	const receivingTeamRoster = await findPlayersByTeam(trade.receivingTeamId);
 
 	const proposingTeamPlayerIds = proposingTeamRoster.map(
-		(player) => player.id
+		(player) => player.id,
 	);
 	const receivingTeamPlayerIds = receivingTeamRoster.map(
-		(player) => player.id
+		(player) => player.id,
 	);
 
 	const isProposingTeamValid = trade.proposingTeamPlayers.every((playerId) =>
-		proposingTeamPlayerIds.includes(playerId)
+		proposingTeamPlayerIds.includes(playerId),
 	);
 	const isReceivingTeamValid = trade.receivingTeamPlayers.every((playerId) =>
-		receivingTeamPlayerIds.includes(playerId)
+		receivingTeamPlayerIds.includes(playerId),
 	);
 
 	if (!isProposingTeamValid || !isReceivingTeamValid) {
 		throw new Error(
-			"One or more players in the trade are not part of the proposing or receiving team"
+			"One or more players in the trade are not part of the proposing or receiving team",
 		);
 	}
 
 	// Checking if all keeps in the trade are part of their respective teams
-	const proposingTeamKeeps = await findTeamKeeps(team.id);
-	const receivingTeamKeeps = await findTeamKeeps(trade.receivingTeamId);
-	const proposingTeamKeepIds = proposingTeamKeeps.map((keep) => keep.id);
-	const receivingTeamKeepIds = receivingTeamKeeps.map((keep) => keep.id);
-	const isProposingKeepsValid = trade.proposingTeamKeeps.every((keepId) =>
-		proposingTeamKeepIds.includes(keepId)
+	const proposingTeamPicks = await findTeamDraftPicks(team.id);
+	const receivingTeamPicks = await findTeamDraftPicks(trade.receivingTeamId);
+	const proposingTeamPickIds = proposingTeamPicks.map((pick) => pick.id);
+	const receivingTeamPickIds = receivingTeamPicks.map((pick) => pick.id);
+	const isProposingKeepsValid = trade.proposingTeamPicks.every((pickId) =>
+		proposingTeamPickIds.includes(pickId),
 	);
-	const isReceivingKeepsValid = trade.receivingTeamKeeps.every((keepId) =>
-		receivingTeamKeepIds.includes(keepId)
+	const isReceivingKeepsValid = trade.receivingTeamPicks.every((pickId) =>
+		receivingTeamPickIds.includes(pickId),
 	);
 
 	if (!isProposingKeepsValid || !isReceivingKeepsValid) {
 		throw new Error(
-			"One or more keeps in the trade are not part of the proposing or receiving team"
+			"One or more keeps in the trade are not part of the proposing or receiving team",
 		);
 	}
 
@@ -164,21 +168,23 @@ export async function createTrade(userId: string, trade: CreateTradeDto) {
 			tradeId,
 			playerId,
 			keepId: null,
+			draftPickId: null,
 			fromTeamId: team.id,
 			toTeamId: trade.receivingTeamId,
 			assetType: "Player",
 		});
 	});
 
-	trade.proposingTeamKeeps.forEach((keepId) => {
+	trade.proposingTeamPicks.forEach((pickId) => {
 		proposingTeamAssets.push({
 			id: uuidV7(),
 			tradeId,
 			playerId: null,
-			keepId,
+			keepId: null,
+			draftPickId: pickId,
 			fromTeamId: team.id,
 			toTeamId: trade.receivingTeamId,
-			assetType: "Keep",
+			assetType: "DraftPick",
 		});
 	});
 
@@ -192,21 +198,23 @@ export async function createTrade(userId: string, trade: CreateTradeDto) {
 			tradeId,
 			playerId,
 			keepId: null,
+			draftPickId: null,
 			fromTeamId: trade.receivingTeamId,
 			toTeamId: team.id,
 			assetType: "Player",
 		});
 	});
 
-	trade.receivingTeamKeeps.forEach((keepId) => {
+	trade.receivingTeamPicks.forEach((pickId) => {
 		receivingTeamAssets.push({
 			id: uuidV7(),
 			tradeId,
 			playerId: null,
-			keepId,
+			keepId: null,
+			draftPickId: pickId,
 			fromTeamId: trade.receivingTeamId,
 			toTeamId: team.id,
-			assetType: "Keep",
+			assetType: "DraftPick",
 		});
 	});
 
@@ -241,21 +249,21 @@ export async function acceptTrade(userId: string, tradeId: string) {
 	const proposingTeamPlayers = await findPlayersByTeam(trade.proposingTeamId);
 
 	const proposingTeamPlayerIds = proposingTeamPlayers.map(
-		(player) => player.id
+		(player) => player.id,
 	);
 	const receivingTeamPlayers = await findPlayersByTeam(trade.receivingTeamId);
 
 	const receivingTeamPlayerIds = receivingTeamPlayers.map(
-		(player) => player.id
+		(player) => player.id,
 	);
 
-	const proposingTeamKeeps = await findTeamKeeps(trade.proposingTeamId);
+	const proposingTeamPicks = await findTeamDraftPicks(trade.proposingTeamId);
 
-	const proposingTeamKeepIds = proposingTeamKeeps.map((keep) => keep.id);
+	const proposingTeamPickIds = proposingTeamPicks.map((pick) => pick.id);
 
-	const receivingTeamKeeps = await findTeamKeeps(trade.receivingTeamId);
+	const receivingTeamPicks = await findTeamDraftPicks(trade.receivingTeamId);
 
-	const receivingTeamKeepIds = receivingTeamKeeps.map((keep) => keep.id);
+	const receivingTeamPickIds = receivingTeamPicks.map((pick) => pick.id);
 
 	const isValidTrade = trade.tradeAssets.every((asset) => {
 		if (asset.assetType === "Player" && asset.playerId) {
@@ -264,11 +272,11 @@ export async function acceptTrade(userId: string, tradeId: string) {
 			} else {
 				return receivingTeamPlayerIds.includes(asset.playerId);
 			}
-		} else if (asset.assetType === "Keep" && asset.keepId) {
+		} else if (asset.assetType === "DraftPick" && asset.draftPickId) {
 			if (asset.fromTeamId === trade.proposingTeamId) {
-				return proposingTeamKeepIds.includes(asset.keepId);
+				return proposingTeamPickIds.includes(asset.draftPickId);
 			} else {
-				return receivingTeamKeepIds.includes(asset.keepId);
+				return receivingTeamPickIds.includes(asset.draftPickId);
 			}
 		}
 	});
@@ -292,11 +300,11 @@ export async function acceptTrade(userId: string, tradeId: string) {
 				asset.playerId,
 				asset.toTeamId,
 				"Trade",
-				tradeId
+				tradeId,
 			);
-		} else if (asset.assetType === "Keep" && asset.keepId) {
+		} else if (asset.assetType === "DraftPick" && asset.keepId) {
 			// Update keep team
-			await updateKeepTeam(asset.keepId, asset.toTeamId);
+			await updateDraftPickTeam(asset.keepId, asset.toTeamId);
 		}
 	});
 

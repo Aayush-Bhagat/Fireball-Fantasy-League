@@ -122,8 +122,25 @@ export default function TradesTable({ tradesData }: Props) {
 																			}
 																		</span>
 																	)}
+																	{a.draftPick && (
+																		<span className="text-xs">
+																			Round
+																			{
+																				a
+																					.draftPick
+																					.round
+																			}
+																			(Season{" "}
+																			{
+																				a
+																					.draftPick
+																					.seasonId
+																			}
+																			)
+																		</span>
+																	)}
 																</div>
-															)
+															),
 														)}
 													</div>
 												</div>
@@ -141,7 +158,7 @@ export default function TradesTable({ tradesData }: Props) {
 													<div className="text-xs text-gray-500 mt-0.5">
 														{new Date(
 															trade.resolvedAt ??
-																trade.proposedAt
+																trade.proposedAt,
 														).toLocaleDateString()}
 													</div>
 												</div>
@@ -221,8 +238,25 @@ export default function TradesTable({ tradesData }: Props) {
 																			}
 																		</span>
 																	)}
+																	{a.draftPick && (
+																		<span className="text-xs">
+																			Round
+																			{
+																				a
+																					.draftPick
+																					.round
+																			}
+																			(Season{" "}
+																			{
+																				a
+																					.draftPick
+																					.seasonId
+																			}
+																			)
+																		</span>
+																	)}
 																</div>
-															)
+															),
 														)}
 													</div>
 												</div>
