@@ -13,6 +13,7 @@ import { teams } from "./teams";
 import { playerHistory, players } from "./players";
 import { keepSlots } from "./teams";
 import { seasons } from "./seasons";
+import { draftPicks } from "./draft";
 
 export const tradeStatus = pgEnum("trade_status", [
 	"Pending",
@@ -47,7 +48,7 @@ export const trades = pgTable(
 		index("idx_trade_proposing_team").on(table.proposingTeamId),
 		index("idx_trade_receiving_team").on(table.receivingTeamId),
 		index("idx_trade_parent").on(table.parentId),
-	]
+	],
 );
 
 export type Trade = typeof trades.$inferSelect;
@@ -74,7 +75,11 @@ export const tradeRelations = relations(trades, ({ one, many }) => ({
 	playerHistory: many(playerHistory),
 }));
 
-export const tradeAssetType = pgEnum("trade_asset_type", ["Player", "Keep"]);
+export const tradeAssetType = pgEnum("trade_asset_type", [
+	"Player",
+	"Keep",
+	"DraftPick",
+]);
 
 export const tradeAssets = pgTable(
 	"trade_assets",
@@ -85,6 +90,7 @@ export const tradeAssets = pgTable(
 			.references(() => trades.id),
 		playerId: uuid("player_id").references(() => players.id),
 		keepId: uuid("keep_id").references(() => keepSlots.id),
+		draftPickId: uuid("draft_pick_id").references(() => draftPicks.id),
 		fromTeamId: uuid("from_team_id")
 			.notNull()
 			.references(() => teams.id),
@@ -101,11 +107,12 @@ export const tradeAssets = pgTable(
 		index("idx_trade_asset_keep").on(table.keepId),
 		index("idx_trade_asset_from_team").on(table.fromTeamId),
 		index("idx_trade_asset_to_team").on(table.toTeamId),
-	]
+	],
 );
 
 export type TradeAsset = typeof tradeAssets.$inferSelect;
 export type CreateTradeAsset = typeof tradeAssets.$inferInsert;
+export type TradeAssetType = (typeof tradeAssetType.enumValues)[number];
 
 export const tradeAssetsRelations = relations(tradeAssets, ({ one }) => ({
 	trade: one(trades, {
@@ -119,6 +126,10 @@ export const tradeAssetsRelations = relations(tradeAssets, ({ one }) => ({
 	keep: one(keepSlots, {
 		fields: [tradeAssets.keepId],
 		references: [keepSlots.id],
+	}),
+	draftPick: one(draftPicks, {
+		fields: [tradeAssets.draftPickId],
+		references: [draftPicks.id],
 	}),
 	fromTeam: one(teams, {
 		fields: [tradeAssets.fromTeamId],

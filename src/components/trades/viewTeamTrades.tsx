@@ -216,13 +216,23 @@ export default function ViewTeamTrades() {
 																	}
 																</div>
 															)}
+															{p.draftPick && (
+																<div className="text-xs bg-indigo-300 text-white font-bold px-2 py-0.5 rounded-full">
+																	{
+																		p
+																			.draftPick
+																			.round
+																	}
+																</div>
+															)}
 															<span className="text-sm font-medium truncate max-w-[150px]">
 																{p.player
 																	?.name ||
+																	`Round ${p.draftPick?.round} Pick (Season ${p.draftPick?.seasonId})` ||
 																	`Keep ${p.keep?.odds}`}
 															</span>
 														</li>
-													)
+													),
 												)}
 											</ul>
 										) : (
@@ -271,13 +281,23 @@ export default function ViewTeamTrades() {
 																	}
 																</div>
 															)}
+															{p.draftPick && (
+																<div className="text-xs bg-indigo-300 text-white font-bold px-2 py-0.5 rounded-full">
+																	{
+																		p
+																			.draftPick
+																			.round
+																	}
+																</div>
+															)}
 															<span className="text-sm font-medium truncate max-w-[150px]">
 																{p.player
 																	?.name ||
+																	`Round ${p.draftPick?.round} Pick (Season ${p.draftPick?.seasonId})` ||
 																	`Keep ${p.keep?.odds}`}
 															</span>
 														</li>
-													)
+													),
 												)}
 											</ul>
 										) : (
@@ -312,7 +332,7 @@ export default function ViewTeamTrades() {
 															}
 															onClick={() =>
 																handleAcceptTrade.mutate(
-																	trade.id
+																	trade.id,
 																)
 															}
 														>
@@ -345,7 +365,7 @@ export default function ViewTeamTrades() {
 															}
 															onClick={() =>
 																handleDeclineTrade.mutate(
-																	trade.id
+																	trade.id,
 																)
 															}
 														>
@@ -383,7 +403,7 @@ export default function ViewTeamTrades() {
 														}
 														onClick={() =>
 															handleCancelTrade.mutate(
-																trade.id
+																trade.id,
 															)
 														}
 													>
@@ -411,7 +431,7 @@ export default function ViewTeamTrades() {
 											<span className="inline-block bg-gray-200 text-gray-600 text-xs font-semibold px-3 py-1 rounded-full">
 												{new Date(
 													trade.resolvedAt ??
-														trade.proposedAt
+														trade.proposedAt,
 												).toLocaleDateString()}
 											</span>
 										</div>

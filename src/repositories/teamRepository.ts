@@ -1,7 +1,9 @@
+import { updateGame } from "./../services/gameService";
 import { sql, eq, and, sum, countDistinct, inArray } from "drizzle-orm";
 import { db } from "@/db";
 import { games, teamGames } from "@/models/games";
 import { conferences, keepSlots, teams } from "@/models/teams";
+import { draftPicks } from "@/models/draft";
 import { seasons } from "@/models/seasons";
 import { playerGamesStats, players } from "@/models/players";
 import { teamLineups } from "@/models/teams";
@@ -121,7 +123,7 @@ export async function findAllTeamRecordsBySeason(season: number | null) {
 			games.seasonId,
 			teams.abbreviation,
 			teams.logo,
-			conferences.name
+			conferences.name,
 		);
 
 	return results;
@@ -149,7 +151,7 @@ export async function findRosterStatsByTeam(teamId: string) {
 			runsAllowed: sum(playerGamesStats.runsAllowed).as("runsAllowed"),
 			outs: sum(playerGamesStats.outs).as("outs"),
 			gamesPlayed: countDistinct(playerGamesStats.gameId).as(
-				"gamesPlayed"
+				"gamesPlayed",
 			),
 		})
 		.from(players)
@@ -211,8 +213,12 @@ export async function findAllTeamAssets() {
 	const assets = await db.query.teams.findMany({
 		with: {
 			players: true,
-			keeps: {
-				where: (keeps, { eq }) => eq(keeps.seasonId, seasonQuery),
+			draftPicks: {
+				where: (draftPicks, { eq }) =>
+					and(
+						eq(draftPicks.seasonId, seasonQuery),
+						eq(draftPicks.tradeable, true),
+					),
 			},
 			conference: true,
 		},
@@ -266,4 +272,39 @@ export async function updateKeepTeam(keepId: string, newTeamId: string) {
 	}
 
 	return updatedKeep[0];
+}
+
+export async function findTeamDraftPicks(teamId: string) {
+	const seasonQuery = db
+		.select({
+			id: sql<number>`max(${seasons.id})`.as("id"),
+		})
+		.from(seasons);
+
+	const picks = await db.query.draftPicks.findMany({
+		where: (draftPicks, { eq, and }) =>
+			and(
+				eq(draftPicks.teamId, teamId),
+				eq(draftPicks.seasonId, seasonQuery),
+			),
+	});
+
+	return picks;
+}
+
+export async function updateDraftPickTeam(
+	draftPickId: string,
+	newTeamId: string,
+) {
+	const updatedPick = await db
+		.update(draftPicks)
+		.set({ teamId: newTeamId })
+		.where(eq(draftPicks.id, draftPickId))
+		.returning();
+
+	if (updatedPick.length === 0) {
+		throw new Error("Draft pick not found or update failed");
+	}
+
+	return updatedPick[0];
 }
