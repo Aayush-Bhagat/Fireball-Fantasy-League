@@ -58,11 +58,11 @@ export async function getStandings(season: string) {
 	const standings = await findAllTeamRecordsBySeason(seasonId);
 
 	const easternStandings = standings.filter(
-		(standing) => standing.conferenceName === "Eastern"
+		(standing) => standing.conferenceName === "Eastern",
 	);
 
 	const westernStandings = standings.filter(
-		(standing) => standing.conferenceName === "Western"
+		(standing) => standing.conferenceName === "Western",
 	);
 
 	const easternStandingsSorted = easternStandings.sort((a, b) => {
@@ -84,7 +84,7 @@ export async function getStandings(season: string) {
 			losses: Number(standing.losses),
 			ties: Number(standing.ties),
 			season: Number(standing.season),
-		})
+		}),
 	);
 
 	const westernStandingsDto: TeamStandingsDto[] = westernStandingsSorted.map(
@@ -98,7 +98,7 @@ export async function getStandings(season: string) {
 			losses: Number(standing.losses),
 			ties: Number(standing.ties),
 			season: Number(standing.season),
-		})
+		}),
 	);
 
 	return { eastern: easternStandingsDto, western: westernStandingsDto };
@@ -139,6 +139,7 @@ export async function getTeamRoster(teamId: string) {
 			name: player.name,
 			image: player.image,
 			isCaptain: player.isCaptain,
+			teamId: player.teamId,
 			team: player.team
 				? {
 						id: player.team.id,
@@ -147,7 +148,7 @@ export async function getTeamRoster(teamId: string) {
 						abbreviation: player.team.abbreviation,
 						conference: player.team.conference.name,
 						userId: player.team?.userId,
-				  }
+					}
 				: null,
 			batting: player.batting,
 			pitching: player.pitching,
@@ -167,14 +168,14 @@ export async function getTeamRoster(teamId: string) {
 				strikeouts: Number(stat?.strikeouts) || 0,
 				homeRuns: Number(stat?.homeRuns) || 0,
 				inningsPitched: calculateInningsPitched(
-					Number(stat?.outsPitched) || 0
+					Number(stat?.outsPitched) || 0,
 				),
 				runsAllowed: Number(stat?.runsAllowed) || 0,
 				outs: Number(stat?.outs) || 0,
 				battingAverage: Number(stat?.hits) / Number(stat?.atBats) || 0,
 				era: calculateEra(
 					Number(stat?.runsAllowed) || 0,
-					Number(stat?.outsPitched) || 0
+					Number(stat?.outsPitched) || 0,
 				),
 				gamesPlayed: stat?.gamesPlayed || 0,
 			},
@@ -284,7 +285,7 @@ export async function getTeamLineup(teamId: string) {
 					id: starred.playerId,
 					name: starred.name,
 					image: starred.image,
-			  }
+				}
 			: null;
 
 	const teamLineup: TeamLineupDto = {
@@ -322,8 +323,8 @@ export async function editTeamBattingOrder(lineup: EditBattingOrderRequestDto) {
 				? {
 						battingOrder: index + 1,
 						playerId: playerId,
-				  }
-				: null
+					}
+				: null,
 		)
 		.filter((position) => position !== null);
 
@@ -355,14 +356,7 @@ export async function getAllTeamAssets(userId: string) {
 				name: player.name,
 				image: player.image,
 			})),
-			keeps: teamAssets.keeps.map((keep) => ({
-				id: keep.id,
-				teamId: keep.teamId,
-				odds: keep.odds,
-				value: keep.value,
-				seasonId: keep.seasonId,
-				originalTeamId: keep.originalTeamId,
-			})),
+			draftPicks: teamAssets.draftPicks,
 		},
 		availableAssets: availableAssets.map((team) => ({
 			id: team.id,
@@ -376,14 +370,7 @@ export async function getAllTeamAssets(userId: string) {
 				name: player.name,
 				image: player.image,
 			})),
-			keeps: team.keeps.map((keep) => ({
-				id: keep.id,
-				teamId: keep.teamId,
-				odds: keep.odds,
-				value: keep.value,
-				seasonId: keep.seasonId,
-				originalTeamId: keep.originalTeamId,
-			})),
+			draftPicks: team.draftPicks,
 		})),
 	};
 

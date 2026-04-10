@@ -1,11 +1,13 @@
-import { KeepDto, TeamDto, TeamGameDto } from "./teamDtos";
+import { BasicDraftPickDto, KeepDto, TeamDto, TeamGameDto } from "./teamDtos";
 import { BasicPlayerDto } from "./playerDtos";
 import { z } from "zod";
+import { TradeAssetType } from "@/models/trades";
 
 export type TradeAssetDto = {
 	player: BasicPlayerDto | null;
 	keep: KeepDto | null;
-	type: "Player" | "Keep";
+	draftPick: BasicDraftPickDto | null;
+	type: TradeAssetType;
 };
 
 export type TradeDto = {
@@ -30,7 +32,7 @@ export type TeamTradeResponseDto = {
 
 export type TeamTradeAsset = TeamDto & {
 	players: BasicPlayerDto[];
-	keeps: KeepDto[];
+	draftPicks: BasicDraftPickDto[];
 };
 
 export type TeamTradeAssetsDto = {
@@ -41,9 +43,9 @@ export type TeamTradeAssetsDto = {
 export const CreateTradeSchema = z.object({
 	receivingTeamId: z.string(),
 	proposingTeamPlayers: z.array(z.string()),
-	proposingTeamKeeps: z.array(z.string()),
+	proposingTeamPicks: z.array(z.string()),
 	receivingTeamPlayers: z.array(z.string()),
-	receivingTeamKeeps: z.array(z.string()),
+	receivingTeamPicks: z.array(z.string()),
 });
 
 export type CreateTradeDto = z.infer<typeof CreateTradeSchema>;
@@ -52,8 +54,8 @@ export type CreateTradeAsset = {
 	id: string;
 	tradeId: string;
 	playerId?: string;
-	keepId?: string;
+	draftPickId?: string;
 	fromTeamId: string;
 	toTeamId: string;
-	assetType: "Player" | "Keep";
+	assetType: TradeAssetType;
 };

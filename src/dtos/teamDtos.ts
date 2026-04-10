@@ -1,5 +1,5 @@
 import { TeamAward } from "./awardDtos";
-import { BasicPlayerDto, PlayerWithStatsDto } from "./playerDtos";
+import { BasicPlayerDto, PlayerDto, PlayerWithStatsDto } from "./playerDtos";
 import { z } from "zod";
 
 export type TeamResponseDto = {
@@ -124,4 +124,30 @@ export type EditBattingOrderRequestDto = z.infer<
 export type BattingOrderPosition = {
 	battingOrder: number;
 	playerId: string;
+};
+
+export type BasicDraftPickDto = {
+	id: string;
+	teamId: string;
+	seasonId: number;
+	round: number;
+	pick: number | null;
+	originalTeamId: string;
+	selection: string | null;
+	isCompensatory: boolean;
+	tradeable: boolean;
+};
+
+export type DraftPickDto = {
+	id: string;
+	team: TeamDto;
+	draftId: string;
+	seasonId: number;
+	round: number;
+	pickNumber: number | null;
+	overallPick: number | null;
+	originalTeam: TeamDto;
+	selection: PlayerDto | null;
+	isCompensatory: boolean;
+	isTradeable: boolean;
 };

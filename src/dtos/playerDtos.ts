@@ -4,6 +4,7 @@ import { TeamLineupPosition } from "./teamDtos";
 export type PlayerDto = {
 	id: string;
 	name: string;
+	teamId: string | null;
 	team: TeamDto | null;
 	image: string | null;
 	isCaptain: boolean;
@@ -63,6 +64,7 @@ export type BasicPlayerStatsDto = {
 export type PlayerWithStatsDto = {
 	id: string;
 	name: string;
+	teamId: string | null;
 	team: TeamDto | null;
 	image: string | null;
 	isCaptain: boolean;

@@ -13,6 +13,7 @@ import { users } from "./users";
 import { seasonAwards, seasons } from "./seasons";
 import { players, playerGamesStats, playerHistory } from "./players";
 import { playoffSeries, teamGames } from "./games";
+import { draftPicks } from "./draft";
 
 export const conferences = pgTable("conferences", {
 	id: integer("id").primaryKey(),
@@ -54,6 +55,9 @@ export const teamRelations = relations(teams, ({ one, many }) => ({
 	tradeAssets: many(tradeAssets),
 	keeps: many(keepSlots, {
 		relationName: "keeps",
+	}),
+	draftPicks: many(draftPicks, {
+		relationName: "draft_picks",
 	}),
 	originalKeeps: many(keepSlots, {
 		relationName: "original_keeps",
@@ -113,7 +117,7 @@ export const keepSlots = pgTable(
 	(table) => [
 		index("idx_keep_slots_team").on(table.teamId),
 		index("idx_keep_slots_original_team").on(table.originalTeamId),
-	]
+	],
 );
 
 export type KeepSlot = typeof keepSlots.$inferSelect;

@@ -108,6 +108,7 @@ export async function getAllPlayerStats(season?: string) {
 				image: player.image,
 				isCaptain: player.isCaptain,
 				playerCardImage: player.playerCardImage,
+				teamId: player.teamId,
 				team: player.team
 					? {
 							id: player.team.id,
@@ -116,7 +117,7 @@ export async function getAllPlayerStats(season?: string) {
 							abbreviation: player.team.abbreviation,
 							conference: player.team.conference.name,
 							userId: player.team.userId,
-					  }
+						}
 					: null,
 				batting: player.batting,
 				pitching: player.pitching,
@@ -135,7 +136,7 @@ export async function getAllPlayerStats(season?: string) {
 					strikeouts: Number(stat?.strikeouts) || 0,
 					homeRuns: Number(stat?.homeRuns) || 0,
 					inningsPitched: calculateInningsPitched(
-						Number(stat?.outsPitched) || 0
+						Number(stat?.outsPitched) || 0,
 					),
 					runsAllowed: Number(stat?.runsAllowed) || 0,
 					outs: Number(stat?.outs) || 0,
@@ -143,12 +144,12 @@ export async function getAllPlayerStats(season?: string) {
 						Number(stat?.hits) / Number(stat?.atBats) || 0,
 					era: calculateEra(
 						Number(stat?.runsAllowed) || 0,
-						Number(stat?.outsPitched) || 0
+						Number(stat?.outsPitched) || 0,
 					),
 					gamesPlayed: stat?.gamesPlayed || 0,
 				},
 			};
-		}
+		},
 	);
 
 	return allPlayersWithStats;
@@ -168,6 +169,7 @@ export async function getAllFreeAgents() {
 				image: player.image,
 				isCaptain: player.isCaptain,
 				playerCardImage: player.playerCardImage,
+				teamId: player.teamId,
 				team: null,
 				batting: player.batting,
 				pitching: player.pitching,
@@ -186,7 +188,7 @@ export async function getAllFreeAgents() {
 					strikeouts: Number(stat?.strikeouts) || 0,
 					homeRuns: Number(stat?.homeRuns) || 0,
 					inningsPitched: calculateInningsPitched(
-						Number(stat?.outsPitched) || 0
+						Number(stat?.outsPitched) || 0,
 					),
 					runsAllowed: Number(stat?.runsAllowed) || 0,
 					outs: Number(stat?.outs) || 0,
@@ -194,12 +196,12 @@ export async function getAllFreeAgents() {
 						Number(stat?.hits) / Number(stat?.atBats) || 0,
 					era: calculateEra(
 						Number(stat?.runsAllowed) || 0,
-						Number(stat?.outsPitched) || 0
+						Number(stat?.outsPitched) || 0,
 					),
 					gamesPlayed: stat?.gamesPlayed || 0,
 				},
 			};
-		}
+		},
 	);
 
 	return freeAgentsWithStats;
@@ -225,7 +227,7 @@ export async function getPlayerCareerStats(playerId: string) {
 					abbreviation: playerInfo.team.abbreviation,
 					conference: playerInfo.team.conference.name,
 					userId: playerInfo.team.userId,
-			  }
+				}
 			: null,
 		image: playerInfo.image,
 		isCaptain: playerInfo.isCaptain,
@@ -266,30 +268,33 @@ export async function getPlayerAwards(playerId: string) {
 	const awards = await findPlayerAwards(playerId);
 
 	const groupedAwards = Object.values(
-		awards.reduce((acc, curr) => {
-			const { award, season, awardedAt } = curr;
+		awards.reduce(
+			(acc, curr) => {
+				const { award, season, awardedAt } = curr;
 
-			if (!acc[award.id]) {
-				acc[award.id] = {
-					awardId: award.id,
-					name: award.name,
-					description: award.description,
-					category: award.category,
-					icon: award.icon,
-					wins: [],
-				};
-			}
+				if (!acc[award.id]) {
+					acc[award.id] = {
+						awardId: award.id,
+						name: award.name,
+						description: award.description,
+						category: award.category,
+						icon: award.icon,
+						wins: [],
+					};
+				}
 
-			acc[award.id].wins.push({
-				seasonId: season.id,
-				awardedAt,
-				seasonStart: season.startDate,
-				seasonEnd: season.endDate,
-				currentWeek: season.currentWeek,
-			});
+				acc[award.id].wins.push({
+					seasonId: season.id,
+					awardedAt,
+					seasonStart: season.startDate,
+					seasonEnd: season.endDate,
+					currentWeek: season.currentWeek,
+				});
 
-			return acc;
-		}, {} as Record<string, PlayerAward>)
+				return acc;
+			},
+			{} as Record<string, PlayerAward>,
+		),
 	);
 
 	return groupedAwards;

@@ -15,7 +15,7 @@ export async function findCompletedTrades() {
 	const completedTrades = await db.query.trades.findMany({
 		where: and(
 			eq(trades.seasonId, seasonQuery),
-			eq(trades.status, "Accepted")
+			eq(trades.status, "Accepted"),
 		),
 		with: {
 			proposingTeam: true,
@@ -26,6 +26,7 @@ export async function findCompletedTrades() {
 					fromTeam: true,
 					toTeam: true,
 					keep: true,
+					draftPick: true,
 				},
 			},
 		},
@@ -39,7 +40,7 @@ export async function findTradeByTeamId(teamId: string) {
 	const teamTrades = await db.query.trades.findMany({
 		where: or(
 			eq(trades.proposingTeamId, teamId),
-			eq(trades.receivingTeamId, teamId)
+			eq(trades.receivingTeamId, teamId),
 		),
 		with: {
 			proposingTeam: true,
@@ -50,6 +51,7 @@ export async function findTradeByTeamId(teamId: string) {
 					fromTeam: true,
 					toTeam: true,
 					keep: true,
+					draftPick: true,
 				},
 			},
 		},
@@ -62,7 +64,7 @@ export async function findTradeByTeamId(teamId: string) {
 export async function saveTrade(
 	tradeId: string,
 	proposingTeamId: string,
-	receivingTeamId: string
+	receivingTeamId: string,
 ) {
 	const seasonQuery = await db
 		.select({
@@ -110,7 +112,7 @@ export async function findTradeById(tradeId: string) {
 
 export async function updateTradeStatus(
 	status: "Accepted" | "Declined" | "Countered" | "Canceled",
-	tradeId: string
+	tradeId: string,
 ) {
 	const updatedTrade = await db
 		.update(trades)
