@@ -29,8 +29,9 @@ export const draft = pgTable("draft", {
 
 export type Draft = typeof draft.$inferSelect;
 export type CreateDraft = typeof draft.$inferInsert;
+export type DraftStatusEnum = (typeof draftStatusEnum.enumValues)[number];
 
-export const draftRelations = relations(draft, ({ one }) => ({
+export const draftRelations = relations(draft, ({ one, many }) => ({
 	season: one(seasons, {
 		fields: [draft.seasonId],
 		references: [seasons.id],
@@ -42,6 +43,12 @@ export const draftRelations = relations(draft, ({ one }) => ({
 	commissioner: one(users, {
 		fields: [draft.commissionerId],
 		references: [users.id],
+	}),
+	draftPicks: many(draftPicks, {
+		relationName: "picks",
+	}),
+	draftOrder: many(draftOrder, {
+		relationName: "order",
 	}),
 }));
 
@@ -62,6 +69,21 @@ export const draftOrder = pgTable(
 		index("idx_draft_order_team").on(table.teamId),
 	],
 );
+
+export type DraftOrder = typeof draftOrder.$inferSelect;
+export type CreateDraftOrder = typeof draftOrder.$inferInsert;
+
+export const draftOrderRelations = relations(draftOrder, ({ one }) => ({
+	draft: one(draft, {
+		fields: [draftOrder.draftId],
+		references: [draft.id],
+		relationName: "order",
+	}),
+	team: one(teams, {
+		fields: [draftOrder.teamId],
+		references: [teams.id],
+	}),
+}));
 
 export const draftPicks = pgTable(
 	"draft_picks",
@@ -108,12 +130,13 @@ export const draftPicksRelations = relations(draftPicks, ({ one }) => ({
 	draft: one(draft, {
 		fields: [draftPicks.draftId],
 		references: [draft.id],
+		relationName: "picks",
 	}),
 	originalTeam: one(teams, {
 		fields: [draftPicks.originalTeamId],
 		references: [teams.id],
 	}),
-	selection: one(players, {
+	playerSelected: one(players, {
 		fields: [draftPicks.selection],
 		references: [players.id],
 	}),

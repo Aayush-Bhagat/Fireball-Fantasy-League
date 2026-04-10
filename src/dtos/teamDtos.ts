@@ -1,4 +1,3 @@
-import { draft } from "./../models/draft";
 import { TeamAward } from "./awardDtos";
 import { BasicPlayerDto, PlayerDto, PlayerWithStatsDto } from "./playerDtos";
 import { z } from "zod";

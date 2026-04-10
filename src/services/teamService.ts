@@ -139,6 +139,7 @@ export async function getTeamRoster(teamId: string) {
 			name: player.name,
 			image: player.image,
 			isCaptain: player.isCaptain,
+			teamId: player.teamId,
 			team: player.team
 				? {
 						id: player.team.id,

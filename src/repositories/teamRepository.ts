@@ -1,4 +1,3 @@
-import { updateGame } from "./../services/gameService";
 import { sql, eq, and, sum, countDistinct, inArray } from "drizzle-orm";
 import { db } from "@/db";
 import { games, teamGames } from "@/models/games";
@@ -8,6 +7,7 @@ import { seasons } from "@/models/seasons";
 import { playerGamesStats, players } from "@/models/players";
 import { teamLineups } from "@/models/teams";
 import { BattingOrderPosition, PlayersPosition } from "@/dtos/teamDtos";
+
 export function findAllTeams() {
 	const teams = db.query.teams.findMany({
 		with: {
