@@ -2,7 +2,8 @@ import { updateGame } from "./../services/gameService";
 import { sql, eq, and, sum, countDistinct, inArray } from "drizzle-orm";
 import { db } from "@/db";
 import { games, teamGames } from "@/models/games";
-import { conferences, draftPicks, keepSlots, teams } from "@/models/teams";
+import { conferences, keepSlots, teams } from "@/models/teams";
+import { draftPicks } from "@/models/draft";
 import { seasons } from "@/models/seasons";
 import { playerGamesStats, players } from "@/models/players";
 import { teamLineups } from "@/models/teams";
@@ -280,7 +281,7 @@ export async function findTeamDraftPicks(teamId: string) {
 		})
 		.from(seasons);
 
-	const draftPicks = await db.query.draftPicks.findMany({
+	const picks = await db.query.draftPicks.findMany({
 		where: (draftPicks, { eq, and }) =>
 			and(
 				eq(draftPicks.teamId, teamId),
@@ -288,7 +289,7 @@ export async function findTeamDraftPicks(teamId: string) {
 			),
 	});
 
-	return draftPicks;
+	return picks;
 }
 
 export async function updateDraftPickTeam(

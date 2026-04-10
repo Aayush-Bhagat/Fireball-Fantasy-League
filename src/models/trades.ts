@@ -9,10 +9,11 @@ import {
 	index,
 } from "drizzle-orm/pg-core";
 import { relations } from "drizzle-orm";
-import { draftPicks, teams } from "./teams";
+import { teams } from "./teams";
 import { playerHistory, players } from "./players";
 import { keepSlots } from "./teams";
 import { seasons } from "./seasons";
+import { draftPicks } from "./draft";
 
 export const tradeStatus = pgEnum("trade_status", [
 	"Pending",

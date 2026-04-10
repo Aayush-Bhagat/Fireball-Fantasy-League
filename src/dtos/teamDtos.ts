@@ -1,3 +1,4 @@
+import { draft } from "./../models/draft";
 import { TeamAward } from "./awardDtos";
 import { BasicPlayerDto, PlayerDto, PlayerWithStatsDto } from "./playerDtos";
 import { z } from "zod";
@@ -141,9 +142,11 @@ export type BasicDraftPickDto = {
 export type DraftPickDto = {
 	id: string;
 	team: TeamDto;
+	draftId: string;
 	seasonId: number;
 	round: number;
 	pickNumber: number | null;
+	overallPick: number | null;
 	originalTeam: TeamDto;
 	selection: PlayerDto | null;
 	isCompensatory: boolean;

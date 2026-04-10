@@ -13,6 +13,7 @@ import { users } from "./users";
 import { seasonAwards, seasons } from "./seasons";
 import { players, playerGamesStats, playerHistory } from "./players";
 import { playoffSeries, teamGames } from "./games";
+import { draftPicks } from "./draft";
 
 export const conferences = pgTable("conferences", {
 	id: integer("id").primaryKey(),
@@ -138,52 +139,4 @@ export const keepSlotsRelations = relations(keepSlots, ({ one, many }) => ({
 		relationName: "original_keeps",
 	}),
 	tradeAssets: many(tradeAssets),
-}));
-
-export const draftPicks = pgTable(
-	"draft_picks",
-	{
-		id: uuid("id").primaryKey(),
-		teamId: uuid("team_id")
-			.notNull()
-			.references(() => teams.id),
-		seasonId: integer("season_id")
-			.notNull()
-			.references(() => seasons.id),
-		round: integer("round").notNull(),
-		pick: integer("pick"),
-		originalTeamId: uuid("original_team_id")
-			.notNull()
-			.references(() => teams.id),
-		selection: uuid("selection").references(() => players.id),
-		isCompensatory: boolean("is_compensatory").notNull().default(false),
-		tradeable: boolean("tradeable").notNull(),
-	},
-	(table) => [
-		index("idx_draft_picks_team").on(table.teamId),
-		index("idx_draft_picks_season").on(table.seasonId),
-	],
-);
-
-export type DraftPick = typeof draftPicks.$inferSelect;
-export type CreateDraftPick = typeof draftPicks.$inferInsert;
-
-export const draftPicksRelations = relations(draftPicks, ({ one }) => ({
-	team: one(teams, {
-		fields: [draftPicks.teamId],
-		references: [teams.id],
-		relationName: "draft_picks",
-	}),
-	season: one(seasons, {
-		fields: [draftPicks.seasonId],
-		references: [seasons.id],
-	}),
-	originalTeam: one(teams, {
-		fields: [draftPicks.originalTeamId],
-		references: [teams.id],
-	}),
-	selection: one(players, {
-		fields: [draftPicks.selection],
-		references: [players.id],
-	}),
 }));
