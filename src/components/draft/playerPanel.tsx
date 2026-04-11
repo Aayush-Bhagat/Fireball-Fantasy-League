@@ -40,6 +40,8 @@ export default function PlayerPanel({
 
 	const numCaptainsAvailable = players.filter((p) => p.isCaptain).length;
 
+	const canSelect = currentDraftPick && currentDraftPick.teamId === teamId;
+
 	const supabase = createClient();
 
 	const handlePlayerClick = (player: PlayerWithStatsDto) => {
@@ -118,7 +120,7 @@ export default function PlayerPanel({
 						<div className="text-sm font-semibold text-blue-700 mt-0.5">
 							{currentDraftPick && (
 								<div>
-									<div className="flex flex-row items-center">
+									<div className="flex flex-row items-center gap-2">
 										{currentDraftPick.team.logo && (
 											<img
 												className="w-11 h-11 rounded-full"
@@ -127,7 +129,7 @@ export default function PlayerPanel({
 										)}
 										<div>{currentDraftPick.team.name}</div>
 									</div>
-									<div>
+									<div className="mt-2">
 										Round: {currentDraftPick.round} - Pick{" "}
 										{currentDraftPick.pick}
 									</div>
@@ -260,28 +262,36 @@ export default function PlayerPanel({
 									</div>
 
 									{/* RIGHT ACTION */}
-									<Button
-										size="sm"
-										className="bg-blue-600 hover:bg-blue-700 text-white text-xs px-3 py-1 rounded-lg shadow-md opacity-90 group-hover:opacity-100 transition"
-										disabled={
-											!currentDraftPick ||
-											currentDraftPick.teamId !==
-												teamId ||
-											(player.isCaptain &&
+									{canSelect && (
+										<Button
+											size="sm"
+											className={`bg-blue-600 hover:bg-blue-700 text-white text-xs px-3 py-1 rounded-lg shadow-md opacity-90 group-hover:opacity-100 transition
+                                            ${
+												player.isCaptain &&
 												teamsWithCaptains.has(teamId) &&
 												numCaptainsAvailable <=
-													8 - teamsWithCaptains.size)
-										}
-										onClick={async (e) => {
-											e.stopPropagation();
-											await handleDraftPick(
-												player.id,
-												currentDraftPick?.id || null,
-											);
-										}}
-									>
-										Draft
-									</Button>
+													8 - teamsWithCaptains.size
+													? "cursor-not-allowed opacity-50 pointer-events-auto"
+													: "cursor-pointer"
+											}`}
+											disabled={
+												player.isCaptain &&
+												teamsWithCaptains.has(teamId) &&
+												numCaptainsAvailable <=
+													8 - teamsWithCaptains.size
+											}
+											onClick={async (e) => {
+												e.stopPropagation();
+												await handleDraftPick(
+													player.id,
+													currentDraftPick?.id ||
+														null,
+												);
+											}}
+										>
+											Draft
+										</Button>
+									)}
 								</div>
 							))}
 

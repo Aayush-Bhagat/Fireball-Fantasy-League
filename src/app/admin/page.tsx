@@ -16,11 +16,15 @@ export default async function Page() {
 		redirect("/login");
 	}
 
+	console.log(user.id);
+
 	const { data: role }: { data: { role: string } | null } = await supabase
 		.from("user_roles")
 		.select("role")
-		.eq("id", user?.id)
+		.eq("id", user.id)
 		.single();
+
+	console.log(role);
 
 	if (role?.role !== "admin") {
 		redirect("/");
