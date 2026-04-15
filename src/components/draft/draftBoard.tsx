@@ -4,11 +4,13 @@ import PlayerPanel from "./playerPanel";
 import { PlayerWithStatsDto } from "@/dtos/playerDtos";
 import { DraftDto, FullDraftPicks } from "@/dtos/draftDtos";
 import { createClient } from "@/lib/supabase/client";
+import DraftLobby from "./DraftLobby";
 
 type Props = {
 	players: PlayerWithStatsDto[];
 	draftData: DraftDto;
 	teamId: string;
+	userId: string;
 };
 
 // ---------------- HELPERS ----------------
@@ -138,7 +140,12 @@ function TeamColumn({
 }
 
 // ---------------- MAIN ----------------
-export default function DraftBoard({ players, draftData, teamId }: Props) {
+export default function DraftBoard({
+	players,
+	draftData,
+	teamId,
+	userId,
+}: Props) {
 	const [draft, setDraft] = useState(draftData);
 	const [draftPicks, setDraftPicks] = useState(draftData.draftPicks);
 	const draftOrder = draftData.draftOrder;
@@ -158,18 +165,6 @@ export default function DraftBoard({ players, draftData, teamId }: Props) {
 	};
 
 	const currentPick = findCurrentPick(draft.currentPickId);
-
-	useEffect(() => {
-		console.log(allPlayers);
-	}, [allPlayers]);
-
-	useEffect(() => {
-		console.log(draft);
-	}, [draft]);
-
-	useEffect(() => {
-		console.log(draftPicks);
-	}, [draftPicks]);
 
 	useEffect(() => {
 		const channel = supabase
@@ -263,6 +258,10 @@ export default function DraftBoard({ players, draftData, teamId }: Props) {
 			supabase.removeChannel(channel);
 		};
 	}, [draft.id, supabase]);
+
+	if (draft.status === "not_started") {
+		return <DraftLobby userId={userId} teamId={teamId} draft={draftData} />;
+	}
 
 	return (
 		<div className="min-h-screen bg-gradient-to-br from-slate-50 via-gray-100 to-slate-200 flex flex-col lg:flex-row">
@@ -363,22 +362,24 @@ export default function DraftBoard({ players, draftData, teamId }: Props) {
 			</div>
 
 			{/* RIGHT PANEL */}
-			<div className="w-full lg:w-[520px] border-t lg:border-l bg-white shadow-xl">
-				<div className="sticky top-0 p-4 border-b bg-white/80 backdrop-blur">
-					<h2 className="text-lg font-bold">Player Board</h2>
-					<p className="text-xs text-gray-500">
-						Free agents & available players
-					</p>
-				</div>
+			{draft.status === "in_progress" && (
+				<div className="w-full lg:w-[520px] border-t lg:border-l bg-white shadow-xl">
+					<div className="sticky top-0 p-4 border-b bg-white/80 backdrop-blur">
+						<h2 className="text-lg font-bold">Player Board</h2>
+						<p className="text-xs text-gray-500">
+							Free agents & available players
+						</p>
+					</div>
 
-				<div className="p-3">
-					<PlayerPanel
-						allPlayers={allPlayers}
-						currentDraftPick={currentPick}
-						teamId={teamId}
-					/>
+					<div className="p-3">
+						<PlayerPanel
+							allPlayers={allPlayers}
+							currentDraftPick={currentPick}
+							teamId={teamId}
+						/>
+					</div>
 				</div>
-			</div>
+			)}
 		</div>
 	);
 }

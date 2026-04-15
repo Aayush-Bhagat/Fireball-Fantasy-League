@@ -29,13 +29,20 @@ export default async function DraftPage({
 		redirect("/login");
 	}
 
+	const userId = user.id;
+
 	const { players } = await viewAllPlayers();
 
 	const { draft, teamId } = await getDraftRequest(draftId, token);
 
 	return (
 		<div className="pt-16">
-			<DraftBoard players={players} draftData={draft} teamId={teamId} />
+			<DraftBoard
+				players={players}
+				draftData={draft}
+				teamId={teamId}
+				userId={userId}
+			/>
 		</div>
 	);
 }

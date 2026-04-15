@@ -1,5 +1,5 @@
 import { DraftResponseDto } from "@/dtos/draftDtos";
-import { findDraft } from "@/repositories/draft";
+import { findDraft, updateDraftToInProgress } from "@/repositories/draft";
 import { findTeamByUserId } from "@/repositories/teamRepository";
 
 export async function getDraft(userId: string, draftId: string) {
@@ -42,4 +42,8 @@ export async function getDraft(userId: string, draftId: string) {
 	};
 
 	return draft;
+}
+
+export async function startDraft(draftId: string, userId: string) {
+	await updateDraftToInProgress(draftId, userId);
 }

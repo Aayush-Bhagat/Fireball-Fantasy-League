@@ -3,11 +3,13 @@
 import { PlayerWithStatsDto } from "@/dtos/playerDtos";
 import { Button } from "../ui/button";
 import PlayerCard from "../playerCard";
-import { useMemo, useState } from "react";
+import { useMemo, useState, useEffect } from "react";
 import { createClient } from "@/lib/supabase/client";
 import { FullDraftPicks } from "@/dtos/draftDtos";
 import { Star } from "lucide-react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { useMutation } from "@tanstack/react-query";
+import { Loader2 } from "lucide-react";
 
 type Props = {
 	allPlayers: PlayerWithStatsDto[];
@@ -30,17 +32,41 @@ export default function PlayerPanel({
 	const [sortKey, setSortKey] = useState<SortKey>("batting");
 	const [ascending, setAscending] = useState(false);
 
+	// ✅ TIMER STATE
+	const [timeLeft, setTimeLeft] = useState(120); // 2 minutes
+
 	const teamsWithCaptains = new Set(
 		allPlayers.filter((p) => p.isCaptain && p.teamId).map((p) => p.teamId),
 	);
 
 	const players = allPlayers.filter((p) => !p.teamId);
-
 	const roster = allPlayers.filter((p) => p.teamId === teamId);
-
 	const numCaptainsAvailable = players.filter((p) => p.isCaptain).length;
 
 	const supabase = createClient();
+
+	useEffect(() => {
+		if (currentDraftPick?.id) {
+			setTimeLeft(120);
+		}
+	}, [currentDraftPick?.id]);
+
+	useEffect(() => {
+		if (!currentDraftPick) return;
+		if (timeLeft <= 0) return;
+
+		const interval = setInterval(() => {
+			setTimeLeft((prev) => prev - 1);
+		}, 1000);
+
+		return () => clearInterval(interval);
+	}, [timeLeft, currentDraftPick]);
+
+	const formatTime = (seconds: number) => {
+		const mins = Math.floor(seconds / 60);
+		const secs = seconds % 60;
+		return `${mins}:${secs.toString().padStart(2, "0")}`;
+	};
 
 	const handlePlayerClick = (player: PlayerWithStatsDto) => {
 		setSelectedPlayer(player);
@@ -56,24 +82,29 @@ export default function PlayerPanel({
 		}
 	};
 
-	const handleDraftPick = async (
-		playerId: string,
-		draftPickId: string | null,
-	) => {
-		if (!draftPickId) {
-			console.error("No active draft pick");
-			return;
-		}
+	const handleDraftPick = useMutation({
+		mutationFn: async ({
+			playerId,
+			draftPickId,
+		}: {
+			playerId: string;
+			draftPickId: string | null;
+		}) => {
+			if (!draftPickId) {
+				console.error("No active draft pick");
+				return;
+			}
 
-		const { error } = await supabase.rpc("make_draft_pick", {
-			p_selection_player_id: playerId,
-			p_draft_pick_id: draftPickId,
-		});
+			const { error } = await supabase.rpc("make_draft_pick", {
+				p_selection_player_id: playerId,
+				p_draft_pick_id: draftPickId,
+			});
 
-		if (error) {
-			console.error("Error making draft pick:", error);
-		}
-	};
+			if (error) {
+				console.error("Error making draft pick:", error);
+			}
+		},
+	});
 
 	const filteredAndSortedPlayers = useMemo(() => {
 		const query = searchQuery.trim().toLowerCase();
@@ -105,38 +136,77 @@ export default function PlayerPanel({
 			)}
 
 			{/* HEADER */}
-			<div className="sticky top-0 z-20 bg-white/80 backdrop-blur-md border-b">
-				<div className="p-4">
-					<h2 className="text-xl font-bold tracking-tight text-gray-800">
-						Draft Panel
-					</h2>
+			<div className="sticky top-0 z-20 backdrop-blur-md rounded-lg text-white shadow-lg">
+				<div className="p-4 space-y-4">
+					{/* TOP ROW */}
+					<div className="flex items-center justify-between">
+						<h2 className="text-lg font-semibold tracking-wide text-slate-400">
+							LIVE DRAFT
+						</h2>
 
-					<div className="mt-3 rounded-xl bg-blue-50 border border-blue-100 p-3">
-						<div className="text-[11px] uppercase tracking-wider text-gray-500">
-							On the clock
+						{/* TIMER */}
+						<div
+							className={`text-2xl font-mono font-bold px-4 py-1 rounded-lg ${
+								timeLeft <= 10
+									? "bg-red-600 text-white animate-pulse"
+									: "bg-slate-700 text-white"
+							}`}
+						>
+							{formatTime(timeLeft)}
 						</div>
-						<div className="text-sm font-semibold text-blue-700 mt-0.5">
-							{currentDraftPick && (
+					</div>
+
+					{/* MAIN CONTENT */}
+					{currentDraftPick && (
+						<div className="flex items-center justify-between">
+							{/* TEAM SIDE */}
+							<div className="flex items-center gap-4">
+								{currentDraftPick.team.logo && (
+									<img
+										src={currentDraftPick.team.logo}
+										className="w-14 h-14 rounded-full border-2 border-white shadow-md"
+									/>
+								)}
+
 								<div>
-									<div className="flex flex-row items-center">
-										{currentDraftPick.team.logo && (
-											<img
-												className="w-11 h-11 rounded-full"
-												src={currentDraftPick.team.logo}
-											/>
-										)}
-										<div>{currentDraftPick.team.name}</div>
+									<div className="text-xs uppercase tracking-widest text-slate-400">
+										On the Clock
 									</div>
-									<div>
-										Round: {currentDraftPick.round} - Pick{" "}
-										{currentDraftPick.pick}
+									<div className="text-xl font-bold text-slate-700 leading-tight">
+										{currentDraftPick.team.name}
 									</div>
 								</div>
-							)}
+							</div>
+
+							{/* PICK INFO */}
+							<div className="text-right">
+								<div className="text-xs uppercase tracking-widest text-slate-400">
+									Pick
+								</div>
+								<div className="text-3xl font-extrabold text-blue-400 leading-none">
+									#{currentDraftPick.pick}
+								</div>
+								<div className="text-xs text-slate-400 mt-1">
+									Round {currentDraftPick.round}
+								</div>
+							</div>
 						</div>
+					)}
+
+					{/* PROGRESS BAR */}
+					<div className="w-full h-1.5 bg-slate-700 rounded-full overflow-hidden">
+						<div
+							className={`h-full transition-all duration-1000 ${
+								timeLeft <= 10 ? "bg-red-500" : "bg-blue-500"
+							}`}
+							style={{
+								width: `${(timeLeft / 120) * 100}%`,
+							}}
+						/>
 					</div>
 				</div>
 			</div>
+
 			<div>
 				<Tabs defaultValue="draft" className="mt-4 w-full">
 					<TabsList className="w-full">
@@ -147,6 +217,7 @@ export default function PlayerPanel({
 							Roster
 						</TabsTrigger>
 					</TabsList>
+
 					<TabsContent value="draft">
 						<div className="px-4 mt-4 pb-3 space-y-3">
 							{/* SORT */}
@@ -200,7 +271,6 @@ export default function PlayerPanel({
 									onClick={() => handlePlayerClick(player)}
 									className="group flex items-center justify-between gap-3 p-3 rounded-2xl border bg-white shadow-sm hover:shadow-lg hover:border-blue-200 transition cursor-pointer"
 								>
-									{/* LEFT */}
 									<div className="flex items-center gap-3 min-w-0">
 										{player.image && (
 											<img
@@ -219,13 +289,10 @@ export default function PlayerPanel({
 													{player.name}
 												</div>
 												{player.isCaptain && (
-													<div className="text-[10px] font-bold">
-														<Star className="w-4 h-4 text-yellow-300 fill-current inline-block mb-[1px]" />
-													</div>
+													<Star className="w-4 h-4 text-yellow-300 fill-current" />
 												)}
 											</div>
 
-											{/* STATS */}
 											<div className="flex flex-wrap gap-1 mt-1">
 												<Stat
 													icon="/images/battingIcon.png"
@@ -259,11 +326,11 @@ export default function PlayerPanel({
 										</div>
 									</div>
 
-									{/* RIGHT ACTION */}
 									<Button
 										size="sm"
-										className="bg-blue-600 hover:bg-blue-700 text-white text-xs px-3 py-1 rounded-lg shadow-md opacity-90 group-hover:opacity-100 transition"
+										className="bg-blue-600 hover:bg-blue-700 text-white text-xs px-3 py-1 rounded-lg shadow-md opacity-90 group-hover:opacity-100 transition cursor-pointer disabled:cursor-not-allowed flex items-center gap-1"
 										disabled={
+											handleDraftPick.isPending ||
 											!currentDraftPick ||
 											currentDraftPick.teamId !==
 												teamId ||
@@ -274,18 +341,30 @@ export default function PlayerPanel({
 										}
 										onClick={async (e) => {
 											e.stopPropagation();
-											await handleDraftPick(
-												player.id,
-												currentDraftPick?.id || null,
-											);
+											await handleDraftPick.mutateAsync({
+												playerId: player.id,
+												draftPickId:
+													currentDraftPick?.id ||
+													null,
+											});
 										}}
 									>
-										Draft
+										{handleDraftPick.isPending &&
+										handleDraftPick.variables?.playerId ===
+											player.id ? (
+											<>
+												<span className="animate-spin">
+													<Loader2 className="w-4 h-4" />
+												</span>
+												Drafting...
+											</>
+										) : (
+											"Draft"
+										)}
 									</Button>
 								</div>
 							))}
 
-							{/* EMPTY */}
 							{filteredAndSortedPlayers.length === 0 && (
 								<div className="text-center text-gray-500 mt-12">
 									<div className="text-3xl mb-2">⚠️</div>
@@ -294,10 +373,9 @@ export default function PlayerPanel({
 							)}
 						</div>
 					</TabsContent>
+
 					<TabsContent value="roster">
-						<div className="">
-							<PlayerCards players={roster} />
-						</div>
+						<PlayerCards players={roster} />
 					</TabsContent>
 				</Tabs>
 			</div>
