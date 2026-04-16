@@ -7,7 +7,7 @@ export type PlayerAward = {
 	wins: {
 		seasonId: number;
 		awardedAt: Date;
-		seasonStart: Date;
+		seasonStart: Date | null;
 		seasonEnd: Date | null;
 		currentWeek: number;
 	}[];

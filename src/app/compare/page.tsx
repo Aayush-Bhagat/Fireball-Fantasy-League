@@ -1,16 +1,16 @@
 import ComparePlayers from "@/components/comparePlayers/comparePlayers";
 
 export default async function ComparePlayersPage({
-    searchParams,
+	searchParams,
 }: {
-    searchParams: Promise<{ rightPlayer?: string }>;
+	searchParams: Promise<{ rightPlayer?: string }>;
 }) {
-    const { rightPlayer } = await searchParams;
-    const rightPlayerId = rightPlayer ?? null;
+	const { rightPlayer } = await searchParams;
+	const rightPlayerId = rightPlayer ?? null;
 
-    return (
-        <div className="pt-20">
-            <ComparePlayers PlayerAId={rightPlayerId} />
-        </div>
-    );
+	return (
+		<div className="pt-4">
+			<ComparePlayers PlayerAId={rightPlayerId} />
+		</div>
+	);
 }

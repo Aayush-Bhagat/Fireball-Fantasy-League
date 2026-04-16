@@ -1,5 +1,5 @@
 import { verifyJwtToken } from "@/lib/authUtils";
-import { getDraft, startDraft } from "@/services/draftService";
+import { startDraft } from "@/services/draftService";
 import { NextResponse } from "next/server";
 
 export async function PUT(
@@ -15,8 +15,6 @@ export async function PUT(
 	const userId = verifyJwtToken(token);
 
 	const { draftId } = await params;
-
-	console.log(draftId);
 
 	await startDraft(draftId, userId);
 

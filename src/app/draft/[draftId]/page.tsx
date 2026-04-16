@@ -36,7 +36,7 @@ export default async function DraftPage({
 	const { draft, teamId } = await getDraftRequest(draftId, token);
 
 	return (
-		<div className="pt-16">
+		<div className="">
 			<DraftBoard
 				players={players}
 				draftData={draft}

@@ -32,3 +32,17 @@ export async function startDraftRequest(draftId: string, token: string) {
 		throw new Error(`Error updating draft: ${res.statusText}`);
 	}
 }
+
+export async function completeDraftRequest(draftId: string, token: string) {
+	const res = await fetch(`${API_URL}/api/drafts/${draftId}/complete`, {
+		method: "POST",
+		headers: {
+			"Content-Type": "application/json",
+			Authorization: `Bearer ${token}`,
+		},
+	});
+
+	if (!res.ok) {
+		throw new Error("Failed to complete draft");
+	}
+}

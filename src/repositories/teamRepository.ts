@@ -21,9 +21,10 @@ export function findAllTeams() {
 export async function findTeamByUserId(userId: string) {
 	const seasonQuery = db
 		.select({
-			id: sql<number>`max(${seasons.id})`.as("id"),
+			id: seasons.id,
 		})
-		.from(seasons);
+		.from(seasons)
+		.where(eq(seasons.status, "in_progress"));
 
 	const team = await db.query.teams.findFirst({
 		where: (teams, { eq }) => eq(teams.userId, userId),
@@ -33,7 +34,6 @@ export async function findTeamByUserId(userId: string) {
 				where: (keeps, { eq }) => eq(keeps.seasonId, seasonQuery),
 			},
 			seasonAwards: {
-				where: (awards, { eq }) => eq(awards.seasonId, seasonQuery),
 				with: {
 					award: true,
 				},
@@ -69,9 +69,10 @@ export async function findTeamIdByUserId(userId: string) {
 export async function findTeamById(id: string) {
 	const seasonQuery = db
 		.select({
-			id: sql<number>`max(${seasons.id})`.as("id"),
+			id: seasons.id,
 		})
-		.from(seasons);
+		.from(seasons)
+		.where(eq(seasons.status, "in_progress"));
 
 	const team = await db.query.teams.findFirst({
 		where: (teams, { eq }) => eq(teams.id, id),
@@ -94,9 +95,10 @@ export async function findTeamById(id: string) {
 export async function findAllTeamRecordsBySeason(season: number | null) {
 	const seasonQuery = db
 		.select({
-			id: sql<number>`max(${seasons.id})`.as("id"),
+			id: seasons.id,
 		})
-		.from(seasons);
+		.from(seasons)
+		.where(eq(seasons.status, "in_progress"));
 
 	const seasonId = season ? season : seasonQuery;
 
@@ -132,9 +134,10 @@ export async function findAllTeamRecordsBySeason(season: number | null) {
 export async function findRosterStatsByTeam(teamId: string) {
 	const seasonQuery = db
 		.select({
-			id: sql<number>`max(${seasons.id})`.as("id"),
+			id: seasons.id,
 		})
-		.from(seasons);
+		.from(seasons)
+		.where(eq(seasons.status, "in_progress"));
 
 	const stats = await db
 		.select({
@@ -219,6 +222,10 @@ export async function findAllTeamAssets() {
 						eq(draftPicks.seasonId, seasonQuery),
 						eq(draftPicks.tradeable, true),
 					),
+				with: {
+					team: true,
+					originalTeam: true,
+				},
 			},
 			conference: true,
 		},

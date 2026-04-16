@@ -6,8 +6,8 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import Link from "next/link";
 
 type Props = {
-    players: PlayerWithStatsDto[];
-    freeAgents?: boolean;
+	players: PlayerWithStatsDto[];
+	freeAgents?: boolean;
 };
 
 type BattingStatKey = "battingAverage" | "homeRuns" | "hits" | "rbis";
@@ -17,584 +17,584 @@ type FieldingStatKey = "outs";
 type SortDirection = "desc" | "asc" | null;
 
 export default function ViewPlayers({ players, freeAgents = false }: Props) {
-    const [selectedPlayer, setSelectedPlayer] =
-        useState<PlayerWithStatsDto | null>(null);
-    const [showCard, setShowCard] = useState(false);
-    const [searchQuery, setSearchQuery] = useState("");
-    const [batSort, setBatSort] = useState<{
-        key: BattingStatKey | null;
-        direction: SortDirection;
-    }>({
-        key: null,
-        direction: null,
-    });
-    const [pitchSort, setPitchSort] = useState<{
-        key: PitchingStatKey | null;
-        direction: SortDirection;
-    }>({
-        key: null,
-        direction: null,
-    });
-    const [fieldSort, setFieldSort] = useState<{
-        key: FieldingStatKey | null;
-        direction: SortDirection;
-    }>({
-        key: null,
-        direction: null,
-    });
+	const [selectedPlayer, setSelectedPlayer] =
+		useState<PlayerWithStatsDto | null>(null);
+	const [showCard, setShowCard] = useState(false);
+	const [searchQuery, setSearchQuery] = useState("");
+	const [batSort, setBatSort] = useState<{
+		key: BattingStatKey | null;
+		direction: SortDirection;
+	}>({
+		key: null,
+		direction: null,
+	});
+	const [pitchSort, setPitchSort] = useState<{
+		key: PitchingStatKey | null;
+		direction: SortDirection;
+	}>({
+		key: null,
+		direction: null,
+	});
+	const [fieldSort, setFieldSort] = useState<{
+		key: FieldingStatKey | null;
+		direction: SortDirection;
+	}>({
+		key: null,
+		direction: null,
+	});
 
-    const handlePlayerClick = (player: PlayerWithStatsDto) => {
-        setSelectedPlayer(player);
-        setShowCard(true);
-    };
+	const handlePlayerClick = (player: PlayerWithStatsDto) => {
+		setSelectedPlayer(player);
+		setShowCard(true);
+	};
 
-    const defaultBatters = useMemo(() => {
-        const weights = { hr: 2, rbi: 1, avg: 2.5 };
+	const defaultBatters = useMemo(() => {
+		const weights = { hr: 2, rbi: 1, avg: 2.5 };
 
-        const maxHR = Math.max(...players.map((p) => p.stats?.homeRuns ?? 0));
-        const maxRBI = Math.max(...players.map((p) => p.stats?.rbis ?? 0));
-        const maxAVG = Math.max(
-            ...players.map((p) => p.stats?.battingAverage ?? 0),
-        );
+		const maxHR = Math.max(...players.map((p) => p.stats?.homeRuns ?? 0));
+		const maxRBI = Math.max(...players.map((p) => p.stats?.rbis ?? 0));
+		const maxAVG = Math.max(
+			...players.map((p) => p.stats?.battingAverage ?? 0),
+		);
 
-        return players
-            .filter((p) => p.stats && p.stats.battingAverage !== undefined)
-            .map((p) => {
-                const { homeRuns = 0, rbis = 0, battingAverage = 0 } = p.stats;
-                const normalizedHR = maxHR ? homeRuns / maxHR : 0;
-                const normalizedRBI = maxRBI ? rbis / maxRBI : 0;
-                const normalizedAVG = maxAVG ? battingAverage / maxAVG : 0;
+		return players
+			.filter((p) => p.stats && p.stats.battingAverage !== undefined)
+			.map((p) => {
+				const { homeRuns = 0, rbis = 0, battingAverage = 0 } = p.stats;
+				const normalizedHR = maxHR ? homeRuns / maxHR : 0;
+				const normalizedRBI = maxRBI ? rbis / maxRBI : 0;
+				const normalizedAVG = maxAVG ? battingAverage / maxAVG : 0;
 
-                const score =
-                    normalizedHR * weights.hr +
-                    normalizedRBI * weights.rbi +
-                    normalizedAVG * weights.avg;
+				const score =
+					normalizedHR * weights.hr +
+					normalizedRBI * weights.rbi +
+					normalizedAVG * weights.avg;
 
-                return { ...p, score };
-            })
-            .sort((a, b) => b.score - a.score)
-            .map((p, index) => ({ ...p, rank: index + 1 }));
-    }, [players]);
+				return { ...p, score };
+			})
+			.sort((a, b) => b.score - a.score)
+			.map((p, index) => ({ ...p, rank: index + 1 }));
+	}, [players]);
 
-    const defaultPitchers = useMemo(() => {
-        const weights = {
-            era: -4,
-            so: 0.15,
-            ip: 2,
-        };
-        return players
-            .filter(
-                (p) =>
-                    p.stats &&
-                    p.stats.era !== undefined &&
-                    p.stats.inningsPitched >= p.stats.gamesPlayed,
-            )
-            .map((p) => ({
-                ...p,
-                score:
-                    p.stats.era * weights.era +
-                    p.stats.strikeouts * weights.so +
-                    p.stats.inningsPitched * weights.ip,
-            }))
-            .sort((a, b) => b.score - a.score)
-            .map((p, index) => ({ ...p, rank: index + 1 }));
-    }, [players]);
+	const defaultPitchers = useMemo(() => {
+		const weights = {
+			era: -4,
+			so: 0.15,
+			ip: 2,
+		};
+		return players
+			.filter(
+				(p) =>
+					p.stats &&
+					p.stats.era !== undefined &&
+					p.stats.inningsPitched >= p.stats.gamesPlayed,
+			)
+			.map((p) => ({
+				...p,
+				score:
+					p.stats.era * weights.era +
+					p.stats.strikeouts * weights.so +
+					p.stats.inningsPitched * weights.ip,
+			}))
+			.sort((a, b) => b.score - a.score)
+			.map((p, index) => ({ ...p, rank: index + 1 }));
+	}, [players]);
 
-    const defaultFielders = useMemo(() => {
-        const maxOuts = Math.max(...players.map((p) => p.stats?.outs ?? 0));
+	const defaultFielders = useMemo(() => {
+		const maxOuts = Math.max(...players.map((p) => p.stats?.outs ?? 0));
 
-        return players
-            .filter((p) => p.stats && p.stats.outs !== undefined)
-            .map((p) => {
-                const { outs = 0 } = p.stats;
-                const normalizedOuts = maxOuts ? outs / maxOuts : 0;
+		return players
+			.filter((p) => p.stats && p.stats.outs !== undefined)
+			.map((p) => {
+				const { outs = 0 } = p.stats;
+				const normalizedOuts = maxOuts ? outs / maxOuts : 0;
 
-                return {
-                    ...p,
-                    score: normalizedOuts,
-                };
-            })
-            .sort((a, b) => b.score - a.score)
-            .map((p, index) => ({ ...p, rank: index + 1 }));
-    }, [players]);
-    const sortedFielders = useMemo(() => {
-        if (!fieldSort.key || !fieldSort.direction) return defaultFielders;
+				return {
+					...p,
+					score: normalizedOuts,
+				};
+			})
+			.sort((a, b) => b.score - a.score)
+			.map((p, index) => ({ ...p, rank: index + 1 }));
+	}, [players]);
+	const sortedFielders = useMemo(() => {
+		if (!fieldSort.key || !fieldSort.direction) return defaultFielders;
 
-        const sorted = [...defaultFielders].sort((a, b) => {
-            const valA = a.stats[fieldSort.key!];
-            const valB = b.stats[fieldSort.key!];
+		const sorted = [...defaultFielders].sort((a, b) => {
+			const valA = a.stats[fieldSort.key!];
+			const valB = b.stats[fieldSort.key!];
 
-            return fieldSort.direction === "asc" ? valA - valB : valB - valA;
-        });
+			return fieldSort.direction === "asc" ? valA - valB : valB - valA;
+		});
 
-        return sorted.map((p, index) => ({ ...p, rank: index + 1 }));
-    }, [defaultFielders, fieldSort]);
+		return sorted.map((p, index) => ({ ...p, rank: index + 1 }));
+	}, [defaultFielders, fieldSort]);
 
-    const filteredFielders = useMemo(
-        () =>
-            sortedFielders.filter((p) =>
-                p.name.toLowerCase().includes(searchQuery.toLowerCase()),
-            ),
-        [sortedFielders, searchQuery],
-    );
+	const filteredFielders = useMemo(
+		() =>
+			sortedFielders.filter((p) =>
+				p.name.toLowerCase().includes(searchQuery.toLowerCase()),
+			),
+		[sortedFielders, searchQuery],
+	);
 
-    const sortedBatters = useMemo(() => {
-        if (!batSort.key || !batSort.direction) return defaultBatters;
+	const sortedBatters = useMemo(() => {
+		if (!batSort.key || !batSort.direction) return defaultBatters;
 
-        const sorted = [...defaultBatters].sort((a, b) => {
-            const valA = a.stats[batSort.key!];
-            const valB = b.stats[batSort.key!];
+		const sorted = [...defaultBatters].sort((a, b) => {
+			const valA = a.stats[batSort.key!];
+			const valB = b.stats[batSort.key!];
 
-            return batSort.direction === "asc" ? valA - valB : valB - valA;
-        });
+			return batSort.direction === "asc" ? valA - valB : valB - valA;
+		});
 
-        return sorted.map((p, index) => ({ ...p, rank: index + 1 }));
-    }, [defaultBatters, batSort]);
+		return sorted.map((p, index) => ({ ...p, rank: index + 1 }));
+	}, [defaultBatters, batSort]);
 
-    const sortedPitchers = useMemo(() => {
-        if (!pitchSort.key || !pitchSort.direction) return defaultPitchers;
+	const sortedPitchers = useMemo(() => {
+		if (!pitchSort.key || !pitchSort.direction) return defaultPitchers;
 
-        const sorted = [...defaultPitchers].sort((a, b) => {
-            const valA = a.stats[pitchSort.key!];
-            const valB = b.stats[pitchSort.key!];
+		const sorted = [...defaultPitchers].sort((a, b) => {
+			const valA = a.stats[pitchSort.key!];
+			const valB = b.stats[pitchSort.key!];
 
-            return pitchSort.direction === "asc" ? valA - valB : valB - valA;
-        });
+			return pitchSort.direction === "asc" ? valA - valB : valB - valA;
+		});
 
-        return sorted.map((p, index) => ({ ...p, rank: index + 1 }));
-    }, [defaultPitchers, pitchSort]);
+		return sorted.map((p, index) => ({ ...p, rank: index + 1 }));
+	}, [defaultPitchers, pitchSort]);
 
-    const filteredBatters = useMemo(
-        () =>
-            sortedBatters.filter((p) =>
-                p.name.toLowerCase().includes(searchQuery.toLowerCase()),
-            ),
-        [sortedBatters, searchQuery],
-    );
+	const filteredBatters = useMemo(
+		() =>
+			sortedBatters.filter((p) =>
+				p.name.toLowerCase().includes(searchQuery.toLowerCase()),
+			),
+		[sortedBatters, searchQuery],
+	);
 
-    const filteredPitchers = useMemo(
-        () =>
-            sortedPitchers.filter((p) =>
-                p.name.toLowerCase().includes(searchQuery.toLowerCase()),
-            ),
-        [sortedPitchers, searchQuery],
-    );
+	const filteredPitchers = useMemo(
+		() =>
+			sortedPitchers.filter((p) =>
+				p.name.toLowerCase().includes(searchQuery.toLowerCase()),
+			),
+		[sortedPitchers, searchQuery],
+	);
 
-    const toggleSort = (
-        key: BattingStatKey | PitchingStatKey | FieldingStatKey,
-        type: "bat" | "pitch" | "field",
-    ) => {
-        const current =
-            type === "bat" ? batSort : type === "pitch" ? pitchSort : fieldSort;
+	const toggleSort = (
+		key: BattingStatKey | PitchingStatKey | FieldingStatKey,
+		type: "bat" | "pitch" | "field",
+	) => {
+		const current =
+			type === "bat" ? batSort : type === "pitch" ? pitchSort : fieldSort;
 
-        const newDir: SortDirection =
-            current.key !== key
-                ? "desc"
-                : current.direction === "desc"
-                  ? "asc"
-                  : current.direction === "asc"
-                    ? null
-                    : "desc";
+		const newDir: SortDirection =
+			current.key !== key
+				? "desc"
+				: current.direction === "desc"
+					? "asc"
+					: current.direction === "asc"
+						? null
+						: "desc";
 
-        if (type === "bat") {
-            setBatSort({
-                key: newDir ? (key as BattingStatKey) : null,
-                direction: newDir,
-            });
-        } else if (type === "pitch") {
-            setPitchSort({
-                key: newDir ? (key as PitchingStatKey) : null,
-                direction: newDir,
-            });
-        } else if (type === "field") {
-            setFieldSort({
-                key: newDir ? (key as FieldingStatKey) : null,
-                direction: newDir,
-            });
-        }
-    };
+		if (type === "bat") {
+			setBatSort({
+				key: newDir ? (key as BattingStatKey) : null,
+				direction: newDir,
+			});
+		} else if (type === "pitch") {
+			setPitchSort({
+				key: newDir ? (key as PitchingStatKey) : null,
+				direction: newDir,
+			});
+		} else if (type === "field") {
+			setFieldSort({
+				key: newDir ? (key as FieldingStatKey) : null,
+				direction: newDir,
+			});
+		}
+	};
 
-    const renderTableRows = (
-        type: "bat" | "pitch" | "field",
-        playerList: (PlayerWithStatsDto & { rank: number })[],
-    ) =>
-        playerList.map((player) => (
-            <tr
-                key={player.rank}
-                className="hover:bg-gray-100 transition cursor-pointer"
-                onClick={() => handlePlayerClick(player)}
-            >
-                <td className="px-6 py-4 font-mono text-center">
-                    {player.rank}
-                </td>
-                <td className="px-6 py-4 flex items-center gap-4 text-center">
-                    {player.image && (
-                        <img
-                            src={player.image}
-                            alt={player.name}
-                            className="w-10 h-10 rounded-full border border-gray-300 object-cover"
-                            style={{ transform: "scaleX(-1)" }}
-                        />
-                    )}
-                    <span className="font-semibold text-gray-800">
-                        {player.name}
-                    </span>
-                </td>
-                {!freeAgents && (
-                    <td className="px-6 py-4">
-                        <div className="flex items-center gap-2">
-                            {player.team?.logo && (
-                                <img
-                                    src={player.team.logo}
-                                    alt={`${player.team.name} logo`}
-                                    className="w-6 h-6 rounded-full"
-                                />
-                            )}
-                            <span>{player.team?.name}</span>
-                        </div>
-                    </td>
-                )}
+	const renderTableRows = (
+		type: "bat" | "pitch" | "field",
+		playerList: (PlayerWithStatsDto & { rank: number })[],
+	) =>
+		playerList.map((player) => (
+			<tr
+				key={player.rank}
+				className="hover:bg-gray-100 transition cursor-pointer"
+				onClick={() => handlePlayerClick(player)}
+			>
+				<td className="px-6 py-4 font-mono text-center">
+					{player.rank}
+				</td>
+				<td className="px-6 py-4 flex items-center gap-4 text-center">
+					{player.image && (
+						<img
+							src={player.image}
+							alt={player.name}
+							className="w-10 h-10 rounded-full border border-gray-300 object-cover"
+							style={{ transform: "scaleX(-1)" }}
+						/>
+					)}
+					<span className="font-semibold text-gray-800">
+						{player.name}
+					</span>
+				</td>
+				{!freeAgents && (
+					<td className="px-6 py-4">
+						<div className="flex items-center gap-2">
+							{player.team?.logo && (
+								<img
+									src={player.team.logo}
+									alt={`${player.team.name} logo`}
+									className="w-6 h-6 rounded-full"
+								/>
+							)}
+							<span>{player.team?.name}</span>
+						</div>
+					</td>
+				)}
 
-                {/* Stats Columns */}
-                {type === "bat" && player.stats ? (
-                    <>
-                        <td className="px-6 py-4 font-mono">
-                            {player.stats.battingAverage.toFixed(3)}
-                        </td>
-                        <td className="px-6 py-4 font-mono">
-                            {player.stats.homeRuns}
-                        </td>
-                        <td className="px-6 py-4 font-mono">
-                            {player.stats.hits}
-                        </td>
-                        <td className="px-6 py-4 font-mono">
-                            {player.stats.rbis}
-                        </td>
-                    </>
-                ) : type === "pitch" && player.stats ? (
-                    <>
-                        <td className="px-6 py-4 font-mono">
-                            {player.stats.era.toFixed(2)}
-                        </td>
-                        <td className="px-6 py-4 font-mono">
-                            {player.stats.runsAllowed}
-                        </td>
-                        <td className="px-6 py-4 font-mono">
-                            {player.stats.strikeouts}
-                        </td>
-                        <td className="px-6 py-4 font-mono">
-                            {player.stats.inningsPitched}
-                        </td>
-                    </>
-                ) : type === "field" && player.stats ? (
-                    <>
-                        <td className="px-6 py-4 font-mono">
-                            {player.position}
-                        </td>
-                        <td className="px-6 py-4 font-mono">
-                            {player.stats.outs}
-                        </td>
-                    </>
-                ) : (
-                    <td
-                        className="px-6 py-4 font-mono text-gray-400"
-                        colSpan={4}
-                    >
-                        No stats available
-                    </td>
-                )}
-                <td
-                    className="px-4 py-4 text-center"
-                    onClick={(e) => e.stopPropagation()}
-                >
-                    <Link
-                        href={`/compare?rightPlayer=${player.id}`}
-                        className="inline-block px-3 py-1 text-sm font-semibold rounded-lg  
+				{/* Stats Columns */}
+				{type === "bat" && player.stats ? (
+					<>
+						<td className="px-6 py-4 font-mono">
+							{player.stats.battingAverage.toFixed(3)}
+						</td>
+						<td className="px-6 py-4 font-mono">
+							{player.stats.homeRuns}
+						</td>
+						<td className="px-6 py-4 font-mono">
+							{player.stats.hits}
+						</td>
+						<td className="px-6 py-4 font-mono">
+							{player.stats.rbis}
+						</td>
+					</>
+				) : type === "pitch" && player.stats ? (
+					<>
+						<td className="px-6 py-4 font-mono">
+							{player.stats.era.toFixed(2)}
+						</td>
+						<td className="px-6 py-4 font-mono">
+							{player.stats.runsAllowed}
+						</td>
+						<td className="px-6 py-4 font-mono">
+							{player.stats.strikeouts}
+						</td>
+						<td className="px-6 py-4 font-mono">
+							{player.stats.inningsPitched}
+						</td>
+					</>
+				) : type === "field" && player.stats ? (
+					<>
+						<td className="px-6 py-4 font-mono">
+							{player.position}
+						</td>
+						<td className="px-6 py-4 font-mono">
+							{player.stats.outs}
+						</td>
+					</>
+				) : (
+					<td
+						className="px-6 py-4 font-mono text-gray-400"
+						colSpan={4}
+					>
+						No stats available
+					</td>
+				)}
+				<td
+					className="px-4 py-4 text-center"
+					onClick={(e) => e.stopPropagation()}
+				>
+					<Link
+						href={`/compare?rightPlayer=${player.id}`}
+						className="inline-block px-3 py-1 text-sm font-semibold rounded-lg  
                    bg-blue-100 text-blue-700 hover:bg-blue-300 transition"
-                    >
-                        Compare
-                    </Link>
-                </td>
-            </tr>
-        ));
+					>
+						Compare
+					</Link>
+				</td>
+			</tr>
+		));
 
-    return (
-        <div className="min-h-screen bg-gray-50 pt-20">
-            {showCard && selectedPlayer && (
-                <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm">
-                    <div className="relative">
-                        <PlayerCard player={selectedPlayer} />
-                        <button
-                            className="absolute top-2 right-2 bg-red-500 hover:bg-red-600 text-white rounded-full w-8 h-8 flex items-center justify-center transition"
-                            onClick={() => setShowCard(false)}
-                            aria-label="Close"
-                        >
-                            ✕
-                        </button>
-                    </div>
-                </div>
-            )}
+	return (
+		<div className="min-h-screen bg-gray-50 py-6">
+			{showCard && selectedPlayer && (
+				<div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm">
+					<div className="relative">
+						<PlayerCard player={selectedPlayer} />
+						<button
+							className="absolute top-2 right-2 bg-red-500 hover:bg-red-600 text-white rounded-full w-8 h-8 flex items-center justify-center transition"
+							onClick={() => setShowCard(false)}
+							aria-label="Close"
+						>
+							✕
+						</button>
+					</div>
+				</div>
+			)}
 
-            <div className="text-center mb-10">
-                <h1 className="text-4xl font-bold text-blue-800 tracking-tight">
-                    {freeAgents ? "Free Agents" : "All Players"}
-                </h1>
+			<div className="text-center mb-10">
+				<h1 className="text-4xl font-bold text-blue-800 tracking-tight">
+					{freeAgents ? "Free Agents" : "All Players"}
+				</h1>
 
-                <p className="text-gray-600 mt-2">
-                    Click on a player to view detailed stats
-                </p>
-            </div>
+				<p className="text-gray-600 mt-2">
+					Click on a player to view detailed stats
+				</p>
+			</div>
 
-            <div className="px-4 md:px-12 mb-16">
-                <div className="flex items-center justify-between mb-4">
-                    <input
-                        type="text"
-                        placeholder="Search players..."
-                        className="px-4 py-2 border border-gray-300 rounded-lg"
-                        value={searchQuery}
-                        onChange={(e) => setSearchQuery(e.target.value)}
-                    />
-                </div>
+			<div className="px-4 md:px-12 mb-16">
+				<div className="flex items-center justify-between mb-4">
+					<input
+						type="text"
+						placeholder="Search players..."
+						className="px-4 py-2 border border-gray-300 rounded-lg"
+						value={searchQuery}
+						onChange={(e) => setSearchQuery(e.target.value)}
+					/>
+				</div>
 
-                <Tabs defaultValue="bat" className="w-full">
-                    <TabsList className="flex justify-center mb-4">
-                        <TabsTrigger
-                            value="bat"
-                            className="py-2 px-4 text-lg font-semibold"
-                        >
-                            Top Batters
-                        </TabsTrigger>
-                        <TabsTrigger
-                            value="pitch"
-                            className="py-2 px-4 text-lg font-semibold"
-                        >
-                            Top Pitchers
-                        </TabsTrigger>
-                        <TabsTrigger
-                            value="field"
-                            className="py-2 px-4 text-lg font-semibold"
-                        >
-                            Top Fielders
-                        </TabsTrigger>
-                    </TabsList>
+				<Tabs defaultValue="bat" className="w-full">
+					<TabsList className="flex justify-center mb-4">
+						<TabsTrigger
+							value="bat"
+							className="py-2 px-4 text-lg font-semibold"
+						>
+							Top Batters
+						</TabsTrigger>
+						<TabsTrigger
+							value="pitch"
+							className="py-2 px-4 text-lg font-semibold"
+						>
+							Top Pitchers
+						</TabsTrigger>
+						<TabsTrigger
+							value="field"
+							className="py-2 px-4 text-lg font-semibold"
+						>
+							Top Fielders
+						</TabsTrigger>
+					</TabsList>
 
-                    <TabsContent value="bat">
-                        <div className="mb-2 text-gray-700 font-semibold">
-                            Top Batters
-                        </div>
-                        <div className="overflow-x-auto bg-white rounded-lg shadow border border-gray-200">
-                            <table className="w-full table-auto">
-                                <thead className="bg-blue-50 text-blue-800 text-sm">
-                                    <tr>
-                                        <th className="px-6 py-3 text-left w-1/64">
-                                            Rank
-                                        </th>
-                                        <th className="px-6 py-3 text-left w-1/5">
-                                            Player
-                                        </th>
-                                        {!freeAgents && (
-                                            <th className="px-6 py-3 text-left w-1/5">
-                                                Team
-                                            </th>
-                                        )}
-                                        <th
-                                            className="px-6 py-3 text-left w-1/6 cursor-pointer"
-                                            onClick={() =>
-                                                toggleSort(
-                                                    "battingAverage",
-                                                    "bat",
-                                                )
-                                            }
-                                        >
-                                            AVG
-                                            {batSort.key === "battingAverage" &&
-                                                (batSort.direction === "asc"
-                                                    ? " ▲"
-                                                    : " ▼")}
-                                        </th>
-                                        <th
-                                            className="px-6 py-3 text-left w-1/6 cursor-pointer"
-                                            onClick={() =>
-                                                toggleSort("homeRuns", "bat")
-                                            }
-                                        >
-                                            HR
-                                            {batSort.key === "homeRuns" &&
-                                                (batSort.direction === "asc"
-                                                    ? " ▲"
-                                                    : " ▼")}
-                                        </th>
-                                        <th
-                                            className="px-6 py-3 text-left w-1/6 cursor-pointer"
-                                            onClick={() =>
-                                                toggleSort("hits", "bat")
-                                            }
-                                        >
-                                            H
-                                            {batSort.key === "hits" &&
-                                                (batSort.direction === "asc"
-                                                    ? " ▲"
-                                                    : " ▼")}
-                                        </th>
-                                        <th
-                                            className="px-6 py-3 text-left w-1/6 cursor-pointer"
-                                            onClick={() =>
-                                                toggleSort("rbis", "bat")
-                                            }
-                                        >
-                                            RBI
-                                            {batSort.key === "rbis" &&
-                                                (batSort.direction === "asc"
-                                                    ? " ▲"
-                                                    : " ▼")}
-                                        </th>
-                                        <th className="px-4 py-3 text-center w-1/6">
-                                            Compare
-                                        </th>
-                                    </tr>
-                                </thead>
-                                <tbody className="divide-y divide-gray-100 text-sm">
-                                    {renderTableRows("bat", filteredBatters)}
-                                </tbody>
-                            </table>
-                        </div>
-                    </TabsContent>
+					<TabsContent value="bat">
+						<div className="mb-2 text-gray-700 font-semibold">
+							Top Batters
+						</div>
+						<div className="overflow-x-auto bg-white rounded-lg shadow border border-gray-200">
+							<table className="w-full table-auto">
+								<thead className="bg-blue-50 text-blue-800 text-sm">
+									<tr>
+										<th className="px-6 py-3 text-left w-1/64">
+											Rank
+										</th>
+										<th className="px-6 py-3 text-left w-1/5">
+											Player
+										</th>
+										{!freeAgents && (
+											<th className="px-6 py-3 text-left w-1/5">
+												Team
+											</th>
+										)}
+										<th
+											className="px-6 py-3 text-left w-1/6 cursor-pointer"
+											onClick={() =>
+												toggleSort(
+													"battingAverage",
+													"bat",
+												)
+											}
+										>
+											AVG
+											{batSort.key === "battingAverage" &&
+												(batSort.direction === "asc"
+													? " ▲"
+													: " ▼")}
+										</th>
+										<th
+											className="px-6 py-3 text-left w-1/6 cursor-pointer"
+											onClick={() =>
+												toggleSort("homeRuns", "bat")
+											}
+										>
+											HR
+											{batSort.key === "homeRuns" &&
+												(batSort.direction === "asc"
+													? " ▲"
+													: " ▼")}
+										</th>
+										<th
+											className="px-6 py-3 text-left w-1/6 cursor-pointer"
+											onClick={() =>
+												toggleSort("hits", "bat")
+											}
+										>
+											H
+											{batSort.key === "hits" &&
+												(batSort.direction === "asc"
+													? " ▲"
+													: " ▼")}
+										</th>
+										<th
+											className="px-6 py-3 text-left w-1/6 cursor-pointer"
+											onClick={() =>
+												toggleSort("rbis", "bat")
+											}
+										>
+											RBI
+											{batSort.key === "rbis" &&
+												(batSort.direction === "asc"
+													? " ▲"
+													: " ▼")}
+										</th>
+										<th className="px-4 py-3 text-center w-1/6">
+											Compare
+										</th>
+									</tr>
+								</thead>
+								<tbody className="divide-y divide-gray-100 text-sm">
+									{renderTableRows("bat", filteredBatters)}
+								</tbody>
+							</table>
+						</div>
+					</TabsContent>
 
-                    <TabsContent value="pitch">
-                        <div className="mb-2 text-gray-700 font-semibold">
-                            Top Pitchers
-                        </div>
-                        <div className="overflow-x-auto bg-white rounded-lg shadow border border-gray-200">
-                            <table className="w-full table-auto">
-                                <thead className="bg-blue-50 text-blue-800 text-sm">
-                                    <tr>
-                                        <th className="px-6 py-3 text-left w-1/64">
-                                            Rank
-                                        </th>
-                                        <th className="px-6 py-3 text-left w-1/5">
-                                            Player
-                                        </th>
-                                        {!freeAgents && (
-                                            <th className="px-6 py-3 text-left w-1/5">
-                                                Team
-                                            </th>
-                                        )}
-                                        <th
-                                            className="px-6 py-3 text-left w-1/6 cursor-pointer"
-                                            onClick={() =>
-                                                toggleSort("era", "pitch")
-                                            }
-                                        >
-                                            ERA
-                                            {pitchSort.key === "era" &&
-                                                (pitchSort.direction === "asc"
-                                                    ? " ▲"
-                                                    : " ▼")}
-                                        </th>
-                                        <th
-                                            className="px-6 py-3 text-left w-1/6 cursor-pointer"
-                                            onClick={() =>
-                                                toggleSort(
-                                                    "runsAllowed",
-                                                    "pitch",
-                                                )
-                                            }
-                                        >
-                                            RA
-                                            {pitchSort.key === "runsAllowed" &&
-                                                (pitchSort.direction === "asc"
-                                                    ? " ▲"
-                                                    : " ▼")}
-                                        </th>
-                                        <th
-                                            className="px-6 py-3 text-left w-1/6 cursor-pointer"
-                                            onClick={() =>
-                                                toggleSort(
-                                                    "strikeouts",
-                                                    "pitch",
-                                                )
-                                            }
-                                        >
-                                            SO
-                                            {pitchSort.key === "strikeouts" &&
-                                                (pitchSort.direction === "asc"
-                                                    ? " ▲"
-                                                    : " ▼")}
-                                        </th>
-                                        <th
-                                            className="px-6 py-3 text-left w-1/6 cursor-pointer"
-                                            onClick={() =>
-                                                toggleSort(
-                                                    "inningsPitched",
-                                                    "pitch",
-                                                )
-                                            }
-                                        >
-                                            IP
-                                            {pitchSort.key ===
-                                                "inningsPitched" &&
-                                                (pitchSort.direction === "asc"
-                                                    ? " ▲"
-                                                    : " ▼")}
-                                        </th>
-                                        <th className="px-4 py-3 text-center w-1/6">
-                                            Compare
-                                        </th>
-                                    </tr>
-                                </thead>
-                                <tbody className="divide-y divide-gray-100 text-sm">
-                                    {renderTableRows("pitch", filteredPitchers)}
-                                </tbody>
-                            </table>
-                        </div>
-                    </TabsContent>
-                    <TabsContent value="field">
-                        <div className="mb-2 text-gray-700 font-semibold">
-                            Top Fielders
-                        </div>
-                        <div className="overflow-x-auto bg-white rounded-lg shadow border border-gray-200">
-                            <table className="w-full table-auto">
-                                <thead className="bg-blue-50 text-blue-800 text-sm">
-                                    <tr>
-                                        <th className="px-6 py-3 text-left w-1/64">
-                                            Rank
-                                        </th>
-                                        <th className="px-6 py-3 text-left w-1/5">
-                                            Player
-                                        </th>
-                                        {!freeAgents && (
-                                            <th className="px-6 py-3 text-left w-1/5">
-                                                Team
-                                            </th>
-                                        )}
-                                        <th className="px-6 py-3 text-left w-1/6">
-                                            Position
-                                        </th>
-                                        <th
-                                            className="px-6 py-3 text-left w-1/6 cursor-pointer"
-                                            onClick={() =>
-                                                toggleSort("outs", "field")
-                                            }
-                                        >
-                                            Put Outs
-                                            {fieldSort.key === "outs" &&
-                                                (fieldSort.direction === "asc"
-                                                    ? " ▲"
-                                                    : " ▼")}
-                                        </th>
-                                        <th className="px-4 py-3 text-center w-1/6">
-                                            Compare
-                                        </th>
-                                    </tr>
-                                </thead>
-                                <tbody className="divide-y divide-gray-100 text-sm">
-                                    {renderTableRows("field", filteredFielders)}
-                                </tbody>
-                            </table>
-                        </div>
-                    </TabsContent>
-                </Tabs>
-            </div>
-        </div>
-    );
+					<TabsContent value="pitch">
+						<div className="mb-2 text-gray-700 font-semibold">
+							Top Pitchers
+						</div>
+						<div className="overflow-x-auto bg-white rounded-lg shadow border border-gray-200">
+							<table className="w-full table-auto">
+								<thead className="bg-blue-50 text-blue-800 text-sm">
+									<tr>
+										<th className="px-6 py-3 text-left w-1/64">
+											Rank
+										</th>
+										<th className="px-6 py-3 text-left w-1/5">
+											Player
+										</th>
+										{!freeAgents && (
+											<th className="px-6 py-3 text-left w-1/5">
+												Team
+											</th>
+										)}
+										<th
+											className="px-6 py-3 text-left w-1/6 cursor-pointer"
+											onClick={() =>
+												toggleSort("era", "pitch")
+											}
+										>
+											ERA
+											{pitchSort.key === "era" &&
+												(pitchSort.direction === "asc"
+													? " ▲"
+													: " ▼")}
+										</th>
+										<th
+											className="px-6 py-3 text-left w-1/6 cursor-pointer"
+											onClick={() =>
+												toggleSort(
+													"runsAllowed",
+													"pitch",
+												)
+											}
+										>
+											RA
+											{pitchSort.key === "runsAllowed" &&
+												(pitchSort.direction === "asc"
+													? " ▲"
+													: " ▼")}
+										</th>
+										<th
+											className="px-6 py-3 text-left w-1/6 cursor-pointer"
+											onClick={() =>
+												toggleSort(
+													"strikeouts",
+													"pitch",
+												)
+											}
+										>
+											SO
+											{pitchSort.key === "strikeouts" &&
+												(pitchSort.direction === "asc"
+													? " ▲"
+													: " ▼")}
+										</th>
+										<th
+											className="px-6 py-3 text-left w-1/6 cursor-pointer"
+											onClick={() =>
+												toggleSort(
+													"inningsPitched",
+													"pitch",
+												)
+											}
+										>
+											IP
+											{pitchSort.key ===
+												"inningsPitched" &&
+												(pitchSort.direction === "asc"
+													? " ▲"
+													: " ▼")}
+										</th>
+										<th className="px-4 py-3 text-center w-1/6">
+											Compare
+										</th>
+									</tr>
+								</thead>
+								<tbody className="divide-y divide-gray-100 text-sm">
+									{renderTableRows("pitch", filteredPitchers)}
+								</tbody>
+							</table>
+						</div>
+					</TabsContent>
+					<TabsContent value="field">
+						<div className="mb-2 text-gray-700 font-semibold">
+							Top Fielders
+						</div>
+						<div className="overflow-x-auto bg-white rounded-lg shadow border border-gray-200">
+							<table className="w-full table-auto">
+								<thead className="bg-blue-50 text-blue-800 text-sm">
+									<tr>
+										<th className="px-6 py-3 text-left w-1/64">
+											Rank
+										</th>
+										<th className="px-6 py-3 text-left w-1/5">
+											Player
+										</th>
+										{!freeAgents && (
+											<th className="px-6 py-3 text-left w-1/5">
+												Team
+											</th>
+										)}
+										<th className="px-6 py-3 text-left w-1/6">
+											Position
+										</th>
+										<th
+											className="px-6 py-3 text-left w-1/6 cursor-pointer"
+											onClick={() =>
+												toggleSort("outs", "field")
+											}
+										>
+											Put Outs
+											{fieldSort.key === "outs" &&
+												(fieldSort.direction === "asc"
+													? " ▲"
+													: " ▼")}
+										</th>
+										<th className="px-4 py-3 text-center w-1/6">
+											Compare
+										</th>
+									</tr>
+								</thead>
+								<tbody className="divide-y divide-gray-100 text-sm">
+									{renderTableRows("field", filteredFielders)}
+								</tbody>
+							</table>
+						</div>
+					</TabsContent>
+				</Tabs>
+			</div>
+		</div>
+	);
 }

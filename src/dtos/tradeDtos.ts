@@ -1,3 +1,4 @@
+import { FullDraftPicks } from "@/dtos/draftDtos";
 import { BasicDraftPickDto, KeepDto, TeamDto, TeamGameDto } from "./teamDtos";
 import { BasicPlayerDto } from "./playerDtos";
 import { z } from "zod";
@@ -32,7 +33,7 @@ export type TeamTradeResponseDto = {
 
 export type TeamTradeAsset = TeamDto & {
 	players: BasicPlayerDto[];
-	draftPicks: BasicDraftPickDto[];
+	draftPicks: FullDraftPicks[];
 };
 
 export type TeamTradeAssetsDto = {

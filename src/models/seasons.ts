@@ -16,21 +16,39 @@ import { playerHistory, players } from "./players";
 import { recaps } from "./recaps";
 import { rankings } from "./rankings";
 
+export const seasonStatus = pgEnum("season_status", [
+	"not_started",
+	"in_progress",
+	"completed",
+]);
+
+export const seasonPhase = pgEnum("season_phase", [
+	"offseason",
+	"regular_season",
+	"playoffs",
+	"completed",
+]);
+
 export const seasons = pgTable(
 	"seasons",
 	{
 		id: serial("id").primaryKey(),
-		startDate: timestamp("start_date", { withTimezone: true })
-			.defaultNow()
-			.notNull(),
+		startDate: timestamp("start_date", { withTimezone: true }).defaultNow(),
 		endDate: timestamp("end_date", { withTimezone: true }),
 		currentWeek: integer("current_week").default(1).notNull(),
+		status: seasonStatus("status").default("not_started").notNull(),
+		phase: seasonPhase("phase").default("offseason").notNull(),
 	},
-	(table) => [index("idx_season_current_week").on(table.currentWeek)]
+	(table) => [
+		index("idx_season_current_week").on(table.currentWeek),
+		index("idx_season_status").on(table.status),
+	],
 );
 
 export type Season = typeof seasons.$inferSelect;
 export type CreateSeason = typeof seasons.$inferInsert;
+export type SeasonStatusEnum = (typeof seasonStatus.enumValues)[number];
+export type SeasonPhaseEnum = (typeof seasonPhase.enumValues)[number];
 
 export const seasonRelations = relations(seasons, ({ many }) => ({
 	games: many(games),
@@ -84,7 +102,7 @@ export const seasonAwards = pgTable(
 		index("idx_season_awards_player").on(table.playerId),
 		index("idx_season_awards_team").on(table.teamId),
 		index("idx_season_awards_season").on(table.seasonId),
-	]
+	],
 );
 
 export type SeasonAward = typeof seasonAwards.$inferSelect;
