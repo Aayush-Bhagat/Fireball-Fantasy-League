@@ -6,13 +6,13 @@ import { Loader2 } from "lucide-react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { getAllSeasons } from "@/requests/season";
 import {
-    DropdownMenu,
-    DropdownMenuContent,
-    DropdownMenuLabel,
-    DropdownMenuRadioGroup,
-    DropdownMenuRadioItem,
-    DropdownMenuSeparator,
-    DropdownMenuTrigger,
+	DropdownMenu,
+	DropdownMenuContent,
+	DropdownMenuLabel,
+	DropdownMenuRadioGroup,
+	DropdownMenuRadioItem,
+	DropdownMenuSeparator,
+	DropdownMenuTrigger,
 } from "./ui/dropdown-menu";
 import { Button } from "./ui/button";
 type Props = {
@@ -21,7 +21,7 @@ type Props = {
 
 export default function PlayerGameLog({ player }: Props) {
 	const [selectedSeason, setSelectedSeason] = useState<string | undefined>(
-		undefined
+		undefined,
 	);
 
 	const { data: playerGameLogs, isLoading } = useQuery({
@@ -35,8 +35,11 @@ export default function PlayerGameLog({ player }: Props) {
 		queryKey: ["seasons"],
 		queryFn: async () => {
 			const res = await getAllSeasons();
-			setSelectedSeason(res.seasons[0].id.toString());
-			return res.seasons;
+			const inProgressSeasons = res.seasons.filter(
+				(s) => s.status === "in_progress" || s.status === "completed",
+			);
+			setSelectedSeason(inProgressSeasons[0].id.toString());
+			return inProgressSeasons;
 		},
 	});
 	const hasPitchingStats =
@@ -44,7 +47,7 @@ export default function PlayerGameLog({ player }: Props) {
 			(game) =>
 				game.stats.inningsPitched > 0 ||
 				game.stats.runsAllowed > 0 ||
-				game.stats.era > 0
+				game.stats.era > 0,
 		) ?? false;
 
 	return (
@@ -104,9 +107,9 @@ export default function PlayerGameLog({ player }: Props) {
 										.sort(
 											(a, b) =>
 												new Date(
-													b.playedAt!
+													b.playedAt!,
 												).getTime() -
-												new Date(a.playedAt!).getTime()
+												new Date(a.playedAt!).getTime(),
 										)
 										.map((game, i) => (
 											<tr
@@ -117,9 +120,9 @@ export default function PlayerGameLog({ player }: Props) {
 													{(game.playedAt &&
 														format(
 															new Date(
-																game.playedAt
+																game.playedAt,
 															),
-															"MM/dd"
+															"MM/dd",
 														)) ||
 														"TBD"}
 												</td>
@@ -143,7 +146,7 @@ export default function PlayerGameLog({ player }: Props) {
 												</td>
 												<td className="p-2">
 													{game.stats.battingAverage.toFixed(
-														3
+														3,
 													)}
 												</td>
 											</tr>
@@ -174,11 +177,11 @@ export default function PlayerGameLog({ player }: Props) {
 											.sort(
 												(a, b) =>
 													new Date(
-														b.playedAt!
+														b.playedAt!,
 													).getTime() -
 													new Date(
-														a.playedAt!
-													).getTime()
+														a.playedAt!,
+													).getTime(),
 											)
 											.map((game, i) => (
 												<tr
@@ -189,9 +192,9 @@ export default function PlayerGameLog({ player }: Props) {
 														{(game.playedAt &&
 															format(
 																new Date(
-																	game.playedAt
+																	game.playedAt,
 																),
-																"MM/dd"
+																"MM/dd",
 															)) ||
 															"TBD"}
 													</td>
@@ -219,7 +222,7 @@ export default function PlayerGameLog({ player }: Props) {
 
 													<td className="p-2">
 														{game.stats.era.toFixed(
-															2
+															2,
 														)}
 													</td>
 												</tr>
