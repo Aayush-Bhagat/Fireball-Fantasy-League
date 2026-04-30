@@ -356,7 +356,9 @@ export async function getAllTeamAssets(userId: string) {
 				name: player.name,
 				image: player.image,
 			})),
-			draftPicks: teamAssets.draftPicks,
+			draftPicks: teamAssets.draftPicks.map((dp) => {
+				return { ...dp, playerSelected: null };
+			}),
 		},
 		availableAssets: availableAssets.map((team) => ({
 			id: team.id,
@@ -370,7 +372,9 @@ export async function getAllTeamAssets(userId: string) {
 				name: player.name,
 				image: player.image,
 			})),
-			draftPicks: team.draftPicks,
+			draftPicks: team.draftPicks.map((dp) => {
+				return { ...dp, playerSelected: null };
+			}),
 		})),
 	};
 

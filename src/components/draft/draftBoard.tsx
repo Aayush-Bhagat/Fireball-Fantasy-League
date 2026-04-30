@@ -1,148 +1,40 @@
 "use client";
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import PlayerPanel from "./playerPanel";
 import { PlayerWithStatsDto } from "@/dtos/playerDtos";
-import { DraftDto, FullDraftPicks } from "@/dtos/draftDtos";
+import { DraftDto } from "@/dtos/draftDtos";
 import { createClient } from "@/lib/supabase/client";
+import DraftLobby from "./DraftLobby";
+import { Button } from "../ui/button";
+import { useMutation } from "@tanstack/react-query";
+import { completeDraftRequest } from "@/requests/draft";
+import { Loader2 } from "lucide-react";
+import PickToast, { ToastPick } from "@/components/draft/PickToast";
+import { TeamColumn } from "./TeamPickColumn";
 
 type Props = {
 	players: PlayerWithStatsDto[];
 	draftData: DraftDto;
 	teamId: string;
+	userId: string;
 };
 
-// ---------------- HELPERS ----------------
-const formatPick = (p: FullDraftPicks) => `${p.round}.${p.pick}`;
-
-// ---------------- COMPONENTS ----------------
-
-function PickCard({
-	pick,
-	currentPick,
-}: {
-	pick: FullDraftPicks;
-	currentPick: FullDraftPicks | null;
-}) {
-	const isActive = !pick.playerSelected;
-
-	return (
-		<div
-			className={`rounded-xl p-3 text-xs border min-h-[80px] flex flex-col justify-between transition-all
-        ${isActive ? "bg-blue-50" : "border-gray-200 bg-white"} ${currentPick?.id === pick.id ? "ring-2 ring-blue-400" : ""}`}
-		>
-			{/* top row */}
-			<div className="flex justify-between items-start">
-				<div className="flex flex-col">
-					<span className="font-semibold text-gray-700">
-						{formatPick(pick)}
-					</span>
-					{pick.isCompensatory && (
-						<span className="text-[10px] font-light">
-							Comp Pick
-						</span>
-					)}
-				</div>
-
-				<div className="flex gap-1">
-					{currentPick?.id === pick.id && (
-						<span className="text-[10px] bg-red-500 text-white px-2 py-[2px] rounded-full shadow">
-							OTC
-						</span>
-					)}
-					{pick.playerSelected && (
-						<span className="text-[10px] bg-green-500 text-white px-2 py-[2px] rounded-full shadow">
-							✓
-						</span>
-					)}
-				</div>
-			</div>
-			{/* player section */}
-			{pick.playerSelected && (
-				<div className="flex items-center gap-2 mt-2">
-					{pick.playerSelected.image && (
-						<img
-							src={pick.playerSelected.image}
-							alt={pick.playerSelected.name}
-							className="w-10 h-10 rounded-lg object-cover border shadow-sm"
-						/>
-					)}
-
-					<div className="flex flex-col overflow-hidden">
-						<span className="text-sm font-semibold text-gray-800 truncate">
-							{pick.playerSelected.name}
-						</span>
-						<span className="text-[11px] text-gray-500">
-							Drafted
-						</span>
-					</div>
-				</div>
-			)}
-			{currentPick?.id === pick.id && !pick.playerSelected && (
-				<div className="text-gray-400 text-[11px] mt-2">
-					Waiting for pick...
-				</div>
-			)}
-			{pick.teamId !== pick.originalTeamId && (
-				<div className="mt-2 flex items-center gap-1 text-[10px] text-gray-600">
-					{/* current team */}
-					{pick.team.logo && (
-						<img
-							src={pick.team.logo}
-							className="w-5 h-5 rounded-full"
-						/>
-					)}
-
-					<span className="text-gray-400">via</span>
-
-					{/* original team */}
-					{pick.originalTeam.logo && (
-						<img
-							src={pick.originalTeam.logo}
-							className="w-5 h-5 rounded-full"
-						/>
-					)}
-				</div>
-			)}
-		</div>
-	);
-}
-
-function TeamColumn({
-	picks,
-	isComp = false,
-	currentPick,
-}: {
-	picks: FullDraftPicks[];
-	isComp?: boolean;
-	currentPick: FullDraftPicks | null;
-}) {
-	if (picks.length === 0) {
-		return (
-			<div
-				className={
-					isComp
-						? "min-h-[70px]"
-						: "min-h-[110px] flex items-center justify-center text-gray-300 text-xs"
-				}
-			></div>
-		);
-	}
-
-	return (
-		<div className="space-y-2">
-			{picks.map((p, i) => (
-				<PickCard key={i} pick={p} currentPick={currentPick} />
-			))}
-		</div>
-	);
-}
-
 // ---------------- MAIN ----------------
-export default function DraftBoard({ players, draftData, teamId }: Props) {
+export default function DraftBoard({
+	players,
+	draftData,
+	teamId,
+	userId,
+}: Props) {
 	const [draft, setDraft] = useState(draftData);
 	const [draftPicks, setDraftPicks] = useState(draftData.draftPicks);
 	const draftOrder = draftData.draftOrder;
 	const [allPlayers, setAllPlayers] = useState(players);
+
+	// Toast state
+	const [lastPickToast, setLastPickToast] = useState<ToastPick | null>(null);
+	const [toastVisible, setToastVisible] = useState(false);
+	const toastTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
 	const supabase = createClient();
 
@@ -159,17 +51,23 @@ export default function DraftBoard({ players, draftData, teamId }: Props) {
 
 	const currentPick = findCurrentPick(draft.currentPickId);
 
-	useEffect(() => {
-		console.log(allPlayers);
-	}, [allPlayers]);
+	const showPickToast = (toast: ToastPick) => {
+		if (toastTimerRef.current) clearTimeout(toastTimerRef.current);
+		setLastPickToast(toast);
+		setToastVisible(true);
+		toastTimerRef.current = setTimeout(() => {
+			setToastVisible(false);
+		}, 3500);
+	};
 
-	useEffect(() => {
-		console.log(draft);
-	}, [draft]);
-
-	useEffect(() => {
-		console.log(draftPicks);
-	}, [draftPicks]);
+	const handleCompleteDraft = useMutation({
+		mutationFn: async () => {
+			const session = await supabase.auth.getSession();
+			const token = session.data.session?.access_token;
+			if (!token) return;
+			await completeDraftRequest(draftData.id, token);
+		},
+	});
 
 	useEffect(() => {
 		const channel = supabase
@@ -181,21 +79,17 @@ export default function DraftBoard({ players, draftData, teamId }: Props) {
 					schema: "public",
 					table: "draft",
 				},
-
 				(payload) => {
 					const newDraft = payload.new as {
 						id: string;
 						status: "not_started" | "in_progress" | "completed";
 						current_pick_id: string | null;
 					};
-					console.log(newDraft);
-					setDraft((prev) => {
-						return {
-							...prev,
-							status: newDraft.status,
-							currentPickId: newDraft.current_pick_id,
-						};
-					});
+					setDraft((prev) => ({
+						...prev,
+						status: newDraft.status,
+						currentPickId: newDraft.current_pick_id,
+					}));
 				},
 			)
 			.on(
@@ -205,33 +99,45 @@ export default function DraftBoard({ players, draftData, teamId }: Props) {
 					schema: "public",
 					table: "draft_picks",
 				},
-
 				(payload) => {
 					const newPick = payload.new as {
 						id: string;
 						selection: string | null;
+						team_id: string | null;
+						round: number;
+						pick: number;
 					};
-					console.log(newPick);
 					const player = players.find(
 						(p) => p.id === newPick.selection,
 					);
 
-					setDraftPicks((prev) => {
-						return prev.map((round) => {
-							return {
-								...round,
-								picks: round.picks.map((pick) =>
-									pick.id === newPick.id
-										? {
-												...pick,
-												selection: newPick.selection,
-												playerSelected: player || null,
-											}
-										: pick,
-								),
-							};
+					if (newPick.selection && player) {
+						const pickTeam = draftOrder.find(
+							(t) => t.teamId === newPick.team_id,
+						);
+						showPickToast({
+							playerName: player.name,
+							teamName: pickTeam?.team.name ?? "Unknown",
+							teamLogo: pickTeam?.team.logo,
+							round: newPick.round,
+							pick: newPick.pick,
 						});
-					});
+					}
+
+					setDraftPicks((prev) =>
+						prev.map((round) => ({
+							...round,
+							picks: round.picks.map((pick) =>
+								pick.id === newPick.id
+									? {
+											...pick,
+											selection: newPick.selection,
+											playerSelected: player || null,
+										}
+									: pick,
+							),
+						})),
+					);
 				},
 			)
 			.on(
@@ -241,20 +147,18 @@ export default function DraftBoard({ players, draftData, teamId }: Props) {
 					schema: "public",
 					table: "players",
 				},
-
 				(payload) => {
 					const updatedPlayer = payload.new as {
 						id: string;
 						team_id: string | null;
 					};
-					console.log(updatedPlayer);
-					setAllPlayers((prev) => {
-						return prev.map((p) =>
+					setAllPlayers((prev) =>
+						prev.map((p) =>
 							p.id === updatedPlayer.id
 								? { ...p, teamId: updatedPlayer.team_id }
 								: p,
-						);
-					});
+						),
+					);
 				},
 			)
 			.subscribe();
@@ -262,37 +166,85 @@ export default function DraftBoard({ players, draftData, teamId }: Props) {
 		return () => {
 			supabase.removeChannel(channel);
 		};
-	}, [draft.id, supabase]);
+	}, [draft.id, supabase, players, draftOrder]);
+
+	if (draft.status === "not_started") {
+		return <DraftLobby userId={userId} teamId={teamId} draft={draftData} />;
+	}
 
 	return (
 		<div className="min-h-screen bg-gradient-to-br from-slate-50 via-gray-100 to-slate-200 flex flex-col lg:flex-row">
 			{/* LEFT */}
 			<div className="flex-1 p-4 lg:p-8">
 				<div className="mb-6 text-center">
-					<h1 className="text-3xl lg:text-4xl font-extrabold text-gray-800">
-						Fireball League Draft
-					</h1>
-					<p className="text-sm text-gray-500">Season 4</p>
+					<div className="flex justify-center items-center">
+						{draft.status === "completed" &&
+							draft.commissionerId === userId && (
+								<Button
+									disabled={handleCompleteDraft.isPending}
+									onClick={() => handleCompleteDraft.mutate()}
+									className="bg-blue-600 hover:bg-blue-700 rounded-md p-3 text-white mt-2 flex items-center justify-center gap-2"
+								>
+									{handleCompleteDraft.isPending && (
+										<Loader2 className="h-4 w-4 animate-spin" />
+									)}
+									{handleCompleteDraft.isPending
+										? "Completing..."
+										: "Complete"}
+								</Button>
+							)}
+					</div>
 				</div>
 
-				<div className="overflow-x-auto rounded-2xl border bg-white shadow-lg">
+				<div className="overflow-auto max-h-[65vh] lg:max-h-[80vh] rounded-2xl border bg-white shadow-lg">
 					<div className="min-w-[950px] p-4">
 						{/* HEADER */}
-						<div className="grid grid-cols-8 gap-3 sticky top-0 bg-white/80 backdrop-blur border-b pb-3">
-							{draftOrder.map((t) => (
-								<div key={t.teamId} className="text-center">
-									{t.team.logo && (
-										<img
-											src={t.team.logo}
-											alt={t.team.name}
-											className="w-14 h-14 mx-auto mb-1 rounded-full"
-										/>
-									)}
-									<div className="text-xs font-semibold text-gray-700">
-										{t.team.name}
+						<div className="grid grid-cols-8 gap-3 top-0 sticky z-20 bg-white/80 backdrop-blur border-b pb-3">
+							{draftOrder.map((t) => {
+								const isOnTheClock =
+									currentPick?.teamId === t.teamId &&
+									draft.status === "in_progress";
+
+								return (
+									<div
+										key={t.teamId}
+										className={`text-center rounded-xl p-2 transition-all duration-300 relative ${
+											isOnTheClock
+												? "bg-green-50 ring-2 ring-green-400"
+												: ""
+										}`}
+									>
+										{/* On the clock badge */}
+										{isOnTheClock && (
+											<div className="absolute -top-2 left-1/2 -translate-x-1/2 flex items-center gap-1 bg-green-500 text-white text-[9px] font-semibold px-2 py-[2px] rounded-full whitespace-nowrap shadow">
+												<span className="w-1.5 h-1.5 rounded-full bg-white animate-pulse inline-block" />
+												ON THE CLOCK
+											</div>
+										)}
+
+										{t.team.logo && (
+											<img
+												src={t.team.logo}
+												alt={t.team.name}
+												className={`w-14 h-14 mx-auto mb-1 rounded-full transition-all duration-300 ${
+													isOnTheClock
+														? "ring-2 ring-green-400 shadow-md"
+														: ""
+												}`}
+											/>
+										)}
+										<div
+											className={`text-xs font-semibold transition-colors duration-300 ${
+												isOnTheClock
+													? "text-green-700"
+													: "text-gray-700"
+											}`}
+										>
+											{t.team.name}
+										</div>
 									</div>
-								</div>
-							))}
+								);
+							})}
 						</div>
 
 						{/* ROUNDS */}
@@ -335,7 +287,6 @@ export default function DraftBoard({ players, draftData, teamId }: Props) {
 												<div className="text-[11px] text-yellow-700 font-semibold mt-3 mb-1">
 													Compensatory Picks
 												</div>
-
 												<div className="grid grid-cols-8 gap-3">
 													{draftOrder.map((t) => (
 														<TeamColumn
@@ -363,22 +314,28 @@ export default function DraftBoard({ players, draftData, teamId }: Props) {
 			</div>
 
 			{/* RIGHT PANEL */}
-			<div className="w-full lg:w-[520px] border-t lg:border-l bg-white shadow-xl">
-				<div className="sticky top-0 p-4 border-b bg-white/80 backdrop-blur">
-					<h2 className="text-lg font-bold">Player Board</h2>
-					<p className="text-xs text-gray-500">
-						Free agents & available players
-					</p>
-				</div>
+			{draft.status === "in_progress" && (
+				<div className="w-full lg:w-[clamp(320px,25vw,480px)] border-t lg:border-l bg-white shadow-xl">
+					<div className="sticky top-0 p-4 border-b bg-white/80 backdrop-blur">
+						<h2 className="text-lg font-bold">Player Board</h2>
+						<p className="text-xs text-gray-500">
+							Free agents & available players
+						</p>
+					</div>
 
-				<div className="p-3">
-					<PlayerPanel
-						allPlayers={allPlayers}
-						currentDraftPick={currentPick}
-						teamId={teamId}
-					/>
+					<div className="p-3">
+						<PlayerPanel
+							allPlayers={allPlayers}
+							currentDraftPick={currentPick}
+							teamId={teamId}
+							draftPicks={draftPicks}
+						/>
+					</div>
 				</div>
-			</div>
+			)}
+
+			{/* PICK TOAST */}
+			<PickToast toast={lastPickToast} visible={toastVisible} />
 		</div>
 	);
 }

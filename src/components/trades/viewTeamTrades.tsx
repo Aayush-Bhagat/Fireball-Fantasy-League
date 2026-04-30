@@ -121,7 +121,7 @@ export default function ViewTeamTrades() {
 	}
 
 	return (
-		<div className="bg-gray-100 min-h-screen py-20 px-4 mt-10">
+		<div className="bg-gray-100 min-h-screen pt-10 px-4">
 			<div className="max-w-6xl mx-auto">
 				<h1 className="text-5xl font-extrabold text-center text-gray-800 mb-16 tracking-tight">
 					Trade History

@@ -5,12 +5,12 @@ import { games, teamGames } from "@/models/games";
 import { playerGamesStats, players } from "@/models/players";
 import { seasons } from "@/models/seasons";
 import { conferences, teams } from "@/models/teams";
-import { eq, and, sql, lt, ne, asc } from "drizzle-orm";
+import { eq, and, lt, ne, asc } from "drizzle-orm";
 import { alias } from "drizzle-orm/pg-core";
 
 export async function findGamesByWeekAndSeason(
 	season: number | null,
-	week: number | undefined
+	week: number | undefined,
 ): Promise<GameData[]> {
 	const opponent = alias(teams, "teamTwo");
 
@@ -18,9 +18,10 @@ export async function findGamesByWeekAndSeason(
 
 	const seasonQuery = db
 		.select({
-			id: sql<number>`max(${seasons.id})`.as("id"),
+			id: seasons.id,
 		})
-		.from(seasons);
+		.from(seasons)
+		.where(eq(seasons.status, "in_progress"));
 
 	const seasonId = season ? season : seasonQuery;
 
@@ -51,8 +52,8 @@ export async function findGamesByWeekAndSeason(
 			opponentGames,
 			and(
 				eq(opponentGames.gameId, teamGames.gameId),
-				lt(opponentGames.teamId, teamGames.teamId)
-			)
+				lt(opponentGames.teamId, teamGames.teamId),
+			),
 		)
 		.innerJoin(teams, eq(teamGames.teamId, teams.id))
 		.innerJoin(opponent, eq(opponentGames.teamId, opponent.id))
@@ -64,7 +65,7 @@ export async function findGamesByWeekAndSeason(
 }
 
 export async function findSeasonSchedule(
-	season: number | null
+	season: number | null,
 ): Promise<GameData[]> {
 	const opponent = alias(teams, "teamTwo");
 
@@ -72,9 +73,10 @@ export async function findSeasonSchedule(
 
 	const seasonQuery = db
 		.select({
-			id: sql<number>`max(${seasons.id})`.as("id"),
+			id: seasons.id,
 		})
-		.from(seasons);
+		.from(seasons)
+		.where(eq(seasons.status, "in_progress"));
 
 	const seasonId = season ? season : seasonQuery;
 
@@ -103,8 +105,8 @@ export async function findSeasonSchedule(
 			opponentGames,
 			and(
 				eq(opponentGames.gameId, teamGames.gameId),
-				lt(opponentGames.teamId, teamGames.teamId)
-			)
+				lt(opponentGames.teamId, teamGames.teamId),
+			),
 		)
 		.innerJoin(teams, eq(teamGames.teamId, teams.id))
 		.innerJoin(opponent, eq(opponentGames.teamId, opponent.id))
@@ -117,7 +119,7 @@ export async function findSeasonSchedule(
 
 export async function findTeamSchedule(
 	teamId: string,
-	season: number | null
+	season: number | null,
 ): Promise<GameData[]> {
 	const opponent = alias(teams, "teamTwo");
 
@@ -125,9 +127,10 @@ export async function findTeamSchedule(
 
 	const seasonQuery = db
 		.select({
-			id: sql<number>`max(${seasons.id})`.as("id"),
+			id: seasons.id,
 		})
-		.from(seasons);
+		.from(seasons)
+		.where(eq(seasons.status, "in_progress"));
 
 	const seasonId = season ? season : seasonQuery;
 
@@ -156,8 +159,8 @@ export async function findTeamSchedule(
 			opponentGames,
 			and(
 				eq(opponentGames.gameId, teamGames.gameId),
-				ne(opponentGames.teamId, teamGames.teamId)
-			)
+				ne(opponentGames.teamId, teamGames.teamId),
+			),
 		)
 		.innerJoin(teams, eq(teamGames.teamId, teams.id))
 		.innerJoin(opponent, eq(opponentGames.teamId, opponent.id))
@@ -171,9 +174,10 @@ export async function findTeamSchedule(
 export async function findPlayerGames(playerId: string, season?: string) {
 	const seasonQuery = db
 		.select({
-			id: sql<number>`max(${seasons.id})`.as("id"),
+			id: seasons.id,
 		})
-		.from(seasons);
+		.from(seasons)
+		.where(eq(seasons.status, "in_progress"));
 
 	const playerTeam = alias(teams, "playerTeam");
 	const playerTeamGame = alias(teamGames, "playerTeamGame");
@@ -228,32 +232,32 @@ export async function findPlayerGames(playerId: string, season?: string) {
 			playerTeamGame,
 			and(
 				eq(playerTeamGame.gameId, games.id),
-				eq(playerTeamGame.teamId, playerGamesStats.teamId)
-			)
+				eq(playerTeamGame.teamId, playerGamesStats.teamId),
+			),
 		)
 		.innerJoin(playerTeam, eq(playerTeam.id, playerGamesStats.teamId))
 		.innerJoin(
 			playerTeamConference,
-			eq(playerTeam.conferenceId, playerTeamConference.id)
+			eq(playerTeam.conferenceId, playerTeamConference.id),
 		)
 		.innerJoin(players, eq(players.id, playerGamesStats.playerId))
 		.innerJoin(
 			opponentTeamGame,
 			and(
 				eq(opponentTeamGame.gameId, games.id),
-				ne(opponentTeamGame.teamId, playerGamesStats.teamId)
-			)
+				ne(opponentTeamGame.teamId, playerGamesStats.teamId),
+			),
 		)
 		.innerJoin(opponentTeam, eq(opponentTeam.id, opponentTeamGame.teamId))
 		.innerJoin(
 			opponentTeamConference,
-			eq(opponentTeam.conferenceId, opponentTeamConference.id)
+			eq(opponentTeam.conferenceId, opponentTeamConference.id),
 		)
 		.where(
 			and(
 				eq(playerGamesStats.playerId, playerId),
-				eq(seasons.id, season ? Number(season) : seasonQuery)
-			)
+				eq(seasons.id, season ? Number(season) : seasonQuery),
+			),
 		)
 		.orderBy(asc(games.week), asc(games.playedAt));
 
@@ -297,8 +301,8 @@ export async function findGameById(gameId: string) {
 			opponentGames,
 			and(
 				eq(opponentGames.gameId, teamGames.gameId),
-				lt(opponentGames.teamId, teamGames.teamId)
-			)
+				lt(opponentGames.teamId, teamGames.teamId),
+			),
 		)
 		.innerJoin(teams, eq(teamGames.teamId, teams.id))
 		.innerJoin(opponent, eq(opponentGames.teamId, opponent.id))
@@ -306,7 +310,7 @@ export async function findGameById(gameId: string) {
 		.innerJoin(teamConference, eq(teams.conferenceId, teamConference.id))
 		.innerJoin(
 			opponentConference,
-			eq(opponent.conferenceId, opponentConference.id)
+			eq(opponent.conferenceId, opponentConference.id),
 		)
 		.where(eq(games.id, gameId))
 		.limit(1);
@@ -318,7 +322,7 @@ export async function findTeamGameStats(gameId: string, teamId: string) {
 	const result = await db.query.playerGamesStats.findMany({
 		where: and(
 			eq(playerGamesStats.gameId, gameId),
-			eq(playerGamesStats.teamId, teamId)
+			eq(playerGamesStats.teamId, teamId),
 		),
 		with: {
 			player: true,
@@ -331,7 +335,7 @@ export async function updateTeamGameById(
 	gameId: string,
 	teamId: string,
 	score: number,
-	outcome: "Win" | "Loss" | "Tie"
+	outcome: "Win" | "Loss" | "Tie",
 ) {
 	const game = await db
 		.update(teamGames)
@@ -347,7 +351,7 @@ export async function updateTeamGameById(
 export async function createPlayerGameStats(
 	playerStats: UpdatePlayerGameStatsDto[],
 	teamId: string,
-	gameId: string
+	gameId: string,
 ) {
 	try {
 		const playerGameStats = playerStats.map((stat) => ({

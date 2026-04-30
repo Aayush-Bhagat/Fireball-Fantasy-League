@@ -21,7 +21,7 @@ export const draftStatusEnum = pgEnum("draft_status_enum", [
 
 export const draft = pgTable("draft", {
 	id: uuid("id").primaryKey(),
-	seasonId: integer("season_id"),
+	seasonId: integer("season_id").notNull(),
 	status: draftStatusEnum("status").notNull().default("not_started"),
 	currentPickId: uuid("current_pick_id"),
 	commissionerId: uuid("commissioner_id").references(() => users.id),

@@ -31,7 +31,7 @@ export default async function Page() {
 	const lineup = getLineup(token);
 	const battingOrder = getLineup(token);
 	return (
-		<div className="min-h-screen bg-gradient-to-b bg-gray-100 pt-20 px-6">
+		<div className="min-h-screen bg-gradient-to-b bg-gray-100 pt-4 px-6">
 			<div className="flex flex-col items-center mb-8">
 				<div className="flex items-center gap-4">
 					{teamInfo.team.logo && (

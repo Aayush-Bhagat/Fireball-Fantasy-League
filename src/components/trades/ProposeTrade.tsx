@@ -192,8 +192,26 @@ export default function ProposeTrade() {
 										</div>
 
 										<span className="text-lg">
-											Pick: Round {pick.round} (Season:{" "}
+											Round {pick.round} (Season:{" "}
 											{pick.seasonId})
+											{pick.teamId !==
+											pick.originalTeamId ? (
+												<div className="flex flex-row">
+													<div>{"("}via </div>
+													{pick.originalTeam.logo && (
+														<img
+															className="rounded-full w-8 h-8 ml-2"
+															src={
+																pick
+																	.originalTeam
+																	.logo
+															}
+															alt="Team Logo"
+														/>
+													)}
+													{")"}
+												</div>
+											) : null}
 										</span>
 									</div>
 									<Checkbox
@@ -332,8 +350,31 @@ export default function ProposeTrade() {
 										</div>
 
 										<span className="text-lg">
-											Pick: Round {pick.round} (Season:{" "}
+											Round {pick.round} (Season:{" "}
 											{pick.seasonId})
+											{pick.originalTeam.name}
+											{pick.teamId !==
+											pick.originalTeamId ? (
+												<div className="flex flex-row">
+													<div>{"("}via </div>
+													{pick.originalTeam.logo && (
+														<img
+															className="rounded-full w-8 h-8 ml-2"
+															src={
+																pick
+																	.originalTeam
+																	.logo
+															}
+															alt={
+																pick
+																	.originalTeam
+																	.name
+															}
+														/>
+													)}
+													{")"}
+												</div>
+											) : null}
 										</span>
 									</div>
 									<Checkbox

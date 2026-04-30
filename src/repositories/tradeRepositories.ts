@@ -2,15 +2,15 @@ import { CreateTradeAsset } from "./../models/trades";
 import { and, eq, or } from "drizzle-orm";
 import { db } from "@/db";
 import { seasons } from "@/models/seasons";
-import { sql } from "drizzle-orm";
 import { trades, tradeAssets } from "@/models/trades";
 
 export async function findCompletedTrades() {
 	const seasonQuery = db
 		.select({
-			id: sql<number>`max(${seasons.id})`.as("id"),
+			id: seasons.id,
 		})
-		.from(seasons);
+		.from(seasons)
+		.where(eq(seasons.status, "in_progress"));
 
 	const completedTrades = await db.query.trades.findMany({
 		where: and(
@@ -68,9 +68,10 @@ export async function saveTrade(
 ) {
 	const seasonQuery = await db
 		.select({
-			id: sql<number>`max(${seasons.id})`.as("id"),
+			id: seasons.id,
 		})
-		.from(seasons);
+		.from(seasons)
+		.where(eq(seasons.status, "in_progress"));
 
 	const season = seasonQuery[0]?.id;
 

@@ -22,7 +22,7 @@ export default async function viewTrades() {
 	}
 
 	return (
-		<div>
+		<div className="bg-gray-100">
 			<ViewTeamTrades />
 		</div>
 	);

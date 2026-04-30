@@ -1,4 +1,6 @@
 import { db } from "@/db";
+import { draft } from "@/models/draft";
+import { and, eq } from "drizzle-orm";
 
 export async function findDraft(draftId: string) {
 	const draftData = await db.query.draft.findFirst({
@@ -21,4 +23,13 @@ export async function findDraft(draftId: string) {
 		},
 	});
 	return draftData;
+}
+
+export async function updateDraftToInProgress(draftId: string, userId: string) {
+	await db
+		.update(draft)
+		.set({
+			status: "in_progress",
+		})
+		.where(and(eq(draft.id, draftId), eq(draft.commissionerId, userId)));
 }

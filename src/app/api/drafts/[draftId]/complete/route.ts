@@ -1,8 +1,8 @@
 import { verifyJwtToken } from "@/lib/authUtils";
-import { getDraft } from "@/services/draftService";
+import { completeDraft } from "@/services/draftService";
 import { NextResponse } from "next/server";
 
-export async function GET(
+export async function POST(
 	request: Request,
 	{ params }: { params: Promise<{ draftId: string }> },
 ) {
@@ -16,11 +16,7 @@ export async function GET(
 
 	const { draftId } = await params;
 
-	const draft = await getDraft(userId, draftId);
+	await completeDraft(draftId, userId);
 
-	if (!draft) {
-		return NextResponse.json({ error: "Draft not found" }, { status: 404 });
-	}
-
-	return NextResponse.json(draft);
+	return NextResponse.json({ message: "Created Successfully" });
 }

@@ -1,0 +1,1 @@
+ALTER TYPE "public"."season_phase" ADD VALUE 'completed';

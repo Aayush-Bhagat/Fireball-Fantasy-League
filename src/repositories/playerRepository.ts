@@ -51,9 +51,10 @@ export async function findFreeAgents() {
 export async function findAllPlayerStats(season?: string) {
 	const seasonQuery = db
 		.select({
-			id: sql<number>`max(${seasons.id})`.as("id"),
+			id: seasons.id,
 		})
-		.from(seasons);
+		.from(seasons)
+		.where(eq(seasons.status, "in_progress"));
 
 	const stats = await db
 		.select({
@@ -70,7 +71,7 @@ export async function findAllPlayerStats(season?: string) {
 			runsAllowed: sum(playerGamesStats.runsAllowed).as("runsAllowed"),
 			outs: sum(playerGamesStats.outs).as("outs"),
 			gamesPlayed: countDistinct(playerGamesStats.gameId).as(
-				"gamesPlayed"
+				"gamesPlayed",
 			),
 		})
 		.from(players)
@@ -112,7 +113,7 @@ export async function findPlayerCareerStats(playerId: string) {
 			teamsPlayedFor: sql<
 				string[]
 			>`ARRAY_AGG(DISTINCT ${teams.abbreviation}) FILTER (WHERE ${teams.id} IS NOT NULL)`.as(
-				"teams_played_for"
+				"teams_played_for",
 			),
 		})
 		.from(seasons)
@@ -122,8 +123,8 @@ export async function findPlayerCareerStats(playerId: string) {
 			playerGamesStats,
 			and(
 				eq(playerGamesStats.gameId, games.id),
-				eq(playerGamesStats.playerId, players.id)
-			)
+				eq(playerGamesStats.playerId, players.id),
+			),
 		)
 		.leftJoin(teams, eq(teams.id, playerGamesStats.teamId))
 		.where(eq(players.id, playerId))
@@ -175,7 +176,7 @@ export async function updatePlayerTeam(playerId: string, newTeamId: string) {
 
 export async function updatePlayerPosition(
 	playerId: string,
-	newPosition: TeamLineupPosition | null
+	newPosition: TeamLineupPosition | null,
 ) {
 	const updatedPlayer = await db
 		.update(teamLineups)
@@ -197,15 +198,24 @@ export async function savePlayerHistory(
 	type: "Trade" | "Draft",
 	tradeId: string | null = null,
 	draftRound: number | null = null,
-	draftPick: number | null = null
+	draftPick: number | null = null,
+	season: number | undefined = undefined,
+	draftPickId: string | null = null,
 ) {
-	const seasonQuery = await db
-		.select({
-			id: sql<number>`max(${seasons.id})`.as("id"),
-		})
-		.from(seasons);
+	let seasonId = season;
 
-	const season = seasonQuery[0]?.id;
+	console.log(seasonId);
+
+	if (!seasonId) {
+		const seasonQuery = await db
+			.select({
+				id: seasons.id,
+			})
+			.from(seasons)
+			.where(eq(seasons.status, "in_progress"));
+
+		seasonId = seasonQuery[0].id;
+	}
 
 	const playerHistoryEntry = await db
 		.insert(playerHistory)
@@ -213,11 +223,12 @@ export async function savePlayerHistory(
 			id: id,
 			playerId,
 			teamId,
-			seasonId: season,
+			seasonId,
 			type,
 			tradeId,
 			draftRound,
 			draftPick,
+			draftPickId,
 		})
 		.returning();
 

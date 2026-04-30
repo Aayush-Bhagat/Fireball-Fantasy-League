@@ -14,6 +14,7 @@ import { teams, teamLineups } from "./teams";
 import { games } from "./games";
 import { tradeAssets, trades } from "./trades";
 import { seasons } from "./seasons";
+import { draftPicks } from "./draft";
 
 export const players = pgTable(
 	"players",
@@ -32,7 +33,7 @@ export const players = pgTable(
 		fieldingAbility: text("fielding_ability"),
 		playerCardImage: text("player_card_image"),
 	},
-	(table) => [index("idx_player_team").on(table.teamId)]
+	(table) => [index("idx_player_team").on(table.teamId)],
 );
 
 export type Player = typeof players.$inferSelect;
@@ -75,7 +76,7 @@ export const playerGamesStats = pgTable(
 		index("idx_player_games_stats_player").on(table.playerId),
 		index("idx_player_games_stats_game").on(table.gameId),
 		index("idx_player_games_stats_team").on(table.teamId),
-	]
+	],
 );
 
 export type PlayerGamesStats = typeof playerGamesStats.$inferSelect;
@@ -96,7 +97,7 @@ export const playerGamesStatsRelations = relations(
 			fields: [playerGamesStats.teamId],
 			references: [teams.id],
 		}),
-	})
+	}),
 );
 
 export const playerHistoryType = pgEnum("player_history_type", [
@@ -120,6 +121,7 @@ export const playerHistory = pgTable(
 		tradeId: uuid("trade_id").references(() => trades.id),
 		draftRound: integer("draft_round"),
 		draftPick: integer("draft_pick"),
+		draftPickId: uuid("draft_pick_id").references(() => draftPicks.id),
 		type: playerHistoryType("type").notNull(),
 		createdAt: timestamp("created_at", { withTimezone: true })
 			.notNull()
@@ -130,7 +132,7 @@ export const playerHistory = pgTable(
 		index("idx_player_history_team").on(table.teamId),
 		index("idx_player_history_season").on(table.seasonId),
 		index("idx_player_history_trade").on(table.tradeId),
-	]
+	],
 );
 
 export type PlayerHistory = typeof playerHistory.$inferSelect;
@@ -152,5 +154,9 @@ export const playerHistoryRelations = relations(playerHistory, ({ one }) => ({
 	trade: one(trades, {
 		fields: [playerHistory.tradeId],
 		references: [trades.id],
+	}),
+	Pick: one(draftPicks, {
+		fields: [playerHistory.draftPickId],
+		references: [draftPicks.id],
 	}),
 }));

@@ -1,0 +1,2 @@
+ALTER TABLE "player_history" ADD COLUMN "draft_pick_id" uuid;--> statement-breakpoint
+ALTER TABLE "player_history" ADD CONSTRAINT "player_history_draft_pick_id_draft_picks_id_fk" FOREIGN KEY ("draft_pick_id") REFERENCES "public"."draft_picks"("id") ON DELETE no action ON UPDATE no action;
