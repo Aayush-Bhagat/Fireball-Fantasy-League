@@ -2,7 +2,7 @@ import { SeasonPhaseEnum, SeasonStatusEnum } from "@/models/seasons";
 
 export type SeasonDto = {
 	id: number;
-	startDate: Date;
+	startDate: Date | null;
 	endDate: Date | null;
 	currentWeek: number;
 	status: SeasonStatusEnum;

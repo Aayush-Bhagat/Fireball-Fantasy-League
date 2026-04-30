@@ -206,6 +206,7 @@ export default function ProposeTrade() {
 																	.originalTeam
 																	.logo
 															}
+															alt="Team Logo"
 														/>
 													)}
 													{")"}
@@ -363,6 +364,11 @@ export default function ProposeTrade() {
 																pick
 																	.originalTeam
 																	.logo
+															}
+															alt={
+																pick
+																	.originalTeam
+																	.name
 															}
 														/>
 													)}

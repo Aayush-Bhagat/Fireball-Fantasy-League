@@ -166,7 +166,7 @@ export default function DraftBoard({
 		return () => {
 			supabase.removeChannel(channel);
 		};
-	}, [draft.id, supabase]);
+	}, [draft.id, supabase, players, draftOrder]);
 
 	if (draft.status === "not_started") {
 		return <DraftLobby userId={userId} teamId={teamId} draft={draftData} />;

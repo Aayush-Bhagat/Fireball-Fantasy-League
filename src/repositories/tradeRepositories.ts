@@ -2,7 +2,6 @@ import { CreateTradeAsset } from "./../models/trades";
 import { and, eq, or } from "drizzle-orm";
 import { db } from "@/db";
 import { seasons } from "@/models/seasons";
-import { sql } from "drizzle-orm";
 import { trades, tradeAssets } from "@/models/trades";
 
 export async function findCompletedTrades() {

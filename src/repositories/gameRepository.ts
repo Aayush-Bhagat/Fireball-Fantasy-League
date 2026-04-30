@@ -5,7 +5,7 @@ import { games, teamGames } from "@/models/games";
 import { playerGamesStats, players } from "@/models/players";
 import { seasons } from "@/models/seasons";
 import { conferences, teams } from "@/models/teams";
-import { eq, and, sql, lt, ne, asc } from "drizzle-orm";
+import { eq, and, lt, ne, asc } from "drizzle-orm";
 import { alias } from "drizzle-orm/pg-core";
 
 export async function findGamesByWeekAndSeason(

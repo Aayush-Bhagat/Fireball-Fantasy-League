@@ -169,6 +169,7 @@ export default function PlayerPanel({
 						{currentDraftPick.team.logo ? (
 							<img
 								src={currentDraftPick.team.logo}
+								alt="Current Team Logo"
 								className="w-12 h-12 rounded-full border-2 border-gray-100 object-cover flex-shrink-0"
 							/>
 						) : (
@@ -560,7 +561,7 @@ function Stat({
 					: "bg-gray-50 text-gray-500 border-gray-200"
 			}`}
 		>
-			<img src={icon} className="w-6 h-6" />
+			<img src={icon} alt="Icon" className="w-6 h-6" />
 			<span>{value}</span>
 		</div>
 	);
