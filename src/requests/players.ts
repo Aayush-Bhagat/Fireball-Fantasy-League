@@ -32,6 +32,7 @@ export async function getPlayerHistory(playerId: string) {
         headers: {
             "Content-Type": "application/json",
         },
+        next: { revalidate: 3 * 300 }, // Cache for 15 minutes
     });
 
     if (!response.ok) {
@@ -49,6 +50,7 @@ export async function viewAllPlayers() {
         headers: {
             "Content-Type": "application/json",
         },
+        next: { revalidate: 300 }, // Cache for 5 minutes
     });
 
     if (!response.ok) {
@@ -83,6 +85,7 @@ export async function getPlayerAwards(playerId: string) {
         headers: {
             "Content-Type": "application/json",
         },
+        next: { revalidate: 300 }, // Cache for 5 minutes
     });
 
     if (!response.ok) {
