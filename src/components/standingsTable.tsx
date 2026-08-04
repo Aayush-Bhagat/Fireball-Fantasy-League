@@ -69,66 +69,86 @@ export default async function StandingTable({
         allTeams: { id: string; wins: number; losses: number; ties: number }[],
         scheduleData: SeasonScheduleResponseDto,
     ): string {
-        const totalGames = 10;
+        const TOTAL_GAMES = 10;
+        const PLAYOFF_SPOTS = 3;
 
-        const getPct = (t: typeof team) => {
-            const games = t.wins + t.losses + t.ties;
-            if (games === 0) return 0;
-            return (t.wins + 0.5 * t.ties) / games;
-        };
+        const gamesPlayed = (t: typeof team) => t.wins + t.losses + t.ties;
+        const gamesRemaining = (t: typeof team) => TOTAL_GAMES - gamesPlayed(t);
 
-        const getRD = (t: typeof team) => {
-            const rd = calculateRunDifferential(scheduleData, t.id);
-            return typeof rd === "number" ? rd : -Infinity;
-        };
+        const maxWins = (t: typeof team) => t.wins + gamesRemaining(t);
 
-        const getMaxTeam = (t: typeof team) => {
-            const gamesPlayed = t.wins + t.losses + t.ties;
-            const gamesLeft = totalGames - gamesPlayed;
+        // ---------- CLINCH PLAYOFFS (X) ----------
+        // Assume our team loses every remaining game.
+        const myWorstWins = team.wins;
 
-            return {
-                ...t,
-                wins: t.wins + gamesLeft, // assume all wins
-                ties: 0,
-            };
-        };
+        // Count how many teams could finish with at least as many wins.
+        let teamsThatCanTieOrBeat = 0;
 
-        const teamCurrentPct = getPct(team);
-        const teamRD = getRD(team);
+        for (const other of allTeams) {
+            if (other.id === team.id) continue;
 
-        const hasClinchedFirst = allTeams.every((other) => {
-            if (other.id === team.id) return true;
-
-            const maxOther = getMaxTeam(other);
-            const otherPct = getPct(maxOther);
-
-            if (otherPct > teamCurrentPct) return false;
-            if (otherPct === teamCurrentPct) {
-                return getRD(maxOther) < teamRD;
+            if (maxWins(other) >= myWorstWins) {
+                teamsThatCanTieOrBeat++;
             }
-
-            return true;
-        });
-
-        if (hasClinchedFirst) return "Z";
-
-        const teamsThatCanPass = allTeams.filter((other) => {
-            if (other.id === team.id) return false;
-
-            const maxOther = getMaxTeam(other);
-            const otherPct = getPct(maxOther);
-
-            if (otherPct > teamCurrentPct) return true;
-            if (otherPct === teamCurrentPct) {
-                return getRD(maxOther) >= teamRD;
-            }
-
-            return false;
-        });
-
-        if (teamsThatCanPass.length < 3) {
-            return "X";
         }
+
+        // If three other teams can still tie/pass us,
+        // we can still finish 4th.
+        const clinchedPlayoffs = teamsThatCanTieOrBeat < PLAYOFF_SPOTS;
+
+        // ---------- CLINCH BYE (Z) ----------
+        // Assume our team loses out.
+        // If anyone can still tie/pass us, we haven't clinched #1.
+
+        let clinchedBye = true;
+
+        for (const other of allTeams) {
+            if (other.id === team.id) continue;
+
+            if (maxWins(other) >= myWorstWins) {
+                clinchedBye = false;
+                break;
+            }
+        }
+
+        // If everyone has completed the season,
+        // allow run differential to break ties.
+
+        const seasonFinished = allTeams.every((t) => gamesRemaining(t) === 0);
+
+        if (seasonFinished) {
+            const myRD = calculateRunDifferential(scheduleData, team.id);
+
+            clinchedBye = true;
+
+            for (const other of allTeams) {
+                if (other.id === team.id) continue;
+
+                if (other.wins > team.wins) {
+                    clinchedBye = false;
+                    break;
+                }
+
+                if (other.wins === team.wins) {
+                    const otherRD = calculateRunDifferential(
+                        scheduleData,
+                        other.id,
+                    );
+
+                    if (
+                        typeof myRD === "number" &&
+                        typeof otherRD === "number" &&
+                        otherRD >= myRD
+                    ) {
+                        clinchedBye = false;
+                        break;
+                    }
+                }
+            }
+        }
+
+        if (clinchedBye) return "Z";
+        if (clinchedPlayoffs) return "X";
 
         return "";
     }
