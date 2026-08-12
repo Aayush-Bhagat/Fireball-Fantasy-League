@@ -144,21 +144,21 @@ export default function OddsBadge({
 					</Badge>
 				</DialogTrigger>
 
-				{odds.sparseSample && (
+				{odds.coldStart && (
 					<Tooltip>
 						<TooltipTrigger asChild>
 							<button
 								type="button"
-								aria-label="Sparse sample note"
+								aria-label="Cold start note"
 								className="text-amber-500 hover:text-amber-600 transition"
 							>
 								<InfoIcon className="h-3.5 w-3.5" />
 							</button>
 						</TooltipTrigger>
 						<TooltipContent className="max-w-[220px]">
-							Odds driven primarily by season averages due to
-							limited H2H sample size ({odds.h2hGamesPlayed}{" "}
-							{odds.h2hGamesPlayed === 1 ? "match" : "matches"}).
+							One or both teams have very few games played
+							this season — estimates are regressed toward the
+							league baseline.
 						</TooltipContent>
 					</Tooltip>
 				)}
@@ -239,24 +239,13 @@ export default function OddsBadge({
 					/>
 				</div>
 
-				{(odds.sparseSample || odds.coldStart) && (
+				{odds.coldStart && (
 					<div className="mt-2 space-y-1.5 text-xs text-amber-600">
-						{odds.sparseSample && (
-							<p>
-								⚠️ Odds driven primarily by season averages due
-								to limited H2H sample size (
-								{odds.h2hGamesPlayed}{" "}
-								{odds.h2hGamesPlayed === 1 ? "match" : "matches"}
-								).
-							</p>
-						)}
-						{odds.coldStart && (
-							<p>
-								ℹ️ One or both teams have very few games played
-								this season — estimates are regressed toward the
-								league baseline.
-							</p>
-						)}
+						<p>
+							ℹ️ One or both teams have very few games played
+							this season — estimates are regressed toward the
+							league baseline.
+						</p>
 					</div>
 				)}
 				</DialogContent>
