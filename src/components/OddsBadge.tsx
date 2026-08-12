@@ -10,6 +10,7 @@ import {
 	DialogHeader,
 	DialogTitle,
 	DialogDescription,
+	DialogTrigger,
 } from "@/components/ui/dialog";
 import { Tooltip, TooltipTrigger, TooltipContent } from "@/components/ui/tooltip";
 import { cn } from "@/lib/utils";
@@ -125,28 +126,23 @@ export default function OddsBadge({
 			onClick={(e) => e.stopPropagation()}
 		>
 			<Dialog open={open} onOpenChange={setOpen}>
-				<Badge
-					variant="secondary"
-					role="button"
-					tabIndex={0}
-					onClick={() => setOpen(true)}
-					onKeyDown={(e) => {
-						if (e.key === "Enter" || e.key === " ") {
-							e.preventDefault();
-							setOpen(true);
-						}
-					}}
-					className="cursor-pointer hover:bg-secondary/70 text-xs sm:text-sm px-2.5 py-1"
-					title="View odds breakdown"
-				>
-					<span className="font-semibold text-gray-800">
-						{teamPct}
-					</span>
-					<span className="text-gray-400 mx-0.5">vs</span>
-					<span className="font-semibold text-gray-800">
-						{oppPct}
-					</span>
-				</Badge>
+				<DialogTrigger asChild>
+					<Badge
+						variant="secondary"
+						role="button"
+						tabIndex={0}
+						className="cursor-pointer hover:bg-secondary/70 select-none text-xs sm:text-sm px-2.5 py-1"
+						title="View odds breakdown"
+					>
+						<span className="font-semibold text-gray-800">
+							{teamPct}
+						</span>
+						<span className="text-gray-400 mx-0.5">vs</span>
+						<span className="font-semibold text-gray-800">
+							{oppPct}
+						</span>
+					</Badge>
+				</DialogTrigger>
 
 				{odds.sparseSample && (
 					<Tooltip>
@@ -166,17 +162,16 @@ export default function OddsBadge({
 						</TooltipContent>
 					</Tooltip>
 				)}
-			</Dialog>
 
-			<DialogContent
-				onClick={(e) => e.stopPropagation()}
-				className="sm:max-w-lg"
-			>
-				<DialogHeader>
-					<DialogTitle>Match Win Probability</DialogTitle>
-					<DialogDescription>
-						{teamName} vs {opponentName} — going-in odds from the dynamic
-						Pythagenpat / Log5 model with Bayesian H2H shrinkage, using
+				<DialogContent
+					onClick={(e) => e.stopPropagation()}
+					className="sm:max-w-lg"
+				>
+					<DialogHeader>
+						<DialogTitle>Match Win Probability</DialogTitle>
+						<DialogDescription>
+							{teamName} vs {opponentName} — going-in odds from the dynamic
+							Pythagenpat / Log5 model with Bayesian H2H shrinkage, using
 						only games played before this matchup.
 					</DialogDescription>
 				</DialogHeader>
@@ -264,7 +259,8 @@ export default function OddsBadge({
 						)}
 					</div>
 				)}
-			</DialogContent>
+				</DialogContent>
+			</Dialog>
 		</div>
 	);
 }
