@@ -55,6 +55,14 @@ export type MatchOddsDto = {
 	coldStart: boolean;
 };
 
+/** Response for the team-pair odds calculator (schedule page). */
+export type TeamPairOddsDto = {
+	teamA: TeamGameDto;
+	teamB: TeamGameDto;
+	/** Odds from team A's perspective. */
+	odds: MatchOddsDto;
+};
+
 export type SeasonScheduleResponseDto = {
 	season: number;
 	schedule: SeasonScheduleDto[];

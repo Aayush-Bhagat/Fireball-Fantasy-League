@@ -2,7 +2,15 @@ import {
 	computeMatchOdds,
 	MatchOddsResult,
 } from "@/lib/oddsEngine";
-import { GameData } from "@/dtos/gameDtos";
+import { GameData, MatchOddsDto, TeamPairOddsDto } from "@/dtos/gameDtos";
+import {
+	findHeadToHeadRecords,
+	findLeagueRunEnvironment,
+	findTeamRunAverages,
+	HeadToHeadRecord,
+	TeamRunAverages,
+} from "@/repositories/oddsRepository";
+import { findAllTeams } from "@/repositories/teamRepository";
 
 /**
  * Odds service.
@@ -148,4 +156,93 @@ export async function computeSeasonOdds(
 	}
 
 	return result;
+}
+
+function buildH2HLookup(records: HeadToHeadRecord[]) {
+	const map = new Map<
+		string,
+		{ gamesPlayed: number; wins: Map<string, number> }
+	>();
+	for (const r of records) {
+		const key = h2hKey(r.teamAId, r.teamBId);
+		const entry =
+			map.get(key) ?? { gamesPlayed: 0, wins: new Map() };
+		entry.gamesPlayed = r.gamesPlayed;
+		entry.wins.set(r.teamAId, r.teamAWins);
+		map.set(key, entry);
+	}
+	return map;
+}
+
+/** Map an engine {@link MatchOddsResult} to the serializable {@link MatchOddsDto}. */
+function toDto(r: MatchOddsResult): MatchOddsDto {
+	return {
+		...r,
+	};
+}
+
+/**
+ * Compute odds for an arbitrary team pair based on the season so far.
+ *
+ * Unlike the going-in schedule odds (which exclude a game's own result), this
+ * uses season-to-date aggregates over ALL completed games — the right model
+ * for a hypothetical next matchup between the two selected teams. The team
+ * the caller passes as `teamAId` becomes the "team" perspective of the
+ * returned odds.
+ */
+export async function computePairOdds(
+	seasonId: number | null,
+	teamAId: string,
+	teamBId: string,
+): Promise<TeamPairOddsDto> {
+	if (teamAId === teamBId) {
+		throw new Error("Cannot compute odds between a team and itself.");
+	}
+
+	const [env, teamAverages, h2hRecords, allTeams] = await Promise.all([
+		findLeagueRunEnvironment(seasonId),
+		findTeamRunAverages(seasonId),
+		findHeadToHeadRecords(seasonId),
+		findAllTeams(),
+	]);
+
+	const averagesByTeam = new Map<string, TeamRunAverages>();
+	for (const t of teamAverages) averagesByTeam.set(t.teamId, t);
+
+	const h2h = buildH2HLookup(h2hRecords).get(h2hKey(teamAId, teamBId));
+
+	const teamA = averagesByTeam.get(teamAId);
+	const teamB = averagesByTeam.get(teamBId);
+
+	const odds = computeMatchOdds({
+		teamRunsScored: teamA?.runsScored ?? 0,
+		teamRunsAllowed: teamA?.runsAllowed ?? 0,
+		teamGamesPlayed: teamA?.gamesPlayed ?? 0,
+		opponentRunsScored: teamB?.runsScored ?? 0,
+		opponentRunsAllowed: teamB?.runsAllowed ?? 0,
+		opponentGamesPlayed: teamB?.gamesPlayed ?? 0,
+		h2hGamesPlayed: h2h?.gamesPlayed ?? 0,
+		h2hTeamWins: h2h?.wins.get(teamAId) ?? 0,
+		leagueRpg: env.leagueRpg,
+	});
+
+	// Look up team display info for the response.
+	const teamAInfo = allTeams.find((t) => t.id === teamAId);
+	const teamBInfo = allTeams.find((t) => t.id === teamBId);
+
+	return {
+		teamA: {
+			id: teamAId,
+			name: teamAInfo?.name ?? "Team A",
+			logo: teamAInfo?.logo ?? null,
+			abbreviation: teamAInfo?.abbreviation ?? "A",
+		},
+		teamB: {
+			id: teamBId,
+			name: teamBInfo?.name ?? "Team B",
+			logo: teamBInfo?.logo ?? null,
+			abbreviation: teamBInfo?.abbreviation ?? "B",
+		},
+		odds: toDto(odds),
+	};
 }
