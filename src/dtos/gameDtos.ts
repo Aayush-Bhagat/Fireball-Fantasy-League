@@ -21,6 +21,46 @@ export type GameDto = {
 	opponentScore: number | null;
 	teamOutcome: string | null;
 	opponentOutcome: string | null;
+	/** Win probability / odds. Null for completed games. */
+	odds: MatchOddsDto | null;
+};
+
+/**
+ * Full output of the match-odds engine for a single matchup.
+ * Powers both the schedule-card badge and the detail drawer.
+ */
+export type MatchOddsDto = {
+	teamProb: number;
+	opponentProb: number;
+	teamAmerican: number;
+	opponentAmerican: number;
+	h2hGamesPlayed: number;
+	pythagenpatExponent: number;
+	leagueRpg: number;
+	teamRunsScored: number;
+	teamRunsAllowed: number;
+	opponentRunsScored: number;
+	opponentRunsAllowed: number;
+	teamGamesPlayed: number;
+	opponentGamesPlayed: number;
+	teamWinExpectancy: number;
+	opponentWinExpectancy: number;
+	log5Probability: number;
+	h2hProbability: number | null;
+	h2hWeight: number;
+	priorM: number;
+	/** True when N_H2H <= sparse threshold — odds lean on season averages. */
+	sparseSample: boolean;
+	/** True when either team has played fewer than the cold-start threshold. */
+	coldStart: boolean;
+};
+
+/** Response for the team-pair odds calculator (schedule page). */
+export type TeamPairOddsDto = {
+	teamA: TeamGameDto;
+	teamB: TeamGameDto;
+	/** Odds from team A's perspective. */
+	odds: MatchOddsDto;
 };
 
 export type SeasonScheduleResponseDto = {

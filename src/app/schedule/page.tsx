@@ -2,6 +2,7 @@ import React from "react";
 import { getSeasonSchedule } from "@/requests/schedule";
 import ScheduleList from "@/components/ScheduleList";
 import FullScheduleSkeleton from "@/components/loaders/FullScheduleSkeleton";
+import OddsCalculator from "@/components/OddsCalculator";
 import { Suspense } from "react";
 
 export default async function Page() {
@@ -16,6 +17,7 @@ export default async function Page() {
 				<Suspense fallback={<FullScheduleSkeleton />}>
 					<ScheduleList schedule={schedule} />
 				</Suspense>
+				<OddsCalculator />
 			</div>
 		</div>
 	);

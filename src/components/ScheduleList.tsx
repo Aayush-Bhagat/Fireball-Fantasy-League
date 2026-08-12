@@ -4,6 +4,7 @@ import React from "react";
 import { format } from "date-fns";
 import { SeasonScheduleDto } from "@/dtos/gameDtos";
 import { useRouter } from "next/navigation";
+import OddsBadge from "@/components/OddsBadge";
 
 type Props = {
     schedule: SeasonScheduleDto[];
@@ -111,9 +112,25 @@ export default function ScheduleList({ schedule }: Props) {
                                     </div>
                                 </div>
 
-                                {/* Score */}
-                                <div className="mt-2 sm:mt-0 text-center text-purple-600 font-semibold text-sm sm:text-base w-full sm:w-[80px]">
-                                    {game.teamScore} - {game.opponentScore}
+                                {/* Odds (going-in) + final score for completed games */}
+                                <div className="mt-2 sm:mt-0 text-center w-full sm:w-[160px] flex flex-col items-center gap-1">
+                                    {game.odds && (
+                                        <OddsBadge
+                                            odds={game.odds}
+                                            teamName={game.team.name}
+                                            teamAbbreviation={game.team.abbreviation}
+                                            opponentName={game.opponent.name}
+                                            opponentAbbreviation={
+                                                game.opponent.abbreviation
+                                            }
+                                        />
+                                    )}
+                                    {game.teamOutcome !== null && (
+                                        <span className="text-purple-600 font-semibold text-sm sm:text-base">
+                                            {game.teamScore} -{" "}
+                                            {game.opponentScore}
+                                        </span>
+                                    )}
                                 </div>
                             </div>
                         ))}

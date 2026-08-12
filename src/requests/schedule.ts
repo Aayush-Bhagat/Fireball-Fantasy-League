@@ -75,3 +75,29 @@ export async function getMyTeamSchedule(token: string) {
 
 	return data;
 }
+
+import { TeamPairOddsDto } from "@/dtos/gameDtos";
+
+/** Compute win odds for a hypothetical matchup between two teams this season. */
+export async function getTeamPairOdds(
+	season: string,
+	teamAId: string,
+	teamBId: string,
+) {
+	const response = await fetch(
+		`${API_URL}/api/seasons/${season}/odds?teamA=${teamAId}&teamB=${teamBId}`,
+		{
+			method: "GET",
+			headers: { "Content-Type": "application/json" },
+		},
+	);
+
+	if (!response.ok) {
+		const err = await response.json().catch(() => ({}));
+		throw new Error(err.error ?? "Failed to compute odds");
+	}
+
+	const data: TeamPairOddsDto = await response.json();
+
+	return data;
+}
