@@ -175,8 +175,9 @@ export default function OddsBadge({
 				<DialogHeader>
 					<DialogTitle>Match Win Probability</DialogTitle>
 					<DialogDescription>
-						{teamName} vs {opponentName} — dynamic Pythagenpat / Log5
-						model with Bayesian H2H shrinkage.
+						{teamName} vs {opponentName} — going-in odds from the dynamic
+						Pythagenpat / Log5 model with Bayesian H2H shrinkage, using
+						only games played before this matchup.
 					</DialogDescription>
 				</DialogHeader>
 

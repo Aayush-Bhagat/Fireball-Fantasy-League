@@ -50,7 +50,7 @@ export async function getSeasonSchedule(
 
 	const records = await findAllTeamRecordsBySeason(seasonId);
 
-	const oddsByGame = await computeSeasonOdds(seasonId, schedule);
+	const oddsByGame = await computeSeasonOdds(schedule);
 
 	const seasonSchedule = mapToSeasonSchedule(schedule, records, oddsByGame);
 

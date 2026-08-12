@@ -112,9 +112,9 @@ export default function ScheduleList({ schedule }: Props) {
                                     </div>
                                 </div>
 
-                                {/* Score or Odds */}
-                                <div className="mt-2 sm:mt-0 text-center w-full sm:w-[160px] flex justify-center">
-                                    {game.odds ? (
+                                {/* Odds (going-in) + final score for completed games */}
+                                <div className="mt-2 sm:mt-0 text-center w-full sm:w-[160px] flex flex-col items-center gap-1">
+                                    {game.odds && (
                                         <OddsBadge
                                             odds={game.odds}
                                             teamName={game.team.name}
@@ -124,7 +124,8 @@ export default function ScheduleList({ schedule }: Props) {
                                                 game.opponent.abbreviation
                                             }
                                         />
-                                    ) : (
+                                    )}
+                                    {game.teamOutcome !== null && (
                                         <span className="text-purple-600 font-semibold text-sm sm:text-base">
                                             {game.teamScore} -{" "}
                                             {game.opponentScore}

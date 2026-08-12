@@ -2,8 +2,8 @@
  * Dynamic Match Odds & Win Probability Engine
  *
  * Pure math module. No DB access — pass in raw team/league/H2H metrics and
- * receive a fully-computed {@link MatchOddsResult}. Data fetching lives in
- * `src/services/oddsService.ts` / `src/repositories/oddsRepository.ts`.
+ * receive a fully-computed {@link MatchOddsResult}. Data fetching / assembly
+ * lives in `src/services/oddsService.ts`.
  *
  * Model (see SRS §3):
  *   1. Dynamic Pythagenpat exponent:  x = (2 · L_R) ^ 0.287

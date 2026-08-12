@@ -2,22 +2,19 @@ import {
 	computeMatchOdds,
 	MatchOddsResult,
 } from "@/lib/oddsEngine";
-import {
-	findHeadToHeadRecords,
-	findLeagueRunEnvironment,
-	findTeamRunAverages,
-	HeadToHeadRecord,
-	TeamRunAverages,
-} from "@/repositories/oddsRepository";
 import { GameData } from "@/dtos/gameDtos";
 
 /**
  * Odds service.
  *
- * Computes win probabilities / moneylines for an entire season schedule in a
- * single batch (3 season-wide queries + in-memory math) rather than per-match
- * round-trips. Only games not yet played (no `teamOutcome`) receive odds —
- * completed games keep `odds = null` and the UI shows the final score.
+ * Computes win probabilities / moneylines for EVERY game on a season schedule
+ * — completed *and* upcoming — as the **going-in odds**: each game's odds are
+ * derived from only the games played *before* it (strictly earlier weeks), so
+ * a game's own result never leaks into its own probability.
+ *
+ * All data is derived in-memory from the `games` array the caller already
+ * loaded for the schedule, so this adds zero database round-trips. For a
+ * fantasy league (tens of games) the O(weeks × games) pass is trivial.
  */
 
 /** Returns the canonical H2H key for an unordered team-id pair. */
@@ -25,82 +22,129 @@ function h2hKey(teamAId: string, teamBId: string): string {
 	return [teamAId, teamBId].sort().join("::");
 }
 
-interface H2HLookup {
+interface TeamAgg {
+	runsScored: number;
+	runsAllowed: number;
 	gamesPlayed: number;
-	/** Wins by `teamAId` within the pair (the side that ordered the lookup). */
-	winsFor: (teamAId: string) => number;
 }
 
-function buildH2HLookup(records: HeadToHeadRecord[]): Map<string, H2HLookup> {
-	const map = new Map<string, { gamesPlayed: number; wins: Map<string, number> }>();
+interface H2HAgg {
+	gamesPlayed: number;
+	/** Wins keyed by teamId within this pair. */
+	wins: Map<string, number>;
+}
 
-	for (const r of records) {
-		const key = h2hKey(r.teamAId, r.teamBId);
-		const entry =
-			map.get(key) ?? { gamesPlayed: 0, wins: new Map<string, number>() };
-		// Each ordered row contributes its gamesPlayed once; the two directed
-		// rows for the same pair describe the same set of games, so we set the
-		// count from whichever row we see (they agree).
-		entry.gamesPlayed = r.gamesPlayed;
-		entry.wins.set(r.teamAId, r.teamAWins);
-		map.set(key, entry);
-	}
-
-	const lookup = new Map<string, H2HLookup>();
-	for (const [key, entry] of map) {
-		lookup.set(key, {
-			gamesPlayed: entry.gamesPlayed,
-			winsFor: (teamAId: string) => entry.wins.get(teamAId) ?? 0,
-		});
-	}
-	return lookup;
+/** A game counts as "completed" once both team outcomes are recorded. */
+function isCompleted(g: GameData): boolean {
+	return g.teamOutcome !== null && g.opponentOutcome !== null;
 }
 
 /**
- * Compute odds for every upcoming game in `games`.
- * Returns a map keyed by gameId.
+ * Compute going-in odds for every game in `games`, keyed by gameId.
+ *
+ * Processing is week-ordered: for each week we (1) snapshot odds for all of
+ * that week's games against the running aggregates from prior weeks, then
+ * (2) fold that week's completed games into the aggregates. This guarantees
+ * same-week games never influence each other and a game's own result never
+ * affects its own odds.
  */
 export async function computeSeasonOdds(
-	seasonId: number | null,
 	games: GameData[],
 ): Promise<Map<string, MatchOddsResult>> {
-	const upcoming = games.filter(
-		(g) => g.teamOutcome === null && g.opponentOutcome === null,
-	);
-
 	const result = new Map<string, MatchOddsResult>();
-	if (upcoming.length === 0) return result;
+	if (games.length === 0) return result;
 
-	const [env, teamAverages, h2hRecords] = await Promise.all([
-		findLeagueRunEnvironment(seasonId),
-		findTeamRunAverages(seasonId),
-		findHeadToHeadRecords(seasonId),
-	]);
+	// Group games by week (stable within a week by insertion order).
+	const byWeek = new Map<number, GameData[]>();
+	for (const g of games) {
+		const list = byWeek.get(g.week);
+		if (list) list.push(g);
+		else byWeek.set(g.week, [g]);
+	}
+	const weeks = [...byWeek.keys()].sort((a, b) => a - b);
 
-	const averagesByTeam = new Map<string, TeamRunAverages>();
-	for (const t of teamAverages) averagesByTeam.set(t.teamId, t);
+	// Running aggregates over completed games from prior weeks.
+	const teamAgg = new Map<string, TeamAgg>();
+	const h2hAgg = new Map<string, H2HAgg>();
+	let totalRuns = 0;
+	let completedGames = 0;
 
-	const h2h = buildH2HLookup(h2hRecords);
+	const getTeam = (id: string): TeamAgg =>
+		teamAgg.get(id) ?? { runsScored: 0, runsAllowed: 0, gamesPlayed: 0 };
 
-	for (const game of upcoming) {
-		const team = averagesByTeam.get(game.teamId);
-		const opp = averagesByTeam.get(game.opponentId);
+	const leagueRpg = () =>
+		completedGames > 0 ? totalRuns / (2 * completedGames) : 0;
 
-		const h2hEntry = h2h.get(h2hKey(game.teamId, game.opponentId));
+	/** Fold one completed game's results into the running aggregates. */
+	const fold = (g: GameData) => {
+		if (!isCompleted(g)) return;
 
-		const odds = computeMatchOdds({
-			teamRunsScored: team?.runsScored ?? 0,
-			teamRunsAllowed: team?.runsAllowed ?? 0,
-			teamGamesPlayed: team?.gamesPlayed ?? 0,
-			opponentRunsScored: opp?.runsScored ?? 0,
-			opponentRunsAllowed: opp?.runsAllowed ?? 0,
-			opponentGamesPlayed: opp?.gamesPlayed ?? 0,
-			h2hGamesPlayed: h2hEntry?.gamesPlayed ?? 0,
-			h2hTeamWins: h2hEntry?.winsFor(game.teamId) ?? 0,
-			leagueRpg: env.leagueRpg,
-		});
+		const teamScore = g.teamScore ?? 0;
+		const oppScore = g.opponentScore ?? 0;
 
-		result.set(game.gameId, odds);
+		// Team side: scored `teamScore`, allowed `oppScore`.
+		const t = getTeam(g.teamId);
+		t.runsScored += teamScore;
+		t.runsAllowed += oppScore;
+		t.gamesPlayed += 1;
+		teamAgg.set(g.teamId, t);
+
+		// Opponent side: scored `oppScore`, allowed `teamScore`.
+		const o = getTeam(g.opponentId);
+		o.runsScored += oppScore;
+		o.runsAllowed += teamScore;
+		o.gamesPlayed += 1;
+		teamAgg.set(g.opponentId, o);
+
+		// League run environment.
+		totalRuns += teamScore + oppScore;
+		completedGames += 1;
+
+		// Head-to-head (ties count as a game played but a win for neither).
+		const key = h2hKey(g.teamId, g.opponentId);
+		const h = h2hAgg.get(key) ?? { gamesPlayed: 0, wins: new Map() };
+		h.gamesPlayed += 1;
+		h.wins.set(
+			g.teamId,
+			(h.wins.get(g.teamId) ?? 0) + (g.teamOutcome === "Win" ? 1 : 0),
+		);
+		h.wins.set(
+			g.opponentId,
+			(h.wins.get(g.opponentId) ?? 0) +
+				(g.opponentOutcome === "Win" ? 1 : 0),
+		);
+		h2hAgg.set(key, h);
+	};
+
+	for (const week of weeks) {
+		const weekGames = byWeek.get(week)!;
+
+		// (1) Snapshot going-in odds for every game this week using only
+		// aggregates from prior weeks.
+		for (const g of weekGames) {
+			const team = getTeam(g.teamId);
+			const opp = getTeam(g.opponentId);
+			const h2h = h2hAgg.get(h2hKey(g.teamId, g.opponentId));
+
+			result.set(
+				g.gameId,
+				computeMatchOdds({
+					teamRunsScored: team.runsScored,
+					teamRunsAllowed: team.runsAllowed,
+					teamGamesPlayed: team.gamesPlayed,
+					opponentRunsScored: opp.runsScored,
+					opponentRunsAllowed: opp.runsAllowed,
+					opponentGamesPlayed: opp.gamesPlayed,
+					h2hGamesPlayed: h2h?.gamesPlayed ?? 0,
+					h2hTeamWins: h2h?.wins.get(g.teamId) ?? 0,
+					leagueRpg: leagueRpg(),
+				}),
+			);
+		}
+
+		// (2) Fold this week's completed games into the running aggregates so
+		// later weeks see them.
+		for (const g of weekGames) fold(g);
 	}
 
 	return result;
