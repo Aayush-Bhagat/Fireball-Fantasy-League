@@ -147,7 +147,16 @@ function TeamPicker({
 							value={team.id}
 							disabled={team.id === disabledId}
 						>
-							{team.name}
+							{team.logo ? (
+								<img
+									src={team.logo}
+									alt=""
+									className="w-5 h-5 rounded-full border object-cover"
+								/>
+							) : (
+								<span className="w-5 h-5 rounded-full border bg-gray-200" />
+							)}
+							<span>{team.name}</span>
 						</SelectItem>
 					))}
 				</SelectContent>
