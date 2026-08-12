@@ -16,6 +16,7 @@ import {
 import { GameDtoMapper, mapToSeasonSchedule } from "@/lib/mappers/gameMappers";
 import { findAllTeamRecordsBySeason } from "@/repositories/teamRepository";
 import { findPlayersByTeamId } from "@/repositories/playerRepository";
+import { computeSeasonOdds } from "@/services/oddsService";
 
 export async function getGamesByWeekAndSeason(
 	week: number | undefined,
@@ -49,7 +50,9 @@ export async function getSeasonSchedule(
 
 	const records = await findAllTeamRecordsBySeason(seasonId);
 
-	const seasonSchedule = mapToSeasonSchedule(schedule, records);
+	const oddsByGame = await computeSeasonOdds(seasonId, schedule);
+
+	const seasonSchedule = mapToSeasonSchedule(schedule, records, oddsByGame);
 
 	const seasonNumber = schedule.at(0)?.seasonId || 0;
 

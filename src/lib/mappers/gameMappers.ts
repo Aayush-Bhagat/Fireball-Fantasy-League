@@ -1,11 +1,12 @@
-import { GameDto, SeasonScheduleDto } from "@/dtos/gameDtos";
+import { GameDto, MatchOddsDto, SeasonScheduleDto } from "@/dtos/gameDtos";
 import { GameData } from "@/dtos/gameDtos";
 import { buildTeamRecordsMap } from "./teamMappers";
 import { TeamRecord } from "@/dtos/teamDtos";
 
 export function GameDtoMapper(
 	games: GameData[],
-	records: TeamRecord[]
+	records: TeamRecord[],
+	oddsByGame?: Map<string, MatchOddsDto>,
 ): GameDto[] {
 	const teamRecords = buildTeamRecordsMap(records);
 
@@ -38,16 +39,18 @@ export function GameDtoMapper(
 			opponentScore: game.opponentScore,
 			teamOutcome: game.teamOutcome,
 			opponentOutcome: game.opponentOutcome,
+			odds: oddsByGame ? (oddsByGame.get(game.gameId) ?? null) : null,
 		};
 	});
 }
 
 export function mapToSeasonSchedule(
 	games: GameData[],
-	records: TeamRecord[]
+	records: TeamRecord[],
+	oddsByGame?: Map<string, MatchOddsDto>,
 ): SeasonScheduleDto[] {
 	// First convert all games to GameDto format
-	const gameDtos = GameDtoMapper(games, records);
+	const gameDtos = GameDtoMapper(games, records, oddsByGame);
 
 	// Group games by week
 	const gamesByWeek = gameDtos.reduce<Record<number, GameDto[]>>(
