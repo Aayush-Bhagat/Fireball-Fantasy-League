@@ -137,11 +137,23 @@ export async function computeSeasonOdds(
 			result.set(
 				g.gameId,
 				computeMatchOdds({
-					teamRunsScored: team.runsScored,
-					teamRunsAllowed: team.runsAllowed,
+					teamRunsScored:
+						team.gamesPlayed > 0
+							? team.runsScored / team.gamesPlayed
+							: 0,
+					teamRunsAllowed:
+						team.gamesPlayed > 0
+							? team.runsAllowed / team.gamesPlayed
+							: 0,
 					teamGamesPlayed: team.gamesPlayed,
-					opponentRunsScored: opp.runsScored,
-					opponentRunsAllowed: opp.runsAllowed,
+					opponentRunsScored:
+						opp.gamesPlayed > 0
+							? opp.runsScored / opp.gamesPlayed
+							: 0,
+					opponentRunsAllowed:
+						opp.gamesPlayed > 0
+							? opp.runsAllowed / opp.gamesPlayed
+							: 0,
 					opponentGamesPlayed: opp.gamesPlayed,
 					h2hGamesPlayed: h2h?.gamesPlayed ?? 0,
 					h2hTeamWins: h2h?.wins.get(g.teamId) ?? 0,
