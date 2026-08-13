@@ -224,7 +224,7 @@ export default function OddsBadge({
 							this season, so estimates will be off.
 						</p>
 						<p>
-							Early-season win chances blend each team's stats
+							Early-season win chances blend each team&rsquo;s stats
 							with the league average ({odds.leagueRpg.toFixed(2)}{" "}
 							runs/game). The RS/RA shown above are the true
 							per-game averages.

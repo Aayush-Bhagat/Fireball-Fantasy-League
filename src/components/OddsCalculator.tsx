@@ -1,6 +1,7 @@
 "use client";
 
 import React from "react";
+import Image from "next/image";
 import { useQuery } from "@tanstack/react-query";
 import { Loader2 } from "lucide-react";
 import { getAllTeams } from "@/requests/teams";
@@ -194,9 +195,12 @@ function TeamPicker({
 							disabled={team.id === disabledId}
 						>
 							{team.logo ? (
-								<img
+								<Image
 									src={team.logo}
 									alt=""
+									width={20}
+									height={20}
+									unoptimized
 									className="w-5 h-5 rounded-full border object-cover"
 								/>
 							) : (
@@ -265,9 +269,12 @@ function SeriesColumn({
 	return (
 		<div className="flex-1 max-w-[200px] rounded-lg border p-4 bg-gray-50/50 text-center">
 			{logo ? (
-				<img
+				<Image
 					src={logo}
 					alt=""
+					width={48}
+					height={48}
+					unoptimized
 					className="w-12 h-12 mx-auto rounded-full border object-cover mb-2"
 				/>
 			) : (
