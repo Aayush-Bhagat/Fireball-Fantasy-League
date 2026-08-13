@@ -33,17 +33,6 @@ function formatAmerican(odds: number): string {
 	return odds > 0 ? `+${odds}` : `${odds}`;
 }
 
-function StatRow({ label, value }: { label: string; value: React.ReactNode }) {
-	return (
-		<div className="flex items-center justify-between py-1.5 border-b border-gray-100 last:border-0">
-			<span className="text-sm text-gray-500">{label}</span>
-			<span className="text-sm font-medium text-gray-800 tabular-nums">
-				{value}
-			</span>
-		</div>
-	);
-}
-
 function TeamColumn({
 	name,
 	abbreviation,
@@ -170,9 +159,8 @@ export default function OddsBadge({
 					<DialogHeader>
 						<DialogTitle>Match Win Probability</DialogTitle>
 						<DialogDescription>
-							{teamName} vs {opponentName} — going-in odds from the dynamic
-							Pythagenpat / Log5 model with Bayesian H2H shrinkage, using
-						only games played before this matchup.
+							{teamName} vs {opponentName} — estimated win chance based
+							on how each team has done this season before this matchup.
 					</DialogDescription>
 				</DialogHeader>
 
@@ -201,42 +189,33 @@ export default function OddsBadge({
 					/>
 				</div>
 
-				<div className="mt-3 rounded-lg border p-3">
-					<div className="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-1">
-						Model Parameters
+				<div className="mt-3 rounded-lg border p-3 bg-gray-50/50">
+					<div className="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-2">
+						How this works
 					</div>
-					<StatRow
-						label="League runs / game (L_R)"
-						value={odds.leagueRpg.toFixed(2)}
-					/>
-					<StatRow
-						label="Pythagenpat exponent (x)"
-						value={odds.pythagenpatExponent.toFixed(3)}
-					/>
-					<StatRow
-						label="Log5 baseline prob. (team)"
-						value={pct(odds.log5Probability)}
-					/>
-					<StatRow
-						label="H2H sample prob. (team)"
-						value={
-							odds.h2hProbability === null
-								? "—"
-								: pct(odds.h2hProbability)
-						}
-					/>
-					<StatRow
-						label="H2H games played"
-						value={odds.h2hGamesPlayed}
-					/>
-					<StatRow
-						label="H2H shrinkage weight (w)"
-						value={odds.h2hWeight.toFixed(3)}
-					/>
-					<StatRow
-						label="Bayesian prior (M)"
-						value={odds.priorM}
-					/>
+					<p className="text-sm text-gray-600 leading-relaxed">
+						Each team is rated by its average runs scored and allowed
+						this season — teams that score more and allow fewer are
+						favored. The two ratings are compared head-to-head, with a
+						small nod to whoever has won more of their past meetings
+						this season.
+					</p>
+					<div className="mt-3 space-y-1.5">
+						<div className="flex justify-between text-sm">
+							<span className="text-gray-500">League avg runs / game</span>
+							<span className="font-medium text-gray-800 tabular-nums">
+								{odds.leagueRpg.toFixed(2)}
+							</span>
+						</div>
+						<div className="flex justify-between text-sm">
+							<span className="text-gray-500">
+								Times these teams have met this season
+							</span>
+							<span className="font-medium text-gray-800 tabular-nums">
+								{odds.h2hGamesPlayed}
+							</span>
+						</div>
+					</div>
 				</div>
 
 				{odds.coldStart && (
