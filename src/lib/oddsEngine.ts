@@ -17,9 +17,7 @@
 export interface OddsEngineConfig {
 	/** Bayesian prior weight (in games). SRS default is 10. */
 	priorM: number;
-	/** Fallback runs scored per game when a team has no completed games. */
-	defaultRunsPerGame: number;
-	/** Fallback league runs-per-game when no games are completed yet. */
+	/** Fallback league runs-per-game (per side) when no games are completed yet. */
 	defaultLeagueRpg: number;
 	/** A team is considered "cold" (sparse data) below this many games played. */
 	coldStartThreshold: number;
@@ -31,8 +29,7 @@ export interface OddsEngineConfig {
 
 export const DEFAULT_ODDS_CONFIG: OddsEngineConfig = {
 	priorM: 10.0,
-	defaultRunsPerGame: 4.5,
-	defaultLeagueRpg: 9.0,
+	defaultLeagueRpg: 4.5,
 	coldStartThreshold: 3,
 	sparseH2HThreshold: 3,
 	epsilon: 1e-5,
@@ -160,6 +157,39 @@ export function toAmericanOdds(p: number): number {
 	return Math.floor(((1 - clamped) / clamped) * 100);
 }
 
+/**
+ * Probability that a team wins a best-of-N series given its single-game win
+ * probability. Assumes each game is independent and that every game has a
+ * winner (ties are not modeled). `bestOf` should be odd (1, 3, 5, ...).
+ */
+export function seriesWinProbability(
+	singleGameProb: number,
+	bestOf: number,
+): number {
+	const p = Math.min(Math.max(singleGameProb, 0), 1);
+	if (bestOf <= 1) return p;
+
+	const winsNeeded = Math.floor(bestOf / 2) + 1;
+	let probability = 0;
+	for (let wins = winsNeeded; wins <= bestOf; wins++) {
+		probability +=
+			binomialCoefficient(bestOf, wins) *
+			Math.pow(p, wins) *
+			Math.pow(1 - p, bestOf - wins);
+	}
+	return probability;
+}
+
+/** Binomial coefficient "n choose k" (fine for the small n used here). */
+function binomialCoefficient(n: number, k: number): number {
+	if (k < 0 || k > n) return 0;
+	let coefficient = 1;
+	for (let i = 0; i < k; i++) {
+		coefficient = (coefficient * (n - i)) / (i + 1);
+	}
+	return coefficient;
+}
+
 /** Round to a fixed number of decimals while keeping a number type. */
 function round(value: number, decimals: number): number {
 	const factor = 10 ** decimals;
@@ -177,20 +207,26 @@ export function computeMatchOdds(input: MatchOddsInput): MatchOddsResult {
 		input.leagueRpg > 0 ? input.leagueRpg : cfg.defaultLeagueRpg;
 	const exponent = pythagenpatExponent(leagueRpg);
 
-	// Cold-start: teams with very few games regress toward league-average
-	// runs (≈ half the league total), which yields ~0.500 Pythagorean win
-	// expectancy. We blend their actual RS/RA with the default proportionally
-	// to how many games they've played.
-	const blend = (actual: number, gamesPlayed: number) => {
-		if (gamesPlayed >= cfg.coldStartThreshold || actual > 0) return actual;
-		// No data at all → fall back to league-average-ish baseline.
-		return cfg.defaultRunsPerGame;
+	// Regression to the mean for small samples: a team with fewer than
+	// `coldStartThreshold` completed games has its observed per-game averages
+	// blended with the league-average runs/game, filling the missing sample up
+	// to the threshold. This keeps early-season win chances realistic (e.g. a
+	// one-game shutout isn't a literal 0% chance) without using any games
+	// after the matchup. The displayed RS/RA below stay the TRUE observed
+	// averages — only the Pythagorean rating uses these shrunk numbers.
+	const shrink = (actual: number, gamesPlayed: number) => {
+		if (gamesPlayed >= cfg.coldStartThreshold) return actual;
+		const missing = cfg.coldStartThreshold - gamesPlayed;
+		return (
+			(actual * gamesPlayed + missing * leagueRpg) /
+			cfg.coldStartThreshold
+		);
 	};
 
-	const teamRS = blend(input.teamRunsScored, input.teamGamesPlayed);
-	const teamRA = blend(input.teamRunsAllowed, input.teamGamesPlayed);
-	const oppRS = blend(input.opponentRunsScored, input.opponentGamesPlayed);
-	const oppRA = blend(input.opponentRunsAllowed, input.opponentGamesPlayed);
+	const teamRS = shrink(input.teamRunsScored, input.teamGamesPlayed);
+	const teamRA = shrink(input.teamRunsAllowed, input.teamGamesPlayed);
+	const oppRS = shrink(input.opponentRunsScored, input.opponentGamesPlayed);
+	const oppRA = shrink(input.opponentRunsAllowed, input.opponentGamesPlayed);
 
 	const wTeam = pythagoreanWinExpectancy(teamRS, teamRA, exponent, cfg.epsilon);
 	const wOpp = pythagoreanWinExpectancy(oppRS, oppRA, exponent, cfg.epsilon);
@@ -222,10 +258,10 @@ export function computeMatchOdds(input: MatchOddsInput): MatchOddsResult {
 		h2hGamesPlayed: nH2H,
 		pythagenpatExponent: round(exponent, 3),
 		leagueRpg: round(leagueRpg, 3),
-		teamRunsScored: round(teamRS, 3),
-		teamRunsAllowed: round(teamRA, 3),
-		opponentRunsScored: round(oppRS, 3),
-		opponentRunsAllowed: round(oppRA, 3),
+		teamRunsScored: round(input.teamRunsScored, 3),
+		teamRunsAllowed: round(input.teamRunsAllowed, 3),
+		opponentRunsScored: round(input.opponentRunsScored, 3),
+		opponentRunsAllowed: round(input.opponentRunsAllowed, 3),
 		teamGamesPlayed: input.teamGamesPlayed,
 		opponentGamesPlayed: input.opponentGamesPlayed,
 		teamWinExpectancy: round(wTeam, 4),

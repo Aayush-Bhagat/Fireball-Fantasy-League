@@ -159,8 +159,10 @@ for the frontend. Notable fields:
 - `leagueRpg`, `pythagenpatExponent` — the run environment and resulting `x`.
 - `h2hGamesPlayed`, `h2hProbability`, `h2hWeight` — the head-to-head slice and
   how much it influenced the final number.
-- `coldStart` — true when a team has very few games played (its rating is
-  regressed toward the league baseline, so don't trust it yet).
+- `coldStart` — true when a team has very few games played. The *displayed*
+  RS/RA are always the true observed averages, but for teams below the
+  cold-start threshold the rating blends those stats with the league average
+  before computing the win chance (see the on-card disclaimer).
 
 ---
 
@@ -172,9 +174,8 @@ and can be overridden per-call via `MatchOddsInput.config`:
 | Setting | Default | What it means |
 | --- | --- | --- |
 | `priorM` | `10` | How many head-to-head games it takes for H2H to match the weight of the season averages. Bigger = trust season averages more. |
-| `defaultRunsPerGame` | `4.5` | Fallback RS/RA for a team with no games played. |
-| `defaultLeagueRpg` | `9.0` | Fallback league runs/game when no games are completed yet. |
-| `coldStartThreshold` | `3` | Teams with fewer than this many games are flagged `coldStart`. |
+| `defaultLeagueRpg` | `4.5` | Fallback league runs/game (per side) when no games are completed yet. |
+| `coldStartThreshold` | `3` | Teams with fewer than this many games are flagged `coldStart`, and their RS/RA are blended toward the league average up to this many games. |
 | `sparseH2HThreshold` | `3` | H2H samples at or below this are flagged `sparseSample`. (Currently not surfaced in the UI — we removed the indicator because a 10-game season always trips it.) |
 | `epsilon` | `1e-5` | Tiny number to avoid divide-by-zero. Leave alone. |
 

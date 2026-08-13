@@ -14,6 +14,8 @@ import {
 	SelectValue,
 } from "@/components/ui/select";
 import OddsBadge from "@/components/OddsBadge";
+import { seriesWinProbability, toAmericanOdds } from "@/lib/oddsEngine";
+import { cn } from "@/lib/utils";
 
 /**
  * Team-pair odds calculator (bottom of the schedule page).
@@ -31,6 +33,7 @@ export default function OddsCalculator() {
 
 	const [teamAId, setTeamAId] = React.useState<string>("");
 	const [teamBId, setTeamBId] = React.useState<string>("");
+	const [bestOf, setBestOf] = React.useState<1 | 3 | 5>(1);
 
 	const teams: TeamDto[] = teamsData?.teams ?? [];
 
@@ -41,6 +44,14 @@ export default function OddsCalculator() {
 		enabled: !!teamAId && !!teamBId && teamAId !== teamBId,
 		staleTime: 30_000,
 	});
+
+	// Series odds derived from the single-game win probability. Best-of-1 is
+	// just the single game; best-of-3/5 treat each game as independent.
+	const teamSeriesProb = data
+		? seriesWinProbability(data.odds.teamProb, bestOf)
+		: null;
+	const opponentSeriesProb =
+		teamSeriesProb !== null ? 1 - teamSeriesProb : null;
 
 	return (
 		<div className="mt-16">
@@ -74,6 +85,10 @@ export default function OddsCalculator() {
 					/>
 				</div>
 
+				<div className="mt-4 flex justify-center">
+					<BestOfSelector bestOf={bestOf} onChange={setBestOf} />
+				</div>
+
 				<div className="mt-6 min-h-[3rem] flex items-center justify-center text-center">
 					{teamAId && teamBId && teamAId === teamBId ? (
 						<p className="text-sm text-amber-600">
@@ -92,18 +107,49 @@ export default function OddsCalculator() {
 						<p className="text-sm text-red-500">
 							{(error as Error).message}
 						</p>
-					) : data ? (
-						<div className="flex flex-col items-center gap-3 w-full">
-							<OddsBadge
-								odds={data.odds}
-								teamName={data.teamA.name}
-								teamAbbreviation={data.teamA.abbreviation}
-								opponentName={data.teamB.name}
-								opponentAbbreviation={data.teamB.abbreviation}
-							/>
-							<p className="text-xs text-gray-400">
-								Click the badge for the full breakdown.
-							</p>
+					) : data &&
+					  teamSeriesProb !== null &&
+					  opponentSeriesProb !== null ? (
+						<div className="flex flex-col items-center gap-4 w-full">
+							{bestOf !== 1 && (
+								<div className="w-full">
+									<p className="text-xs font-semibold uppercase tracking-wide text-gray-400 text-center mb-2">
+										Series win probability — best of {bestOf}
+									</p>
+									<div className="flex items-stretch justify-center gap-4">
+										<SeriesColumn
+											name={data.teamA.name}
+											abbreviation={data.teamA.abbreviation}
+											logo={data.teamA.logo}
+											prob={teamSeriesProb}
+											american={toAmericanOdds(teamSeriesProb)}
+										/>
+										<div className="self-center text-lg font-bold text-gray-400 px-2">
+											vs
+										</div>
+										<SeriesColumn
+											name={data.teamB.name}
+											abbreviation={data.teamB.abbreviation}
+											logo={data.teamB.logo}
+											prob={opponentSeriesProb}
+											american={toAmericanOdds(opponentSeriesProb)}
+										/>
+									</div>
+								</div>
+							)}
+
+							<div className="flex flex-col items-center gap-1.5">
+								<OddsBadge
+									odds={data.odds}
+									teamName={data.teamA.name}
+									teamAbbreviation={data.teamA.abbreviation}
+									opponentName={data.teamB.name}
+									opponentAbbreviation={data.teamB.abbreviation}
+								/>
+								<p className="text-xs text-gray-400">
+									Single-game odds — click for the full breakdown.
+								</p>
+							</div>
 						</div>
 					) : null}
 				</div>
@@ -161,6 +207,78 @@ function TeamPicker({
 					))}
 				</SelectContent>
 			</Select>
+		</div>
+	);
+}
+
+const BEST_OF_OPTIONS = [1, 3, 5] as const;
+
+function BestOfSelector({
+	bestOf,
+	onChange,
+}: {
+	bestOf: 1 | 3 | 5;
+	onChange: (value: 1 | 3 | 5) => void;
+}) {
+	return (
+		<div className="inline-flex items-center gap-1 rounded-lg bg-gray-100 p-1">
+			{BEST_OF_OPTIONS.map((option) => (
+				<button
+					key={option}
+					type="button"
+					onClick={() => onChange(option)}
+					className={cn(
+						"px-3 py-1.5 text-sm font-medium rounded-md transition",
+						bestOf === option
+							? "bg-white text-gray-900 shadow-sm"
+							: "text-gray-500 hover:text-gray-800",
+					)}
+				>
+					Best of {option}
+				</button>
+			))}
+		</div>
+	);
+}
+
+function pct(p: number): string {
+	return `${Math.round(p * 100)}%`;
+}
+
+function formatAmerican(odds: number): string {
+	return odds > 0 ? `+${odds}` : `${odds}`;
+}
+
+function SeriesColumn({
+	name,
+	abbreviation,
+	logo,
+	prob,
+	american,
+}: {
+	name: string;
+	abbreviation: string;
+	logo: string | null;
+	prob: number;
+	american: number;
+}) {
+	return (
+		<div className="flex-1 max-w-[200px] rounded-lg border p-4 bg-gray-50/50 text-center">
+			{logo ? (
+				<img
+					src={logo}
+					alt=""
+					className="w-12 h-12 mx-auto rounded-full border object-cover mb-2"
+				/>
+			) : (
+				<span className="w-12 h-12 mx-auto block rounded-full border bg-gray-200 mb-2" />
+			)}
+			<div className="font-semibold text-gray-800 truncate">{name}</div>
+			<div className="text-xs text-gray-400 mb-1">({abbreviation})</div>
+			<div className="text-2xl font-extrabold text-gray-900">{pct(prob)}</div>
+			<div className="text-xs text-gray-500 mt-1">
+				Moneyline {formatAmerican(american)}
+			</div>
 		</div>
 	);
 }

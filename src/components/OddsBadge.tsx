@@ -145,9 +145,8 @@ export default function OddsBadge({
 							</button>
 						</TooltipTrigger>
 						<TooltipContent className="max-w-[220px]">
-							One or both teams have very few games played
-							this season — estimates are regressed toward the
-							league baseline.
+							One or both teams have very few games played, so
+							their stats are blended with the league average.
 						</TooltipContent>
 					</Tooltip>
 				)}
@@ -221,9 +220,14 @@ export default function OddsBadge({
 				{odds.coldStart && (
 					<div className="mt-2 space-y-1.5 text-xs text-amber-600">
 						<p>
-							ℹ️ One or both teams have very few games played
-							this season — estimates are regressed toward the
-							league baseline.
+							One or both teams have very few games played
+							this season, so estimates will be off.
+						</p>
+						<p>
+							Early-season win chances blend each team's stats
+							with the league average ({odds.leagueRpg.toFixed(2)}{" "}
+							runs/game). The RS/RA shown above are the true
+							per-game averages.
 						</p>
 					</div>
 				)}

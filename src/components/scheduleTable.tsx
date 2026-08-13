@@ -18,6 +18,8 @@ import { useQuery } from "@tanstack/react-query";
 import ScheduleTableSkeleton from "@/components/loaders/ScheduleTableSkeleton";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
+import OddsBadge from "@/components/OddsBadge";
+import { cn } from "@/lib/utils";
 type Props = {
     gamesData: Promise<GameResponseDto>;
 };
@@ -43,6 +45,11 @@ export default function ScheduleTable({ gamesData }: Props) {
         return <ScheduleTableSkeleton />;
     }
 
+    const weekDate =
+        schedule?.find((game) => game.playedAt)?.playedAt ?? null;
+    const weekStart = weekDate ? new Date(weekDate).getTime() : null;
+    const weekNumber = schedule?.at(0)?.week;
+
     return (
         <div className="mx-auto p-4 space-y-4 font-sans border border-gray-300 rounded-lg shadow-md bg-white">
             <div className="text-2xl font-bold">
@@ -54,48 +61,60 @@ export default function ScheduleTable({ gamesData }: Props) {
                 </Link>
             </div>
 
-            <DropdownMenu>
-                <DropdownMenuTrigger asChild>
-                    <Button variant="outline">Week {selectedWeek}</Button>
-                </DropdownMenuTrigger>
-                <DropdownMenuContent className="w-56">
-                    <DropdownMenuLabel>Select Week</DropdownMenuLabel>
-                    <DropdownMenuSeparator />
-                    <DropdownMenuRadioGroup
-                        value={selectedWeek}
-                        onValueChange={(value) => setSelectedWeek(value)}
-                        defaultValue={"current"}
-                    >
-                        <DropdownMenuRadioItem value="current">
-                            Current Week
-                        </DropdownMenuRadioItem>
-                        {Array.from({ length: 10 }, (_, i) => (
-                            <DropdownMenuRadioItem
-                                key={i}
-                                value={(i + 1).toString()}
-                            >
-                                Week {i + 1}
+            <div className="flex items-center gap-3">
+                <DropdownMenu>
+                    <DropdownMenuTrigger asChild>
+                        <Button variant="outline">Week {selectedWeek}</Button>
+                    </DropdownMenuTrigger>
+                    <DropdownMenuContent className="w-56">
+                        <DropdownMenuLabel>Select Week</DropdownMenuLabel>
+                        <DropdownMenuSeparator />
+                        <DropdownMenuRadioGroup
+                            value={selectedWeek}
+                            onValueChange={(value) => setSelectedWeek(value)}
+                            defaultValue={"current"}
+                        >
+                            <DropdownMenuRadioItem value="current">
+                                Current Week
                             </DropdownMenuRadioItem>
-                        ))}
-                        <DropdownMenuRadioItem value="11">
-                            Play-Ins
-                        </DropdownMenuRadioItem>
-                        <DropdownMenuRadioItem value="12">
-                            Semifinals
-                        </DropdownMenuRadioItem>
-                        <DropdownMenuRadioItem value="13">
-                            Finals
-                        </DropdownMenuRadioItem>
-                    </DropdownMenuRadioGroup>
-                </DropdownMenuContent>
-            </DropdownMenu>
+                            {Array.from({ length: 10 }, (_, i) => (
+                                <DropdownMenuRadioItem
+                                    key={i}
+                                    value={(i + 1).toString()}
+                                >
+                                    Week {i + 1}
+                                </DropdownMenuRadioItem>
+                            ))}
+                            <DropdownMenuRadioItem value="11">
+                                Play-Ins
+                            </DropdownMenuRadioItem>
+                            <DropdownMenuRadioItem value="12">
+                                Semifinals
+                            </DropdownMenuRadioItem>
+                            <DropdownMenuRadioItem value="13">
+                                Finals
+                            </DropdownMenuRadioItem>
+                        </DropdownMenuRadioGroup>
+                    </DropdownMenuContent>
+                </DropdownMenu>
+                {selectedWeek === "current" && weekNumber != null && (
+                    <span className="text-sm text-gray-700 font-semibold">
+                        Week {weekNumber}
+                    </span>
+                )}
+                {weekStart != null && (
+                    <span className="text-md text-gray-800">
+                        {format(weekStart, "EEEE, MMMM do")}
+                    </span>
+                )}
+            </div>
             <div className="overflow-x-auto">
                 <table className="min-w-full table-auto border-collapse">
                     <thead>
                         <tr className="bg-gray-100 text-center text-sm text-gray-600">
-                            <th className="p-2">Week</th>
-                            <th className="p-2">Date</th>
+                            <th className="p-2">Time</th>
                             <th className="p-2">Matchup</th>
+                            <th className="p-2">Odds</th>
                             <th className="p-2">Result</th>
                         </tr>
                     </thead>
@@ -109,47 +128,52 @@ export default function ScheduleTable({ gamesData }: Props) {
                                         router.push(`/game/${game.gameId}`)
                                     }
                                 >
-                                    <td className="p-2 pb-4">{game.week}</td>
                                     <td className="p-2 pb-4">
-                                        <div className="text-sm text-gray-500 mb-2 sm:mb-0 w-full  text-center flex flex-col gap-1 xxl:flex-row ">
-                                            <div>
-                                                {(game.playedAt &&
-                                                    format(
-                                                        new Date(game.playedAt),
-                                                        "EEEE, MMMM do",
-                                                    )) ||
-                                                    "TBD"}{" "}
-                                            </div>
-                                            <div>
-                                                {(game.playedAt &&
-                                                    format(
-                                                        new Date(game.playedAt),
-                                                        "p",
-                                                    )) ||
-                                                    "TBD"}
-                                            </div>
-                                        </div>
+                                        {weekStart != null
+                                            ? format(
+                                                  weekStart +
+                                                      index * 30 * 60 * 1000,
+                                                  "p",
+                                              )
+                                            : "TBD"}
                                     </td>
-                                    {/* <td className="p-2 pb-4">
-                                    {(game.playedAt &&
-                                        format(new Date(game.playedAt), "p")) ||
-                                        "TBD"}
-                                </td> */}
 
                                     <td className="p-2 pb-4">
-                                        <div className="flex items-center justify-center gap-4">
+                                        <div className="flex gap-4">
                                             {/* Team */}
-                                            <div className="flex items-center gap-2 w-[160px] text-left">
-                                                {game.team.logo && (
-                                                    <img
-                                                        src={game.team.logo}
-                                                        alt="Team Logo"
-                                                        className="w-6 h-6 rounded-full border"
-                                                    />
-                                                )}
-                                                <span className="truncate font-medium">
-                                                    {game.team.name}
-                                                </span>
+                                            <div className="flex justify-start gap-1 min-w-0 max-w-[120px] sm:max-w-[180px] md:max-w-[240px] lg:max-w-[280px]">
+                                                <div
+                                                    className={cn(
+                                                        "flex gap-2 min-w-0 text-left rounded px-1 py-0.5",
+                                                        game.teamOutcome ===
+                                                            "Win" &&
+                                                            "bg-green-100",
+                                                    )}
+                                                >
+                                                    {game.team.logo && (
+                                                        <img
+                                                            src={game.team.logo}
+                                                            alt="Team Logo"
+                                                            className="w-6 h-6 rounded-full border shrink-0"
+                                                        />
+                                                    )}
+                                                    <span className="truncate font-medium">
+                                                        {game.team.name}
+                                                    </span>
+                                                </div>
+                                                {game.odds &&
+                                                    game.odds.teamProb >
+                                                        game.odds.opponentProb && (
+                                                        <sup
+                                                            className="font-bold text-xs text-orange-500 align-super shrink-0"
+                                                            style={{
+                                                                lineHeight: 1,
+                                                            }}
+                                                            title="Favored to win"
+                                                        >
+                                                            Y
+                                                        </sup>
+                                                    )}
                                             </div>
 
                                             {/* vs */}
@@ -158,19 +182,64 @@ export default function ScheduleTable({ gamesData }: Props) {
                                             </span>
 
                                             {/* Opponent */}
-                                            <div className="flex items-center gap-2 w-[160px] justify-end text-right">
-                                                <span className="truncate font-medium">
-                                                    {game.opponent.name}
-                                                </span>
-                                                {game.opponent.logo && (
-                                                    <img
-                                                        src={game.opponent.logo}
-                                                        alt="Opponent Logo"
-                                                        className="w-6 h-6 rounded-full border"
-                                                    />
-                                                )}
+                                            <div className="flex items-center justify-end gap-1 min-w-0 max-w-[120px] sm:max-w-[180px] md:max-w-[240px] lg:max-w-[280px]">
+                                                <div
+                                                    className={cn(
+                                                        "flex items-center gap-2 min-w-0 text-right rounded px-1 py-0.5",
+                                                        game.opponentOutcome ===
+                                                            "Win" &&
+                                                            "bg-green-100",
+                                                    )}
+                                                >
+                                                    <span className="truncate font-medium">
+                                                        {game.opponent.name}
+                                                    </span>
+                                                    {game.opponent.logo && (
+                                                        <img
+                                                            src={game.opponent.logo}
+                                                            alt="Opponent Logo"
+                                                            className="w-6 h-6 rounded-full border shrink-0"
+                                                        />
+                                                    )}
+                                                </div>
+                                                {game.odds &&
+                                                    game.odds.opponentProb >
+                                                        game.odds.teamProb && (
+                                                        <sup
+                                                            className="font-bold text-xs text-orange-500 align-super shrink-0"
+                                                            style={{
+                                                                lineHeight: 1,
+                                                            }}
+                                                            title="Favored to win"
+                                                        >
+                                                            Y
+                                                        </sup>
+                                                    )}
                                             </div>
                                         </div>
+                                    </td>
+
+                                    <td className="p-2">
+                                        {game.odds ? (
+                                            <OddsBadge
+                                                odds={game.odds}
+                                                teamName={game.team.name}
+                                                teamAbbreviation={
+                                                    game.team.abbreviation
+                                                }
+                                                opponentName={
+                                                    game.opponent.name
+                                                }
+                                                opponentAbbreviation={
+                                                    game.opponent.abbreviation
+                                                }
+                                                className="justify-center"
+                                            />
+                                        ) : (
+                                            <span className="text-gray-400">
+                                                -
+                                            </span>
+                                        )}
                                     </td>
 
                                     <td className="p-2">
@@ -183,6 +252,12 @@ export default function ScheduleTable({ gamesData }: Props) {
                             ))}
                     </tbody>
                 </table>
+            </div>
+            <div className="mt-4 text-sm text-gray-700 flex space-x-6">
+                <div className="flex items-center space-x-1">
+                    <span className="font-bold text-orange-500">Y</span>
+                    <span>– Favored to win</span>
+                </div>
             </div>
         </div>
     );
