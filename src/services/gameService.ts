@@ -30,9 +30,15 @@ export async function getGamesByWeekAndSeason(
 
 	const games = await findGamesByWeekAndSeason(seasonId, week);
 
+	// Going-in odds need the full season schedule: each game's odds are
+	// derived only from the games played before it.
+	const schedule = await findSeasonSchedule(seasonId);
+
 	const records = await findAllTeamRecordsBySeason(seasonId);
 
-	const gamesWithRecords = GameDtoMapper(games, records);
+	const oddsByGame = await computeSeasonOdds(schedule);
+
+	const gamesWithRecords = GameDtoMapper(games, records, oddsByGame);
 
 	return gamesWithRecords;
 }
