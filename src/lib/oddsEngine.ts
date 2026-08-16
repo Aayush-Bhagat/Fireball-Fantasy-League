@@ -313,11 +313,17 @@ export function computeMatchOdds(input: MatchOddsInput): MatchOddsResult {
 	);
 
 	// Step 2: cold-start shrinkage. A team with fewer than
-	// `coldStartThreshold` completed games has its (now-projection-blended)
-	// per-game averages pulled toward the league-average runs/game. This
-	// keeps early-season win chances realistic without using any games
-	// after the matchup. The displayed RS/RA below stay the TRUE observed
-	// averages — only the Pythagorean rating uses these shrunk numbers.
+	// `coldStartThreshold` completed games has its observed per-game
+	// averages pulled toward the league-average runs/game. This keeps
+	// early-season win chances realistic (e.g. a literal 0/0 team isn't
+	// a 0% win chance) without using any games after the matchup. The
+	// displayed RS/RA below stay the TRUE observed averages — only the
+	// Pythagorean rating uses these shrunk numbers.
+	//
+	// Cold-start is skipped when a projection is present for that side:
+	// the projection IS the prior signal, so applying cold-start on top
+	// would overwrite it with the league average and the projection
+	// would have no visible effect on game 1.
 	const shrink = (actual: number, gamesPlayed: number) => {
 		if (gamesPlayed >= cfg.coldStartThreshold) return actual;
 		const missing = cfg.coldStartThreshold - gamesPlayed;
@@ -327,10 +333,23 @@ export function computeMatchOdds(input: MatchOddsInput): MatchOddsResult {
 		);
 	};
 
-	const teamRS = shrink(teamBlend.blendedRS, input.teamGamesPlayed);
-	const teamRA = shrink(teamBlend.blendedRA, input.teamGamesPlayed);
-	const oppRS = shrink(oppBlend.blendedRS, input.opponentGamesPlayed);
-	const oppRA = shrink(oppBlend.blendedRA, input.opponentGamesPlayed);
+	const teamHasProjection =
+		input.teamProjectedRS != null && input.teamProjectedRA != null;
+	const oppHasProjection =
+		input.opponentProjectedRS != null && input.opponentProjectedRA != null;
+
+	const teamRS = teamHasProjection
+		? teamBlend.blendedRS
+		: shrink(input.teamRunsScored, input.teamGamesPlayed);
+	const teamRA = teamHasProjection
+		? teamBlend.blendedRA
+		: shrink(input.teamRunsAllowed, input.teamGamesPlayed);
+	const oppRS = oppHasProjection
+		? oppBlend.blendedRS
+		: shrink(input.opponentRunsScored, input.opponentGamesPlayed);
+	const oppRA = oppHasProjection
+		? oppBlend.blendedRA
+		: shrink(input.opponentRunsAllowed, input.opponentGamesPlayed);
 
 	const wTeam = pythagoreanWinExpectancy(teamRS, teamRA, exponent, cfg.epsilon);
 	const wOpp = pythagoreanWinExpectancy(oppRS, oppRA, exponent, cfg.epsilon);
@@ -364,8 +383,8 @@ export function computeMatchOdds(input: MatchOddsInput): MatchOddsResult {
 		: null;
 
 	const coldStart =
-		input.teamGamesPlayed < cfg.coldStartThreshold ||
-		input.opponentGamesPlayed < cfg.coldStartThreshold;
+		(!teamHasProjection && input.teamGamesPlayed < cfg.coldStartThreshold) ||
+		(!oppHasProjection && input.opponentGamesPlayed < cfg.coldStartThreshold);
 
 	return {
 		teamProb: round(pFinalTeam, 4),
