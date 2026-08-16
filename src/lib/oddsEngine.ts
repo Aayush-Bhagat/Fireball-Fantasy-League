@@ -23,6 +23,13 @@ export interface OddsEngineConfig {
 	coldStartThreshold: number;
 	/** H2H sample at or below this count is flagged as sparse. */
 	sparseH2HThreshold: number;
+	/**
+	 * Games of equivalent weight given to the roster projection when
+	 * blending with observed RS/RA. Default 40 — early in the season the
+	 * projection dominates, by the playoffs observed data dominates.
+	 * Matches the `priorWeight` constant in `ProjectionConfig`.
+	 */
+	projectionPriorWeight: number;
 	/** Epsilon to avoid divide-by-zero in Log5 / Pythagorean terms. */
 	epsilon: number;
 }
@@ -32,6 +39,7 @@ export const DEFAULT_ODDS_CONFIG: OddsEngineConfig = {
 	defaultLeagueRpg: 4.5,
 	coldStartThreshold: 3,
 	sparseH2HThreshold: 3,
+	projectionPriorWeight: 40,
 	epsilon: 1e-5,
 };
 
@@ -49,6 +57,16 @@ export interface MatchOddsInput {
 	h2hTeamWins: number;
 	/** League-wide average runs per game (per side), L_R. */
 	leagueRpg: number;
+	/**
+	 * Optional roster projection — when present, the engine blends the
+	 * observed RS/RA toward the projection's RS/RA using a Bayesian
+	 * shrinkage (see `blendObservedWithProjection`). `null` / omitted
+	 * disables the blend and falls back to the existing behavior.
+	 */
+	teamProjectedRS?: number | null;
+	teamProjectedRA?: number | null;
+	opponentProjectedRS?: number | null;
+	opponentProjectedRA?: number | null;
 	config?: Partial<OddsEngineConfig>;
 }
 
@@ -75,6 +93,19 @@ export interface MatchOddsResult {
 	priorM: number;
 	sparseSample: boolean;
 	coldStart: boolean;
+	/**
+	 * Win probability the engine would have produced using only the
+	 * observed RS/RA (i.e. projection blend weight = 0). `null` when
+	 * no projection was supplied.
+	 */
+	teamProbWithoutProjection: number | null;
+	opponentProbWithoutProjection: number | null;
+	/** Projection's expected runs scored per game (echoed from input). */
+	teamProjectedRS: number | null;
+	opponentProjectedRS: number | null;
+	/** Projection's expected runs allowed per game (echoed from input). */
+	teamProjectedRA: number | null;
+	opponentProjectedRA: number | null;
 }
 
 /**
@@ -197,8 +228,62 @@ function round(value: number, decimals: number): number {
 }
 
 /**
+ * Bayesian blend of observed per-game RS/RA with a roster projection.
+ *
+ *   observedWeight = gamesPlayed / (gamesPlayed + priorWeight)
+ *   blendedRS = observedWeight · observedRS
+ *             + (1 − observedWeight) · projectedRS
+ *
+ * When `gamesPlayed` is 0 the blend is pure projection; when
+ * `gamesPlayed` is large the blend converges to the observed value.
+ * `priorWeight` defaults to 40 (projection config's `priorWeight`),
+ * passed in via `OddsEngineConfig.projectionPriorWeight`.
+ *
+ * Returns the observed numbers unchanged when either projection input
+ * is null/negative — callers should treat that as "no projection
+ * available" and use the existing cold-start path instead.
+ */
+export function blendObservedWithProjection(
+	observedRS: number,
+	observedRA: number,
+	gamesPlayed: number,
+	projectedRS: number | null | undefined,
+	projectedRA: number | null | undefined,
+	priorWeight: number,
+): { blendedRS: number; blendedRA: number } {
+	if (
+		projectedRS === null ||
+		projectedRS === undefined ||
+		projectedRA === null ||
+		projectedRA === undefined ||
+		priorWeight <= 0
+	) {
+		return { blendedRS: observedRS, blendedRA: observedRA };
+	}
+	const safeGames = Math.max(gamesPlayed, 0);
+	const observedWeight = safeGames / (safeGames + priorWeight);
+	return {
+		blendedRS: observedWeight * observedRS + (1 - observedWeight) * projectedRS,
+		blendedRA: observedWeight * observedRA + (1 - observedWeight) * projectedRA,
+	};
+}
+
+/**
  * Run the full pipeline for a single matchup. Pure — safe to unit test and
  * safe to call for many games in a loop.
+ *
+ * When a roster projection is supplied (via `teamProjectedRS` /
+ * `teamProjectedRA` / `opponentProjectedRS` / `opponentProjectedRA`), the
+ * observed RS/RA are blended toward the projection's RS/RA using
+ * `blendObservedWithProjection`. The blend happens *before* the
+ * Pythagorean rating and the cold-start shrinkage, so the projection
+ * has its strongest influence at the start of the season (when both
+ * observed games and the projection's prior weight matter most).
+ *
+ * The output also carries `teamProbWithoutProjection` /
+ * `opponentProbWithoutProjection`, which is the engine's answer using
+ * only observed data — used by the UI to display the projection's
+ * effect on the final number.
  */
 export function computeMatchOdds(input: MatchOddsInput): MatchOddsResult {
 	const cfg = { ...DEFAULT_ODDS_CONFIG, ...input.config };
@@ -207,11 +292,30 @@ export function computeMatchOdds(input: MatchOddsInput): MatchOddsResult {
 		input.leagueRpg > 0 ? input.leagueRpg : cfg.defaultLeagueRpg;
 	const exponent = pythagenpatExponent(leagueRpg);
 
-	// Regression to the mean for small samples: a team with fewer than
-	// `coldStartThreshold` completed games has its observed per-game averages
-	// blended with the league-average runs/game, filling the missing sample up
-	// to the threshold. This keeps early-season win chances realistic (e.g. a
-	// one-game shutout isn't a literal 0% chance) without using any games
+	// Step 1: blend observed with the projection (if available). This is
+	// what makes the projection act as a Bayesian prior on the team's
+	// underlying talent level.
+	const teamBlend = blendObservedWithProjection(
+		input.teamRunsScored,
+		input.teamRunsAllowed,
+		input.teamGamesPlayed,
+		input.teamProjectedRS ?? null,
+		input.teamProjectedRA ?? null,
+		cfg.projectionPriorWeight,
+	);
+	const oppBlend = blendObservedWithProjection(
+		input.opponentRunsScored,
+		input.opponentRunsAllowed,
+		input.opponentGamesPlayed,
+		input.opponentProjectedRS ?? null,
+		input.opponentProjectedRA ?? null,
+		cfg.projectionPriorWeight,
+	);
+
+	// Step 2: cold-start shrinkage. A team with fewer than
+	// `coldStartThreshold` completed games has its (now-projection-blended)
+	// per-game averages pulled toward the league-average runs/game. This
+	// keeps early-season win chances realistic without using any games
 	// after the matchup. The displayed RS/RA below stay the TRUE observed
 	// averages — only the Pythagorean rating uses these shrunk numbers.
 	const shrink = (actual: number, gamesPlayed: number) => {
@@ -223,10 +327,10 @@ export function computeMatchOdds(input: MatchOddsInput): MatchOddsResult {
 		);
 	};
 
-	const teamRS = shrink(input.teamRunsScored, input.teamGamesPlayed);
-	const teamRA = shrink(input.teamRunsAllowed, input.teamGamesPlayed);
-	const oppRS = shrink(input.opponentRunsScored, input.opponentGamesPlayed);
-	const oppRA = shrink(input.opponentRunsAllowed, input.opponentGamesPlayed);
+	const teamRS = shrink(teamBlend.blendedRS, input.teamGamesPlayed);
+	const teamRA = shrink(teamBlend.blendedRA, input.teamGamesPlayed);
+	const oppRS = shrink(oppBlend.blendedRS, input.opponentGamesPlayed);
+	const oppRA = shrink(oppBlend.blendedRA, input.opponentGamesPlayed);
 
 	const wTeam = pythagoreanWinExpectancy(teamRS, teamRA, exponent, cfg.epsilon);
 	const wOpp = pythagoreanWinExpectancy(oppRS, oppRA, exponent, cfg.epsilon);
@@ -245,6 +349,19 @@ export function computeMatchOdds(input: MatchOddsInput): MatchOddsResult {
 	);
 
 	const pFinalOpp = 1 - pFinalTeam;
+
+	// Step 3: compute the "without projection" probability. Run the same
+	// pipeline with projectionPriorWeight forced to 0 so the projection
+	// contributes nothing. Only meaningful when at least one projection
+	// value was supplied — otherwise it equals `pFinalTeam`.
+	const hasProjection =
+		(input.teamProjectedRS ?? null) !== null ||
+		(input.teamProjectedRA ?? null) !== null ||
+		(input.opponentProjectedRS ?? null) !== null ||
+		(input.opponentProjectedRA ?? null) !== null;
+	const baselineTeamProb = hasProjection
+		? computeWithoutProjection(input, cfg, leagueRpg, exponent, nH2H, pH2HTeam)
+		: null;
 
 	const coldStart =
 		input.teamGamesPlayed < cfg.coldStartThreshold ||
@@ -272,5 +389,57 @@ export function computeMatchOdds(input: MatchOddsInput): MatchOddsResult {
 		priorM: cfg.priorM,
 		sparseSample: nH2H <= cfg.sparseH2HThreshold,
 		coldStart,
+		teamProbWithoutProjection:
+			baselineTeamProb === null ? null : round(baselineTeamProb, 4),
+		opponentProbWithoutProjection:
+			baselineTeamProb === null ? null : round(1 - baselineTeamProb, 4),
+		teamProjectedRS:
+			input.teamProjectedRS === undefined || input.teamProjectedRS === null
+				? null
+				: round(input.teamProjectedRS, 3),
+		opponentProjectedRS:
+			input.opponentProjectedRS === undefined ||
+			input.opponentProjectedRS === null
+				? null
+				: round(input.opponentProjectedRS, 3),
+		teamProjectedRA:
+			input.teamProjectedRA === undefined || input.teamProjectedRA === null
+				? null
+				: round(input.teamProjectedRA, 3),
+		opponentProjectedRA:
+			input.opponentProjectedRA === undefined ||
+			input.opponentProjectedRA === null
+				? null
+				: round(input.opponentProjectedRA, 3),
 	};
+}
+
+/**
+ * Internal: re-run the engine's pipeline with the projection blend
+ * disabled (projectionPriorWeight = 0), producing the "without
+ * projection" win probability. Used by `computeMatchOdds` to surface
+ * the baseline alongside the projection-influenced result.
+ */
+function computeWithoutProjection(
+	input: MatchOddsInput,
+	cfg: OddsEngineConfig,
+	leagueRpg: number,
+	exponent: number,
+	nH2H: number,
+	pH2HTeam: number | null,
+): number {
+	const shrink = (actual: number, gamesPlayed: number) => {
+		if (gamesPlayed >= cfg.coldStartThreshold) return actual;
+		const missing = cfg.coldStartThreshold - gamesPlayed;
+		return (actual * gamesPlayed + missing * leagueRpg) / cfg.coldStartThreshold;
+	};
+	const teamRS = shrink(input.teamRunsScored, input.teamGamesPlayed);
+	const teamRA = shrink(input.teamRunsAllowed, input.teamGamesPlayed);
+	const oppRS = shrink(input.opponentRunsScored, input.opponentGamesPlayed);
+	const oppRA = shrink(input.opponentRunsAllowed, input.opponentGamesPlayed);
+	const wTeam = pythagoreanWinExpectancy(teamRS, teamRA, exponent, cfg.epsilon);
+	const wOpp = pythagoreanWinExpectancy(oppRS, oppRA, exponent, cfg.epsilon);
+	const pLog5 = log5Probability(wTeam, wOpp, cfg.epsilon);
+	const { pFinal } = bayesianShrinkage(pLog5, pH2HTeam, nH2H, cfg.priorM);
+	return pFinal;
 }

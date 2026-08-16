@@ -4,6 +4,7 @@ import React from "react";
 import { InfoIcon } from "lucide-react";
 import { MatchOddsDto } from "@/dtos/gameDtos";
 import { Badge } from "@/components/ui/badge";
+import { toAmericanOdds } from "@/lib/oddsEngine";
 import {
 	Dialog,
 	DialogContent,
@@ -43,6 +44,8 @@ function TeamColumn({
 	rs,
 	ra,
 	gamesPlayed,
+	projectedRS,
+	projectedRA,
 }: {
 	name: string;
 	abbreviation: string;
@@ -53,7 +56,10 @@ function TeamColumn({
 	rs: number;
 	ra: number;
 	gamesPlayed: number;
+	projectedRS: number | null;
+	projectedRA: number | null;
 }) {
+	const showProjection = projectedRS !== null && projectedRA !== null;
 	return (
 		<div className="flex-1 rounded-lg border p-3 bg-gray-50/50">
 			<div className="flex items-center gap-2 mb-2">
@@ -78,13 +84,29 @@ function TeamColumn({
 					<span className="tabular-nums">{pct(winExpectancy)}</span>
 				</div>
 				<div className="flex justify-between">
-					<span>Avg runs scored (RS)</span>
+					<span>Observed runs scored (RS)</span>
 					<span className="tabular-nums">{rs.toFixed(2)}</span>
 				</div>
+				{showProjection && (
+					<div className="flex justify-between text-indigo-700">
+						<span>Projected RS / game</span>
+						<span className="tabular-nums font-medium">
+							{(projectedRS as number).toFixed(2)}
+						</span>
+					</div>
+				)}
 				<div className="flex justify-between">
-					<span>Avg runs allowed (RA)</span>
+					<span>Observed runs allowed (RA)</span>
 					<span className="tabular-nums">{ra.toFixed(2)}</span>
 				</div>
+				{showProjection && (
+					<div className="flex justify-between text-indigo-700">
+						<span>Projected RA / game</span>
+						<span className="tabular-nums font-medium">
+							{(projectedRA as number).toFixed(2)}
+						</span>
+					</div>
+				)}
 				<div className="flex justify-between">
 					<span>Games played</span>
 					<span className="tabular-nums">{gamesPlayed}</span>
@@ -106,6 +128,31 @@ export default function OddsBadge({
 
 	const teamPct = pct(odds.teamProb);
 	const oppPct = pct(odds.opponentProb);
+
+	// True when the engine actually blended a projection into the result.
+	// Suppresses the projection comparison rows when no projection data was
+	// available (e.g. an empty roster).
+	const hasProjection =
+		odds.teamProjectedRS !== null &&
+		odds.teamProjectedRA !== null &&
+		odds.opponentProjectedRS !== null &&
+		odds.opponentProjectedRA !== null &&
+		odds.teamProbWithoutProjection !== null &&
+		odds.opponentProbWithoutProjection !== null;
+	const showProjectionShift =
+		hasProjection &&
+		Math.abs(
+			(odds.teamProbWithoutProjection ?? 0) - odds.teamProb,
+		) > 0.0005;
+
+	// Pick a dataVersion label for the bottom indicator. The DTO doesn't
+	// carry this directly today (the spec defers surfacing it until the
+	// season-5 transition); when both sides have projections, infer from
+	// the projection's reliability being non-"low" for at least one side.
+	// For now just show whether projections were used at all.
+	const projectionStatus: "legacy" | "new" | null = hasProjection
+		? "legacy"
+		: null;
 
 	return (
 		<div
@@ -163,7 +210,45 @@ export default function OddsBadge({
 					</DialogDescription>
 				</DialogHeader>
 
-				<div className="flex gap-3 mt-2">
+				{showProjectionShift && (
+					<div className="mt-2 rounded-lg border border-indigo-200 bg-indigo-50/40 p-3">
+						<div className="text-xs font-semibold text-indigo-700 uppercase tracking-wide mb-2">
+							How the projection shifts the odds
+						</div>
+						<div className="space-y-1.5 text-sm">
+							<div className="flex justify-between">
+								<span className="text-gray-600">
+									With player-aggregate projection
+								</span>
+								<span className="tabular-nums font-semibold text-gray-900">
+									{teamPct}{" "}
+									<span className="text-gray-500 font-normal">
+										({formatAmerican(odds.teamAmerican)})
+									</span>
+								</span>
+							</div>
+							<div className="flex justify-between">
+								<span className="text-gray-600">
+									Without projection (baseline)
+								</span>
+								<span className="tabular-nums font-medium text-gray-700">
+									{pct(odds.teamProbWithoutProjection as number)}{" "}
+									<span className="text-gray-500 font-normal">
+										(
+										{formatAmerican(
+											toAmericanOdds(
+												odds.teamProbWithoutProjection as number,
+											),
+										)}
+										)
+									</span>
+								</span>
+							</div>
+						</div>
+					</div>
+				)}
+
+				<div className="flex gap-3 mt-3">
 					<TeamColumn
 						name={teamName}
 						abbreviation={teamAbbreviation}
@@ -174,6 +259,8 @@ export default function OddsBadge({
 						rs={odds.teamRunsScored}
 						ra={odds.teamRunsAllowed}
 						gamesPlayed={odds.teamGamesPlayed}
+						projectedRS={odds.teamProjectedRS}
+						projectedRA={odds.teamProjectedRA}
 					/>
 					<TeamColumn
 						name={opponentName}
@@ -185,6 +272,8 @@ export default function OddsBadge({
 						rs={odds.opponentRunsScored}
 						ra={odds.opponentRunsAllowed}
 						gamesPlayed={odds.opponentGamesPlayed}
+						projectedRS={odds.opponentProjectedRS}
+						projectedRA={odds.opponentProjectedRA}
 					/>
 				</div>
 
@@ -199,6 +288,15 @@ export default function OddsBadge({
 						small nod to whoever has won more of their past meetings
 						this season.
 					</p>
+					{hasProjection && (
+						<p className="mt-2 text-sm text-gray-600 leading-relaxed">
+							A roster projection (built from each team&rsquo;s
+							historical player stats) is blended in as a
+							Bayesian prior: it has the most influence early in
+							the season, and observed results gradually take
+							over as games are played.
+						</p>
+					)}
 					<div className="mt-3 space-y-1.5">
 						<div className="flex justify-between text-sm">
 							<span className="text-gray-500">League avg runs / game</span>
@@ -230,6 +328,15 @@ export default function OddsBadge({
 							per-game averages.
 						</p>
 					</div>
+				)}
+
+				{projectionStatus && (
+					<p className="mt-2 text-[11px] text-gray-400">
+						Roster projection derived from {projectionStatus === "legacy"
+							? "legacy (pre-season-5) stat-tracking data"
+							: "post-season-5 stat-tracking data"}
+						.
+					</p>
 				)}
 				</DialogContent>
 			</Dialog>

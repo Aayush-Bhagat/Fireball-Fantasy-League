@@ -11,6 +11,9 @@ import {
 	TeamRunAverages,
 } from "@/repositories/oddsRepository";
 import { findAllTeams } from "@/repositories/teamRepository";
+import {
+	projectMultipleTeamRosters,
+} from "@/services/rosterProjectionService";
 
 /**
  * Odds service.
@@ -61,6 +64,15 @@ export async function computeSeasonOdds(
 ): Promise<Map<string, MatchOddsResult>> {
 	const result = new Map<string, MatchOddsResult>();
 	if (games.length === 0) return result;
+
+	// Fetch projections for every team that appears in the schedule once,
+	// up-front. The projection doesn't change week-to-week within a
+	// single schedule render, so a single batch is sufficient. Failures
+	// are swallowed by the service and the map simply omits those teams.
+	const teamIds = [
+		...new Set(games.flatMap((g) => [g.teamId, g.opponentId])),
+	];
+	const projections = await projectMultipleTeamRosters(teamIds);
 
 	// Group games by week (stable within a week by insertion order).
 	const byWeek = new Map<number, GameData[]>();
@@ -133,6 +145,8 @@ export async function computeSeasonOdds(
 			const team = getTeam(g.teamId);
 			const opp = getTeam(g.opponentId);
 			const h2h = h2hAgg.get(h2hKey(g.teamId, g.opponentId));
+			const teamProj = projections.get(g.teamId);
+			const oppProj = projections.get(g.opponentId);
 
 			result.set(
 				g.gameId,
@@ -158,6 +172,10 @@ export async function computeSeasonOdds(
 					h2hGamesPlayed: h2h?.gamesPlayed ?? 0,
 					h2hTeamWins: h2h?.wins.get(g.teamId) ?? 0,
 					leagueRpg: leagueRpg(),
+					teamProjectedRS: teamProj?.projectedRS ?? null,
+					teamProjectedRA: teamProj?.projectedRA ?? null,
+					opponentProjectedRS: oppProj?.projectedRS ?? null,
+					opponentProjectedRA: oppProj?.projectedRA ?? null,
 				}),
 			);
 		}
@@ -211,12 +229,14 @@ export async function computePairOdds(
 		throw new Error("Cannot compute odds between a team and itself.");
 	}
 
-	const [env, teamAverages, h2hRecords, allTeams] = await Promise.all([
-		findLeagueRunEnvironment(seasonId),
-		findTeamRunAverages(seasonId),
-		findHeadToHeadRecords(seasonId),
-		findAllTeams(),
-	]);
+	const [env, teamAverages, h2hRecords, allTeams, projections] =
+		await Promise.all([
+			findLeagueRunEnvironment(seasonId),
+			findTeamRunAverages(seasonId),
+			findHeadToHeadRecords(seasonId),
+			findAllTeams(),
+			projectMultipleTeamRosters([teamAId, teamBId]),
+		]);
 
 	const averagesByTeam = new Map<string, TeamRunAverages>();
 	for (const t of teamAverages) averagesByTeam.set(t.teamId, t);
@@ -225,6 +245,8 @@ export async function computePairOdds(
 
 	const teamA = averagesByTeam.get(teamAId);
 	const teamB = averagesByTeam.get(teamBId);
+	const teamAProj = projections.get(teamAId);
+	const teamBProj = projections.get(teamBId);
 
 	const odds = computeMatchOdds({
 		teamRunsScored: teamA?.runsScored ?? 0,
@@ -236,6 +258,10 @@ export async function computePairOdds(
 		h2hGamesPlayed: h2h?.gamesPlayed ?? 0,
 		h2hTeamWins: h2h?.wins.get(teamAId) ?? 0,
 		leagueRpg: env.leagueRpg,
+		teamProjectedRS: teamAProj?.projectedRS ?? null,
+		teamProjectedRA: teamAProj?.projectedRA ?? null,
+		opponentProjectedRS: teamBProj?.projectedRS ?? null,
+		opponentProjectedRA: teamBProj?.projectedRA ?? null,
 	});
 
 	// Look up team display info for the response.
