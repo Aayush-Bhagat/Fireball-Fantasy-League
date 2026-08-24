@@ -334,7 +334,7 @@ export default function DraftBoard({
 
 			{/* RIGHT PANEL */}
 			{(draft.status === "in_progress" || preview) && (
-				<div className="relative z-30 w-full lg:w-[clamp(320px,25vw,480px)] border-t lg:border-l bg-white shadow-xl lg:h-full lg:sticky lg:top-0 flex flex-col min-h-0 overflow-hidden">
+				<div className=" z-50 w-full lg:w-[clamp(320px,25vw,480px)] border-t lg:border-l bg-white shadow-xl lg:h-full lg:sticky lg:top-0 flex flex-col min-h-0 overflow-hidden">
 					<div className="p-4 border-b bg-white/80 backdrop-blur flex-shrink-0">
 						<h2 className="text-lg font-bold">Player Board</h2>
 						<p className="text-xs text-gray-500">
