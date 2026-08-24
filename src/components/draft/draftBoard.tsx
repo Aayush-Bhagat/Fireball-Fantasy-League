@@ -218,7 +218,7 @@ export default function DraftBoard({
 				<div className="overflow-auto max-h-[65vh] lg:max-h-[80vh] rounded-2xl border bg-white shadow-lg">
 					<div className="min-w-[950px] p-4">
 						{/* HEADER */}
-						<div className="grid grid-cols-8 gap-3 top-0 sticky z-20 bg-white/80 backdrop-blur border-b pb-3">
+						<div className="grid grid-cols-8 gap-3 top-0 sticky z-5 bg-white/80 backdrop-blur border-b pb-3">
 							{draftOrder.map((t) => {
 								const isOnTheClock =
 									currentPick?.teamId === t.teamId &&
@@ -334,7 +334,7 @@ export default function DraftBoard({
 
 			{/* RIGHT PANEL */}
 			{(draft.status === "in_progress" || preview) && (
-				<div className="w-full lg:w-[clamp(320px,25vw,480px)] border-t lg:border-l bg-white shadow-xl lg:h-full lg:sticky lg:top-0 flex flex-col min-h-0 overflow-hidden">
+				<div className="relative z-30 w-full lg:w-[clamp(320px,25vw,480px)] border-t lg:border-l bg-white shadow-xl lg:h-full lg:sticky lg:top-0 flex flex-col min-h-0 overflow-hidden">
 					<div className="p-4 border-b bg-white/80 backdrop-blur flex-shrink-0">
 						<h2 className="text-lg font-bold">Player Board</h2>
 						<p className="text-xs text-gray-500">
