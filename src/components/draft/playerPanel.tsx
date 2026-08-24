@@ -143,7 +143,7 @@ export default function PlayerPanel({
 		<div className="w-full h-full bg-gradient-to-b from-white to-gray-50 flex flex-col min-h-0">
 			{/* MODAL */}
 			{showCard && selectedPlayer && (
-				<div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm">
+				<div className="fixed inset-0 z-[9999] flex items-center justify-center bg-black/60 backdrop-blur-sm">
 					<div className="relative animate-in fade-in zoom-in-95">
 						<PlayerCard player={selectedPlayer} />
 						<button
