@@ -19,6 +19,7 @@ type Props = {
 		round: number;
 		picks: FullDraftPicks[];
 	}[];
+	draftStatus: "not_started" | "in_progress" | "completed";
 };
 
 type SortKey = "batting" | "pitching" | "fielding" | "running";
@@ -28,6 +29,7 @@ export default function PlayerPanel({
 	currentDraftPick,
 	teamId,
 	draftPicks,
+	draftStatus,
 }: Props) {
 	const [selectedPlayer, setSelectedPlayer] =
 		useState<PlayerWithStatsDto | null>(null);
@@ -47,7 +49,10 @@ export default function PlayerPanel({
 	const players = allPlayers.filter((p) => !p.teamId);
 	const roster = allPlayers.filter((p) => p.teamId === teamId);
 	const numCaptainsAvailable = players.filter((p) => p.isCaptain).length;
-	const canDraft = currentDraftPick && currentDraftPick.teamId === teamId;
+	const canDraft =
+		currentDraftPick &&
+		currentDraftPick.teamId === teamId &&
+		draftStatus === "in_progress";
 
 	const supabase = createClient();
 
@@ -152,7 +157,7 @@ export default function PlayerPanel({
 			)}
 
 			{/* HEADER */}
-			<div className="sticky top-0 z-20 backdrop-blur-md rounded-xl bg-white/80 shadow-sm border border-gray-100 p-4 space-y-3">
+			<div className="flex-shrink-0 backdrop-blur-md rounded-xl bg-white/80 shadow-sm border border-gray-100 p-4 space-y-3">
 				{/* TOP ROW — Live label + Timer ring */}
 				<div className="flex items-center justify-between">
 					<div className="flex items-center gap-1.5 text-red-500 text-[11px] font-medium uppercase tracking-widest">
@@ -270,7 +275,7 @@ export default function PlayerPanel({
 					defaultValue="draft"
 					className="flex flex-col flex-1 gap-y-2 min-h-0"
 				>
-					<TabsList className="w-full">
+					<TabsList className="w-full flex-shrink-0">
 						<TabsTrigger className="rounded-xl" value="draft">
 							Draft Board
 						</TabsTrigger>
@@ -279,8 +284,11 @@ export default function PlayerPanel({
 						</TabsTrigger>
 					</TabsList>
 
-					<TabsContent value="draft">
-						<div className="px-4 mt-4 pb-3 space-y-3">
+					<TabsContent
+						value="draft"
+						className="flex flex-col flex-1 min-h-0"
+					>
+						<div className="px-4 pb-3 space-y-3 flex-shrink-0">
 							{/* SORT */}
 							<div className="sticky flex gap-2 overflow-x-auto no-scrollbar">
 								{(
@@ -325,7 +333,7 @@ export default function PlayerPanel({
 						</div>
 
 						{/* LIST */}
-						<div className="flex-1 overflow-y-auto p-3 space-y-3">
+						<div className="flex-1 overflow-y-auto min-h-0 p-3 space-y-3">
 							{filteredAndSortedPlayers.map((player) => (
 								<div
 									key={player.id}
@@ -439,7 +447,10 @@ export default function PlayerPanel({
 						</div>
 					</TabsContent>
 
-					<TabsContent value="roster">
+					<TabsContent
+						value="roster"
+						className="flex flex-col flex-1 min-h-0"
+					>
 						<PlayerCards players={roster} />
 					</TabsContent>
 				</Tabs>
@@ -459,7 +470,7 @@ function PlayerCards({ players }: { players: PlayerWithStatsDto[] }) {
 	};
 
 	return (
-		<div className="flex-1 overflow-y-auto h-2/3 p-3 space-y-3">
+		<div className="flex-1 overflow-y-auto min-h-0 p-3 space-y-3">
 			{showCard && selectedPlayer && (
 				<div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm">
 					<div className="relative animate-in fade-in zoom-in-95">
