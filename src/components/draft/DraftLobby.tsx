@@ -15,9 +15,15 @@ type Props = {
 	userId: string;
 	teamId: string;
 	draft: DraftDto;
+	setPreview: (preview: boolean) => void;
 };
 
-export default function DraftLobby({ userId, teamId, draft }: Props) {
+export default function DraftLobby({
+	userId,
+	teamId,
+	draft,
+	setPreview,
+}: Props) {
 	const channelRef = useRef<RealtimeChannel | null>(null);
 	const [teams, setTeams] = useState<string[]>([]);
 	const [joined, setJoined] = useState(false);
@@ -210,22 +216,30 @@ export default function DraftLobby({ userId, teamId, draft }: Props) {
 							</span>{" "}
 							/ {draft.draftOrder.length} teams joined
 						</p>
-						{draft.commissionerId === userId && (
+						<div className="flex items-center gap-2">
+							{draft.commissionerId === userId && (
+								<button
+									disabled={
+										handleStartDraft.isPending
+										// teamsInLobby.length <
+										// 	draft.draftOrder.length
+									}
+									onClick={() => handleStartDraft.mutate()}
+									className="text-sm px-4 py-1.5 rounded-lg bg-gray-900 text-white font-medium disabled:opacity-40 disabled:cursor-not-allowed cursor-pointer flex items-center gap-2"
+								>
+									{handleStartDraft.isPending && (
+										<Loader2 className="w-3 h-3 animate-spin" />
+									)}
+									Start draft
+								</button>
+							)}
 							<button
-								disabled={
-									handleStartDraft.isPending
-									// teamsInLobby.length <
-									// 	draft.draftOrder.length
-								}
-								onClick={() => handleStartDraft.mutate()}
-								className="text-sm px-4 py-1.5 rounded-lg bg-gray-900 text-white font-medium disabled:opacity-40 disabled:cursor-not-allowed flex items-center gap-2"
+								onClick={() => setPreview(true)}
+								className="text-sm px-4 py-1.5 rounded-lg bg-gray-200 text-black font-medium cursor-pointer flex items-center gap-2"
 							>
-								{handleStartDraft.isPending && (
-									<Loader2 className="w-3 h-3 animate-spin" />
-								)}
-								Start draft
+								Preview Draft
 							</button>
-						)}
+						</div>
 					</div>
 				</div>
 			</div>

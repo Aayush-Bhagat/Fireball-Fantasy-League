@@ -8,7 +8,7 @@ import DraftLobby from "./DraftLobby";
 import { Button } from "../ui/button";
 import { useMutation } from "@tanstack/react-query";
 import { completeDraftRequest } from "@/requests/draft";
-import { Loader2 } from "lucide-react";
+import { Loader2, MoveLeft } from "lucide-react";
 import PickToast, { ToastPick } from "@/components/draft/PickToast";
 import { TeamColumn } from "./TeamPickColumn";
 
@@ -27,6 +27,7 @@ export default function DraftBoard({
 	userId,
 }: Props) {
 	const [draft, setDraft] = useState(draftData);
+	const [preview, setPreview] = useState(false);
 	const [draftPicks, setDraftPicks] = useState(draftData.draftPicks);
 	const draftOrder = draftData.draftOrder;
 	const [allPlayers, setAllPlayers] = useState(players);
@@ -168,15 +169,33 @@ export default function DraftBoard({
 		};
 	}, [draft.id, supabase, players, draftOrder]);
 
-	if (draft.status === "not_started") {
-		return <DraftLobby userId={userId} teamId={teamId} draft={draftData} />;
+	if (draft.status === "not_started" && !preview) {
+		return (
+			<DraftLobby
+				userId={userId}
+				teamId={teamId}
+				draft={draftData}
+				setPreview={setPreview}
+			/>
+		);
 	}
 
 	return (
-		<div className="min-h-screen bg-gradient-to-br from-slate-50 via-gray-100 to-slate-200 flex flex-col lg:flex-row">
+		<div className="lg:h-[calc(100vh-68px)] lg:overflow-hidden bg-gradient-to-br from-slate-50 via-gray-100 to-slate-200 flex flex-col lg:flex-row">
 			{/* LEFT */}
 			<div className="flex-1 p-4 lg:p-8">
-				<div className="mb-6 text-center">
+				<div className="mb-6">
+					{preview && (
+						<div>
+							<Button
+								className="bg-gray-200 hover:bg-gray-300 cursor-pointer text-gray-800"
+								onClick={() => setPreview(false)}
+							>
+								<MoveLeft className="h-4 w-4" />
+								Back
+							</Button>
+						</div>
+					)}
 					<div className="flex justify-center items-center">
 						{draft.status === "completed" &&
 							draft.commissionerId === userId && (
@@ -314,21 +333,22 @@ export default function DraftBoard({
 			</div>
 
 			{/* RIGHT PANEL */}
-			{draft.status === "in_progress" && (
-				<div className="w-full lg:w-[clamp(320px,25vw,480px)] border-t lg:border-l bg-white shadow-xl">
-					<div className="sticky top-0 p-4 border-b bg-white/80 backdrop-blur">
+			{(draft.status === "in_progress" || preview) && (
+				<div className="w-full lg:w-[clamp(320px,25vw,480px)] border-t lg:border-l bg-white shadow-xl lg:h-full lg:sticky lg:top-0 flex flex-col min-h-0 overflow-hidden">
+					<div className="p-4 border-b bg-white/80 backdrop-blur flex-shrink-0">
 						<h2 className="text-lg font-bold">Player Board</h2>
 						<p className="text-xs text-gray-500">
 							Free agents & available players
 						</p>
 					</div>
 
-					<div className="p-3">
+					<div className="p-3 flex-1 min-h-0">
 						<PlayerPanel
 							allPlayers={allPlayers}
 							currentDraftPick={currentPick}
 							teamId={teamId}
 							draftPicks={draftPicks}
+							draftStatus={draft.status}
 						/>
 					</div>
 				</div>
