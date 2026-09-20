@@ -203,6 +203,7 @@ export async function findPlayerGames(playerId: string, season?: string) {
 			playerTeamConferenceId: playerTeamConference.id,
 			playerTeamConferenceName: playerTeamConference.name,
 			playerTeamUserId: playerTeam.userId,
+
 			// Opponent team
 			opponentTeamId: opponentTeam.id,
 			opponentTeamName: opponentTeam.name,
@@ -213,7 +214,8 @@ export async function findPlayerGames(playerId: string, season?: string) {
 			opponentTeamConferenceId: opponentTeamConference.id,
 			opponentTeamConferenceName: opponentTeamConference.name,
 			opponentTeamUserId: opponentTeam.userId,
-			// Player stats
+
+			// Player stats - batting
 			atBats: playerGamesStats.atBats,
 			hits: playerGamesStats.hits,
 			runs: playerGamesStats.runs,
@@ -221,9 +223,56 @@ export async function findPlayerGames(playerId: string, season?: string) {
 			walks: playerGamesStats.walks,
 			strikeouts: playerGamesStats.strikeouts,
 			homeRuns: playerGamesStats.homeRuns,
+			walksTaken: playerGamesStats.walksTaken,
+			plateAppearances: playerGamesStats.plateAppearances,
+			strikeoutsBatted: playerGamesStats.strikeoutsBatted,
+			hitByPitch: playerGamesStats.hitByPitch,
+			singles: playerGamesStats.singles,
+			doubles: playerGamesStats.doubles,
+			triples: playerGamesStats.triples,
+			oneHr: playerGamesStats.oneHr,
+			twoHr: playerGamesStats.twoHr,
+			threeHr: playerGamesStats.threeHr,
+			grandSlams: playerGamesStats.grandSlams,
+			totalBases: playerGamesStats.totalBases,
+			sacFlies: playerGamesStats.sacFlies,
+			startHits: playerGamesStats.startHits,
+			starsUsedBatting: playerGamesStats.starsUsedBatting,
+
+			// Player stats - baserunning
+			stolenBases: playerGamesStats.stolenBases,
+			caughtStealing: playerGamesStats.caughtStealing,
+			stealAttempts: playerGamesStats.stealAttempts,
+
+			// Player stats - fielding
+			putout: playerGamesStats.putout,
+			assist: playerGamesStats.assist,
+			fieldingErrors: playerGamesStats.fieldingErrors,
+			buddyJumpPutouts: playerGamesStats.buddyJumpPutouts,
+			buddyJumpAttempts: playerGamesStats.buddyJumpAttempts,
+			doublePlays: playerGamesStats.doublePlays,
+			triplePlays: playerGamesStats.triplePlays,
+			bobbles: playerGamesStats.bobbles,
+
+			// Player stats - pitching
 			outsPitched: playerGamesStats.outsPitched,
 			runsAllowed: playerGamesStats.runsAllowed,
 			outs: playerGamesStats.outs,
+			battersFaced: playerGamesStats.battersFaced,
+			pitches: playerGamesStats.pitches,
+			strikes: playerGamesStats.strikes,
+			balls: playerGamesStats.balls,
+			beanBalls: playerGamesStats.beanBalls,
+			hitsAllowed: playerGamesStats.hitsAllowed,
+			singlesAllowed: playerGamesStats.singlesAllowed,
+			doublesAllowed: playerGamesStats.doublesAllowed,
+			triplesAllowed: playerGamesStats.triplesAllowed,
+			homeRunsAllowed: playerGamesStats.homeRunsAllowed,
+			inheritedRuns: playerGamesStats.inheritedRuns,
+			starPitches: playerGamesStats.starPitches,
+			starsUsedPitching: playerGamesStats.starsUsedPitching,
+			pickoffs: playerGamesStats.pickoffs,
+			pickoffAttempts: playerGamesStats.pickoffAttempts,
 		})
 		.from(playerGamesStats)
 		.innerJoin(games, eq(playerGamesStats.gameId, games.id))

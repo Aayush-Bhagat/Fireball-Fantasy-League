@@ -156,6 +156,85 @@ export async function findRosterStatsByTeam(teamId: string) {
 			gamesPlayed: countDistinct(playerGamesStats.gameId).as(
 				"gamesPlayed",
 			),
+
+			// Batting
+			plateAppearances: sum(playerGamesStats.plateAppearances).as(
+				"plateAppearances",
+			),
+			strikeoutsBatted: sum(playerGamesStats.strikeoutsBatted).as(
+				"strikeoutsBatted",
+			),
+			walksTaken: sum(playerGamesStats.walks).as("walksTaken"),
+			hitByPitch: sum(playerGamesStats.hitByPitch).as("hitByPitch"),
+			singles: sum(playerGamesStats.singles).as("singles"),
+			doubles: sum(playerGamesStats.doubles).as("doubles"),
+			triples: sum(playerGamesStats.triples).as("triples"),
+			oneHr: sum(playerGamesStats.oneHr).as("oneHr"),
+			twoHr: sum(playerGamesStats.twoHr).as("twoHr"),
+			threeHr: sum(playerGamesStats.threeHr).as("threeHr"),
+			grandSlams: sum(playerGamesStats.grandSlams).as("grandSlams"),
+			totalBases: sum(playerGamesStats.totalBases).as("totalBases"),
+			sacFlies: sum(playerGamesStats.sacFlies).as("sacFlies"),
+			startHits: sum(playerGamesStats.startHits).as("startHits"),
+			starsUsedBatting: sum(playerGamesStats.starsUsedBatting).as(
+				"starsUsedBatting",
+			),
+
+			// Baserunning
+			stolenBases: sum(playerGamesStats.stolenBases).as("stolenBases"),
+			caughtStealing: sum(playerGamesStats.caughtStealing).as(
+				"caughtStealing",
+			),
+			stealAttempts: sum(playerGamesStats.stealAttempts).as(
+				"stealAttempts",
+			),
+
+			// Fielding
+			putout: sum(playerGamesStats.putout).as("putout"),
+			assist: sum(playerGamesStats.assist).as("assist"),
+			fieldingErrors: sum(playerGamesStats.fieldingErrors).as(
+				"fieldingErrors",
+			),
+			buddyJumpPutouts: sum(playerGamesStats.buddyJumpPutouts).as(
+				"buddyJumpPutouts",
+			),
+			buddyJumpAttempts: sum(playerGamesStats.buddyJumpAttempts).as(
+				"buddyJumpAttempts",
+			),
+			doublePlays: sum(playerGamesStats.doublePlays).as("doublePlays"),
+			triplePlays: sum(playerGamesStats.triplePlays).as("triplePlays"),
+			bobbles: sum(playerGamesStats.bobbles).as("bobbles"),
+
+			// Pitching
+			battersFaced: sum(playerGamesStats.battersFaced).as("battersFaced"),
+			pitches: sum(playerGamesStats.pitches).as("pitches"),
+			strikes: sum(playerGamesStats.strikes).as("strikes"),
+			balls: sum(playerGamesStats.balls).as("balls"),
+			beanBalls: sum(playerGamesStats.beanBalls).as("beanBalls"),
+			hitsAllowed: sum(playerGamesStats.hitsAllowed).as("hitsAllowed"),
+			singlesAllowed: sum(playerGamesStats.singlesAllowed).as(
+				"singlesAllowed",
+			),
+			doublesAllowed: sum(playerGamesStats.doublesAllowed).as(
+				"doublesAllowed",
+			),
+			triplesAllowed: sum(playerGamesStats.triplesAllowed).as(
+				"triplesAllowed",
+			),
+			homeRunsAllowed: sum(playerGamesStats.homeRunsAllowed).as(
+				"homeRunsAllowed",
+			),
+			inheritedRuns: sum(playerGamesStats.inheritedRuns).as(
+				"inheritedRuns",
+			),
+			starPitches: sum(playerGamesStats.starPitches).as("starPitches"),
+			starsUsedPitching: sum(playerGamesStats.starsUsedPitching).as(
+				"starsUsedPitching",
+			),
+			pickoffs: sum(playerGamesStats.pickoffs).as("pickoffs"),
+			pickoffAttempts: sum(playerGamesStats.pickoffAttempts).as(
+				"pickoffAttempts",
+			),
 		})
 		.from(players)
 		.leftJoin(playerGamesStats, eq(players.id, playerGamesStats.playerId))

@@ -28,6 +28,7 @@ export type PlayerStatsResponseDto = {
 };
 
 export type PlayerStatsDto = {
+	// Batting
 	atBats: number;
 	hits: number;
 	runs: number;
@@ -35,11 +36,68 @@ export type PlayerStatsDto = {
 	walks: number;
 	strikeouts: number;
 	homeRuns: number;
+	plateAppearances: number | null;
+	strikeoutsBatted: number | null;
+	hitByPitch: number | null;
+	singles: number | null;
+	doubles: number | null;
+	triples: number | null;
+	oneHr: number | null;
+	twoHr: number | null;
+	threeHr: number | null;
+	grandSlams: number | null;
+	totalBases: number | null;
+	sacFlies: number | null;
+	startHits: number | null;
+	starsUsedBatting: number | null;
+
+	// Baserunning
+	stolenBases: number | null;
+	caughtStealing: number | null;
+	stealAttempts: number | null;
+
+	// Fielding
+	putout: number | null;
+	assist: number | null;
+	fieldingErrors: number | null;
+	buddyJumpPutouts: number | null;
+	buddyJumpAttempts: number | null;
+	doublePlays: number | null;
+	triplePlays: number | null;
+	bobbles: number | null;
+
+	// Pitching
 	inningsPitched: number;
+	outsPitched: number;
 	runsAllowed: number;
 	outs: number;
+	battersFaced: number | null;
+	pitches: number | null;
+	strikes: number | null;
+	balls: number | null;
+	beanBalls: number | null;
+	hitsAllowed: number | null;
+	singlesAllowed: number | null;
+	doublesAllowed: number | null;
+	triplesAllowed: number | null;
+	homeRunsAllowed: number | null;
+	inheritedRuns: number | null;
+	starPitches: number | null;
+	starsUsedPitching: number | null;
+	pickoffs: number | null;
+	pickoffAttempts: number | null;
+
+	// Derived stats
 	battingAverage: number;
 	era: number;
+	obp: number | null;
+	slg: number | null;
+	ops: number | null;
+	whip: number | null;
+	baa: number | null;
+	obpAgainst: number | null;
+	slgAgainst: number | null;
+	opsAgainst: number | null;
 	gamesPlayed: number;
 };
 
@@ -118,18 +176,79 @@ export type CareerStatsDto = {
 	seasonId: number;
 	playerId: string;
 	playerName: string;
-	homeRuns: number;
+
+	// Batting
 	atBats: number;
 	hits: number;
 	runs: number;
 	rbis: number;
 	walks: number;
 	strikeouts: number;
+	homeRuns: number;
+	plateAppearances: number | null;
+	strikeoutsBatted: number | null;
+	hitByPitch: number | null;
+	singles: number | null;
+	doubles: number | null;
+	triples: number | null;
+	oneHr: number | null;
+	twoHr: number | null;
+	threeHr: number | null;
+	grandSlams: number | null;
+	totalBases: number | null;
+	sacFlies: number | null;
+	startHits: number | null;
+	starsUsedBatting: number | null;
+
+	// Baserunning
+	stolenBases: number | null;
+	caughtStealing: number | null;
+	stealAttempts: number | null;
+
+	// Fielding
+	putout: number | null;
+	assist: number | null;
+	fieldingErrors: number | null;
+	buddyJumpPutouts: number | null;
+	buddyJumpAttempts: number | null;
+	doublePlays: number | null;
+	triplePlays: number | null;
+	bobbles: number | null;
+
+	// Pitching
 	inningsPitched: number;
+	outsPitched: number;
 	runsAllowed: number;
 	outs: number;
+	battersFaced: number | null;
+	pitches: number | null;
+	strikes: number | null;
+	balls: number | null;
+	beanBalls: number | null;
+	hitsAllowed: number | null;
+	singlesAllowed: number | null;
+	doublesAllowed: number | null;
+	triplesAllowed: number | null;
+	homeRunsAllowed: number | null;
+	inheritedRuns: number | null;
+	starPitches: number | null;
+	starsUsedPitching: number | null;
+	pickoffs: number | null;
+	pickoffAttempts: number | null;
+
+	// Derived career stats
 	battingAverage: number;
 	era: number;
+	obp: number | null;
+	slg: number | null;
+	ops: number | null;
+	whip: number | null;
+	baa: number | null;
+	obpAgainst: number | null;
+	slgAgainst: number | null;
+	opsAgainst: number | null;
+
+	// Teams
 	teamsPlayedFor: string[] | null;
 };
 

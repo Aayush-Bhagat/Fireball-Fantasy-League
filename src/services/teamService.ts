@@ -1,4 +1,16 @@
-import { calculateEra, calculateInningsPitched } from "@/lib/statUtils";
+import {
+	calculateBAA,
+	calculateEra,
+	calculateInningsPitched,
+	calculateOBP,
+	calculateOBPAgainst,
+	calculateOPS,
+	calculateOPSAgainst,
+	calculateSLG,
+	calculateSLGAgainst,
+	calculateWHIP,
+	convertStringToNumber,
+} from "@/lib/statUtils";
 import {
 	editBattingOrder,
 	findAllTeamRecordsBySeason,
@@ -178,6 +190,128 @@ export async function getTeamRoster(teamId: string) {
 					Number(stat?.outsPitched) || 0,
 				),
 				gamesPlayed: stat?.gamesPlayed || 0,
+				outsPitched: Number(stat?.outsPitched) || 0,
+
+				// Batting
+				plateAppearances: convertStringToNumber(stat?.plateAppearances),
+				strikeoutsBatted: convertStringToNumber(stat?.strikeoutsBatted),
+				hitByPitch: convertStringToNumber(stat?.hitByPitch),
+				singles: convertStringToNumber(stat?.singles),
+				doubles: convertStringToNumber(stat?.doubles),
+				triples: convertStringToNumber(stat?.triples),
+				oneHr: convertStringToNumber(stat?.oneHr),
+				twoHr: convertStringToNumber(stat?.twoHr),
+				threeHr: convertStringToNumber(stat?.threeHr),
+				grandSlams: convertStringToNumber(stat?.grandSlams),
+				totalBases: convertStringToNumber(stat?.totalBases),
+				sacFlies: convertStringToNumber(stat?.sacFlies),
+				startHits: convertStringToNumber(stat?.startHits),
+				starsUsedBatting: convertStringToNumber(stat?.starsUsedBatting),
+
+				// Baserunning
+				stolenBases: convertStringToNumber(stat?.stolenBases),
+				caughtStealing: convertStringToNumber(stat?.caughtStealing),
+				stealAttempts: convertStringToNumber(stat?.stealAttempts),
+
+				// Fielding
+				putout: convertStringToNumber(stat?.putout),
+				assist: convertStringToNumber(stat?.assist),
+				fieldingErrors: convertStringToNumber(stat?.fieldingErrors),
+				buddyJumpPutouts: convertStringToNumber(stat?.buddyJumpPutouts),
+				buddyJumpAttempts: convertStringToNumber(
+					stat?.buddyJumpAttempts,
+				),
+				doublePlays: convertStringToNumber(stat?.doublePlays),
+				triplePlays: convertStringToNumber(stat?.triplePlays),
+				bobbles: convertStringToNumber(stat?.bobbles),
+
+				// Pitching
+				battersFaced: convertStringToNumber(stat?.battersFaced),
+				pitches: convertStringToNumber(stat?.pitches),
+				strikes: convertStringToNumber(stat?.strikes),
+				balls: convertStringToNumber(stat?.balls),
+				beanBalls: convertStringToNumber(stat?.beanBalls),
+				hitsAllowed: convertStringToNumber(stat?.hitsAllowed),
+				singlesAllowed: convertStringToNumber(stat?.singlesAllowed),
+				doublesAllowed: convertStringToNumber(stat?.doublesAllowed),
+				triplesAllowed: convertStringToNumber(stat?.triplesAllowed),
+				homeRunsAllowed: convertStringToNumber(stat?.homeRunsAllowed),
+				inheritedRuns: convertStringToNumber(stat?.inheritedRuns),
+				starPitches: convertStringToNumber(stat?.starPitches),
+				starsUsedPitching: convertStringToNumber(
+					stat?.starsUsedPitching,
+				),
+				pickoffs: convertStringToNumber(stat?.pickoffs),
+				pickoffAttempts: convertStringToNumber(stat?.pickoffAttempts),
+				obp: calculateOBP(
+					convertStringToNumber(stat?.hits),
+					convertStringToNumber(stat?.walksTaken),
+					convertStringToNumber(stat?.hitByPitch),
+					convertStringToNumber(stat?.atBats),
+					convertStringToNumber(stat?.sacFlies),
+				),
+				slg: calculateSLG(
+					convertStringToNumber(stat?.hits),
+					convertStringToNumber(stat?.singles),
+					convertStringToNumber(stat?.doubles),
+					convertStringToNumber(stat?.triples),
+					convertStringToNumber(stat?.homeRuns),
+					convertStringToNumber(stat?.atBats),
+				),
+				ops: calculateOPS(
+					calculateOBP(
+						convertStringToNumber(stat?.hits),
+						convertStringToNumber(stat?.walksTaken),
+						convertStringToNumber(stat?.hitByPitch),
+						convertStringToNumber(stat?.atBats),
+						convertStringToNumber(stat?.sacFlies),
+					),
+					calculateSLG(
+						convertStringToNumber(stat?.hits),
+						convertStringToNumber(stat?.singles),
+						convertStringToNumber(stat?.doubles),
+						convertStringToNumber(stat?.triples),
+						convertStringToNumber(stat?.homeRuns),
+						convertStringToNumber(stat?.atBats),
+					),
+				),
+				whip: calculateWHIP(
+					convertStringToNumber(stat?.walks),
+					convertStringToNumber(stat?.hitsAllowed),
+					convertStringToNumber(stat?.outsPitched),
+				),
+				baa: calculateBAA(
+					convertStringToNumber(stat?.hitsAllowed),
+					convertStringToNumber(stat?.battersFaced),
+				),
+				obpAgainst: calculateOBPAgainst(
+					convertStringToNumber(stat?.hitsAllowed),
+					convertStringToNumber(stat?.walks),
+					convertStringToNumber(stat?.battersFaced),
+				),
+				slgAgainst: calculateSLGAgainst(
+					convertStringToNumber(stat?.hitsAllowed),
+					convertStringToNumber(stat?.singlesAllowed),
+					convertStringToNumber(stat?.doublesAllowed),
+					convertStringToNumber(stat?.triplesAllowed),
+					convertStringToNumber(stat?.homeRunsAllowed),
+					convertStringToNumber(stat?.battersFaced),
+				),
+				opsAgainst: calculateOPSAgainst(
+					calculateOBPAgainst(
+						convertStringToNumber(stat?.hitsAllowed),
+						convertStringToNumber(stat?.walks),
+						convertStringToNumber(stat?.battersFaced),
+					),
+					calculateSLGAgainst(
+						convertStringToNumber(stat?.hitsAllowed),
+						convertStringToNumber(stat?.singlesAllowed),
+						convertStringToNumber(stat?.doublesAllowed),
+						convertStringToNumber(stat?.triplesAllowed),
+						convertStringToNumber(stat?.homeRunsAllowed),
+						convertStringToNumber(stat?.battersFaced),
+					),
+				),
 			},
 		};
 	});
