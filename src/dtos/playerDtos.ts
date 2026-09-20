@@ -119,6 +119,12 @@ export type BasicPlayerStatsDto = {
 	era: number;
 };
 
+export type PlayerStatsWithIdDto = PlayerStatsDto & {
+	playerId: string;
+	playerName: string;
+	playerImage: string | null;
+};
+
 export type PlayerWithStatsDto = {
 	id: string;
 	name: string;
@@ -148,7 +154,7 @@ export type PlayerGameStatsDto = {
 	opponentScore: number | null;
 	teamOutcome: string | null;
 	opponentOutcome: string | null;
-	stats: PlayerStatsDto;
+	stats: PlayerStatsWithIdDto;
 };
 
 export type PlayerGameResponseDto = {

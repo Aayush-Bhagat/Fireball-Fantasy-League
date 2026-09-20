@@ -1,9 +1,5 @@
 import { TeamDto, TeamGameDto } from "./teamDtos";
-import {
-	BasicPlayerDto,
-	BasicPlayerStatsDto,
-	PlayerStatsDto,
-} from "./playerDtos";
+import { BasicPlayerDto, PlayerStatsWithIdDto } from "./playerDtos";
 import { z } from "zod";
 
 export type GameResponseDto = {
@@ -144,6 +140,6 @@ export type GameStatsDto = {
 	opponentScore: number | null;
 	teamOutcome: string | null;
 	opponentOutcome: string | null;
-	teamPlayers: PlayerStatsDto[];
-	opponentPlayers: PlayerStatsDto[];
+	teamPlayers: PlayerStatsWithIdDto[];
+	opponentPlayers: PlayerStatsWithIdDto[];
 };

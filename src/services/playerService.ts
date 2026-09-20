@@ -58,6 +58,9 @@ export async function getPlayerGames(playerId: string, season?: string) {
 			teamOutcome: game.playerTeamOutcome,
 			opponentOutcome: game.opponentTeamOutcome,
 			stats: {
+				playerId: game.playerId,
+				playerName: game.playerName,
+				playerImage: game.playerImage,
 				atBats: game.atBats,
 				hits: game.hits,
 				runs: game.runs,

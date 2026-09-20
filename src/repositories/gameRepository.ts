@@ -192,6 +192,9 @@ export async function findPlayerGames(playerId: string, season?: string) {
 			gameId: games.id,
 			week: games.week,
 			playedAt: games.playedAt,
+			playerId: players.id,
+			playerName: players.name,
+			playerImage: players.image,
 
 			// Player's team
 			playerTeamId: playerTeam.id,
