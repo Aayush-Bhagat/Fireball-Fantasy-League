@@ -211,7 +211,7 @@ export const DEFAULT_HAND_TUNED_CONFIG: HandTunedConfig = {
 	seasonWeights: [0.5, 0.75, 1.0, 1.5],
 	kAB: 100,
 	kIP: 30,
-	slgPerHRBonus: 2.0,
+	slgPerHRBonus: 1.5, // flat modifier to HRs in slugging% calculations
 	priorWeight: 40,
 	lowSampleThreshold: 100,
 	highSampleThreshold: 400,
@@ -224,11 +224,11 @@ export const DEFAULT_HAND_TUNED_CONFIG: HandTunedConfig = {
  * hand-editing `DEFAULT_LEGACY_CALIBRATION` / `DEFAULT_NEW_CALIBRATION`.
  */
 export const DEFAULT_LEGACY_CALIBRATION: CalibrationConfig = {
-	wAVG: 1.0,
-	wSLG: 1.5,
-	runRateConstant: -0.3,
-	kCoefficient: 0.15,
-	eraConstant: 0,
+	wAVG: 0.28, // how much batting avg. contributes to estimated runs scored, on average
+	wSLG: 0.320, // same but with "slugging" (only counts hits+HRs in legacy)
+	runRateConstant: -0.18, // pulls every team's projection up or down by a fixed amount
+	kCoefficient: -2.0, // how much strikeouts affect estimated runs allowed ()
+	eraConstant: 8.6860,
 };
 
 /** v2 calibration for post-season-5 data. Same placeholders for now. */
