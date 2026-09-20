@@ -28,7 +28,6 @@ import {
 } from "@/lib/rosterProjector";
 import {
 	DEFAULT_PROJECTION_CONFIG,
-	LeagueAverages,
 	ProjectionConfig,
 	RosterStats,
 	TeamProjection,
