@@ -163,6 +163,7 @@ export async function getPlayerGames(playerId: string, season?: string) {
 					game.hitsAllowed,
 					game.walks,
 					game.battersFaced,
+					game.beanBalls,
 				),
 				slgAgainst: calculateSLGAgainst(
 					game.hitsAllowed,
@@ -177,6 +178,7 @@ export async function getPlayerGames(playerId: string, season?: string) {
 						game.hitsAllowed,
 						game.walks,
 						game.battersFaced,
+						game.beanBalls,
 					),
 					calculateSLGAgainst(
 						game.hitsAllowed,
@@ -386,6 +388,7 @@ export async function getAllPlayerStats(season?: string) {
 						convertStringToNumber(stat?.hitsAllowed),
 						convertStringToNumber(stat?.walks),
 						convertStringToNumber(stat?.battersFaced),
+						convertStringToNumber(stat?.beanBalls),
 					),
 					slgAgainst: calculateSLGAgainst(
 						convertStringToNumber(stat?.hitsAllowed),
@@ -400,6 +403,7 @@ export async function getAllPlayerStats(season?: string) {
 							convertStringToNumber(stat?.hitsAllowed),
 							convertStringToNumber(stat?.walks),
 							convertStringToNumber(stat?.battersFaced),
+							convertStringToNumber(stat?.beanBalls),
 						),
 						calculateSLGAgainst(
 							convertStringToNumber(stat?.hitsAllowed),
@@ -573,6 +577,7 @@ export async function getAllFreeAgents() {
 						convertStringToNumber(stat?.hitsAllowed),
 						convertStringToNumber(stat?.walks),
 						convertStringToNumber(stat?.battersFaced),
+						convertStringToNumber(stat?.beanBalls),
 					),
 					slgAgainst: calculateSLGAgainst(
 						convertStringToNumber(stat?.hitsAllowed),
@@ -587,6 +592,7 @@ export async function getAllFreeAgents() {
 							convertStringToNumber(stat?.hitsAllowed),
 							convertStringToNumber(stat?.walks),
 							convertStringToNumber(stat?.battersFaced),
+							convertStringToNumber(stat?.beanBalls),
 						),
 						calculateSLGAgainst(
 							convertStringToNumber(stat?.hitsAllowed),
@@ -752,6 +758,7 @@ export async function getPlayerCareerStats(playerId: string) {
 				convertStringToNumber(stat?.hitsAllowed),
 				stat.walks,
 				convertStringToNumber(stat?.battersFaced),
+				convertStringToNumber(stat?.beanBalls),
 			),
 			slgAgainst: calculateSLGAgainst(
 				convertStringToNumber(stat?.hitsAllowed),
@@ -766,6 +773,7 @@ export async function getPlayerCareerStats(playerId: string) {
 					convertStringToNumber(stat?.hitsAllowed),
 					stat.walks,
 					convertStringToNumber(stat?.battersFaced),
+					convertStringToNumber(stat?.beanBalls),
 				),
 				calculateSLGAgainst(
 					convertStringToNumber(stat?.hitsAllowed),

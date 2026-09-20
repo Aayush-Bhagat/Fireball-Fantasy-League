@@ -142,16 +142,18 @@ export function calculateOBPAgainst(
 	hitsAllowed: number | null,
 	walksAllowed: number | null,
 	atBatsAgainst: number | null,
+	beanBalls: number | null,
 ): number | null {
 	if (
 		hitsAllowed === null ||
 		walksAllowed === null ||
-		atBatsAgainst === null
+		atBatsAgainst === null ||
+		beanBalls === null
 	) {
 		return null;
 	}
 
-	const plateAppearancesAgainst = atBatsAgainst + walksAllowed;
+	const plateAppearancesAgainst = atBatsAgainst + walksAllowed + beanBalls;
 
 	if (plateAppearancesAgainst === 0) {
 		return null;

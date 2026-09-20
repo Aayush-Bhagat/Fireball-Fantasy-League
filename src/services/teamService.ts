@@ -288,6 +288,7 @@ export async function getTeamRoster(teamId: string) {
 					convertStringToNumber(stat?.hitsAllowed),
 					convertStringToNumber(stat?.walks),
 					convertStringToNumber(stat?.battersFaced),
+					convertStringToNumber(stat?.beanBalls),
 				),
 				slgAgainst: calculateSLGAgainst(
 					convertStringToNumber(stat?.hitsAllowed),
@@ -302,6 +303,7 @@ export async function getTeamRoster(teamId: string) {
 						convertStringToNumber(stat?.hitsAllowed),
 						convertStringToNumber(stat?.walks),
 						convertStringToNumber(stat?.battersFaced),
+						convertStringToNumber(stat?.beanBalls),
 					),
 					calculateSLGAgainst(
 						convertStringToNumber(stat?.hitsAllowed),
