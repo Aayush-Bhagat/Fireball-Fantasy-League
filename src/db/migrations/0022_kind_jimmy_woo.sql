@@ -1,0 +1,1 @@
+ALTER TABLE "player_games_stats" ADD COLUMN "walks_taken" integer;

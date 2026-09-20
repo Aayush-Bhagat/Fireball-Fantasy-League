@@ -60,6 +60,7 @@ export async function findAllPlayerStats(season?: string) {
 		.select({
 			playerId: players.id,
 			name: players.name,
+
 			atBats: sum(playerGamesStats.atBats).as("atBats"),
 			hits: sum(playerGamesStats.hits).as("hits"),
 			runs: sum(playerGamesStats.runs).as("runs"),
@@ -70,6 +71,79 @@ export async function findAllPlayerStats(season?: string) {
 			outsPitched: sum(playerGamesStats.outsPitched).as("outsPitched"),
 			runsAllowed: sum(playerGamesStats.runsAllowed).as("runsAllowed"),
 			outs: sum(playerGamesStats.outs).as("outs"),
+			plateAppearances: sum(playerGamesStats.plateAppearances).as(
+				"plateAppearances",
+			),
+			strikeoutsBatted: sum(playerGamesStats.strikeoutsBatted).as(
+				"strikeoutsBatted",
+			),
+			walksTaken: sum(playerGamesStats.walksTaken).as("walksTaken"),
+			hitByPitch: sum(playerGamesStats.hitByPitch).as("hitByPitch"),
+			singles: sum(playerGamesStats.singles).as("singles"),
+			doubles: sum(playerGamesStats.doubles).as("doubles"),
+			triples: sum(playerGamesStats.triples).as("triples"),
+			oneHr: sum(playerGamesStats.oneHr).as("oneHr"),
+			twoHr: sum(playerGamesStats.twoHr).as("twoHr"),
+			threeHr: sum(playerGamesStats.threeHr).as("threeHr"),
+			grandSlams: sum(playerGamesStats.grandSlams).as("grandSlams"),
+			totalBases: sum(playerGamesStats.totalBases).as("totalBases"),
+			sacFlies: sum(playerGamesStats.sacFlies).as("sacFlies"),
+			startHits: sum(playerGamesStats.startHits).as("startHits"),
+			starsUsedBatting: sum(playerGamesStats.starsUsedBatting).as(
+				"starsUsedBatting",
+			),
+			stolenBases: sum(playerGamesStats.stolenBases).as("stolenBases"),
+			caughtStealing: sum(playerGamesStats.caughtStealing).as(
+				"caughtStealing",
+			),
+			stealAttempts: sum(playerGamesStats.stealAttempts).as(
+				"stealAttempts",
+			),
+			putout: sum(playerGamesStats.putout).as("putout"),
+			assist: sum(playerGamesStats.assist).as("assist"),
+			fieldingErrors: sum(playerGamesStats.fieldingErrors).as(
+				"fieldingErrors",
+			),
+			buddyJumpPutouts: sum(playerGamesStats.buddyJumpPutouts).as(
+				"buddyJumpPutouts",
+			),
+			buddyJumpAttempts: sum(playerGamesStats.buddyJumpAttempts).as(
+				"buddyJumpAttempts",
+			),
+			doublePlays: sum(playerGamesStats.doublePlays).as("doublePlays"),
+			triplePlays: sum(playerGamesStats.triplePlays).as("triplePlays"),
+			bobbles: sum(playerGamesStats.bobbles).as("bobbles"),
+
+			battersFaced: sum(playerGamesStats.battersFaced).as("battersFaced"),
+			pitches: sum(playerGamesStats.pitches).as("pitches"),
+			strikes: sum(playerGamesStats.strikes).as("strikes"),
+			balls: sum(playerGamesStats.balls).as("balls"),
+			beanBalls: sum(playerGamesStats.beanBalls).as("beanBalls"),
+			hitsAllowed: sum(playerGamesStats.hitsAllowed).as("hitsAllowed"),
+			singlesAllowed: sum(playerGamesStats.singlesAllowed).as(
+				"singlesAllowed",
+			),
+			doublesAllowed: sum(playerGamesStats.doublesAllowed).as(
+				"doublesAllowed",
+			),
+			triplesAllowed: sum(playerGamesStats.triplesAllowed).as(
+				"triplesAllowed",
+			),
+			homeRunsAllowed: sum(playerGamesStats.homeRunsAllowed).as(
+				"homeRunsAllowed",
+			),
+			inheritedRuns: sum(playerGamesStats.inheritedRuns).as(
+				"inheritedRuns",
+			),
+			starPitches: sum(playerGamesStats.starPitches).as("starPitches"),
+			starsUsedPitching: sum(playerGamesStats.starsUsedPitching).as(
+				"starsUsedPitching",
+			),
+			pickoffs: sum(playerGamesStats.pickoffs).as("pickoffs"),
+			pickoffAttempts: sum(playerGamesStats.pickoffAttempts).as(
+				"pickoffAttempts",
+			),
+
 			gamesPlayed: countDistinct(playerGamesStats.gameId).as(
 				"gamesPlayed",
 			),
@@ -100,18 +174,99 @@ export async function findPlayerCareerStats(playerId: string) {
 			seasonId: seasons.id,
 			playerId: players.id,
 			playerName: players.name,
-			homeRuns: sql<number>`coalesce(sum(${playerGamesStats.homeRuns}), 0) `,
+
+			// Batting
 			atBats: sql<number>`coalesce(sum(${playerGamesStats.atBats}), 0)`,
 			hits: sql<number>`coalesce(sum(${playerGamesStats.hits}), 0)`,
 			runs: sql<number>`coalesce(sum(${playerGamesStats.runs}), 0)`,
 			RBIs: sql<number>`coalesce(sum(${playerGamesStats.rbis}), 0)`,
 			walks: sql<number>`coalesce(sum(${playerGamesStats.walks}), 0)`,
 			strikeouts: sql<number>`coalesce(sum(${playerGamesStats.strikeouts}), 0)`,
+			homeRuns: sql<number>`coalesce(sum(${playerGamesStats.homeRuns}), 0) `,
+			plateAppearances: sum(playerGamesStats.plateAppearances).as(
+				"plateAppearances",
+			),
+			strikeoutsBatted: sum(playerGamesStats.strikeoutsBatted).as(
+				"strikeoutsBatted",
+			),
+			walksTaken: sum(playerGamesStats.walksTaken).as("walksTaken"),
+			hitByPitch: sum(playerGamesStats.hitByPitch).as("hitByPitch"),
+			singles: sum(playerGamesStats.singles).as("singles"),
+			doubles: sum(playerGamesStats.doubles).as("doubles"),
+			triples: sum(playerGamesStats.triples).as("triples"),
+			oneHr: sum(playerGamesStats.oneHr).as("oneHr"),
+			twoHr: sum(playerGamesStats.twoHr).as("twoHr"),
+			threeHr: sum(playerGamesStats.threeHr).as("threeHr"),
+			grandSlams: sum(playerGamesStats.grandSlams).as("grandSlams"),
+			totalBases: sum(playerGamesStats.totalBases).as("totalBases"),
+			sacFlies: sum(playerGamesStats.sacFlies).as("sacFlies"),
+			startHits: sum(playerGamesStats.startHits).as("startHits"),
+			starsUsedBatting: sum(playerGamesStats.starsUsedBatting).as(
+				"starsUsedBatting",
+			),
+
+			// Baserunning
+			stolenBases: sum(playerGamesStats.stolenBases).as("stolenBases"),
+			caughtStealing: sum(playerGamesStats.caughtStealing).as(
+				"caughtStealing",
+			),
+			stealAttempts: sum(playerGamesStats.stealAttempts).as(
+				"stealAttempts",
+			),
+
+			// Fielding
+			putout: sum(playerGamesStats.putout).as("putout"),
+			assist: sum(playerGamesStats.assist).as("assist"),
+			fieldingErrors: sum(playerGamesStats.fieldingErrors).as(
+				"fieldingErrors",
+			),
+			buddyJumpPutouts: sum(playerGamesStats.buddyJumpPutouts).as(
+				"buddyJumpPutouts",
+			),
+			buddyJumpAttempts: sum(playerGamesStats.buddyJumpAttempts).as(
+				"buddyJumpAttempts",
+			),
+			doublePlays: sum(playerGamesStats.doublePlays).as("doublePlays"),
+			triplePlays: sum(playerGamesStats.triplePlays).as("triplePlays"),
+			bobbles: sum(playerGamesStats.bobbles).as("bobbles"),
+
+			// Pitching
 			outsPitched: sql<number>`coalesce(sum(${playerGamesStats.outsPitched}), 0)`,
 			runsAllowed: sql<number>`coalesce(sum(${playerGamesStats.runsAllowed}), 0)`,
 			outs: sql<number>`coalesce(sum(${playerGamesStats.outs}), 0)`,
+			battersFaced: sum(playerGamesStats.battersFaced).as("battersFaced"),
+			pitches: sum(playerGamesStats.pitches).as("pitches"),
+			strikes: sum(playerGamesStats.strikes).as("strikes"),
+			balls: sum(playerGamesStats.balls).as("balls"),
+			beanBalls: sum(playerGamesStats.beanBalls).as("beanBalls"),
+			hitsAllowed: sum(playerGamesStats.hitsAllowed).as("hitsAllowed"),
+			singlesAllowed: sum(playerGamesStats.singlesAllowed).as(
+				"singlesAllowed",
+			),
+			doublesAllowed: sum(playerGamesStats.doublesAllowed).as(
+				"doublesAllowed",
+			),
+			triplesAllowed: sum(playerGamesStats.triplesAllowed).as(
+				"triplesAllowed",
+			),
+			homeRunsAllowed: sum(playerGamesStats.homeRunsAllowed).as(
+				"homeRunsAllowed",
+			),
+			inheritedRuns: sum(playerGamesStats.inheritedRuns).as(
+				"inheritedRuns",
+			),
+			starPitches: sum(playerGamesStats.starPitches).as("starPitches"),
+			starsUsedPitching: sum(playerGamesStats.starsUsedPitching).as(
+				"starsUsedPitching",
+			),
+			pickoffs: sum(playerGamesStats.pickoffs).as("pickoffs"),
+			pickoffAttempts: sum(playerGamesStats.pickoffAttempts).as(
+				"pickoffAttempts",
+			),
+
+			// Teams
 			teamsPlayedFor: sql<
-				string[]
+				string[] | null
 			>`ARRAY_AGG(DISTINCT ${teams.abbreviation}) FILTER (WHERE ${teams.id} IS NOT NULL)`.as(
 				"teams_played_for",
 			),

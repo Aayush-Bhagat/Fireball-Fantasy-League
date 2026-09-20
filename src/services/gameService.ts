@@ -1,4 +1,15 @@
-import { calculateEra, calculateInningsPitched } from "@/lib/statUtils";
+import {
+	calculateBAA,
+	calculateEra,
+	calculateInningsPitched,
+	calculateOBP,
+	calculateOBPAgainst,
+	calculateOPS,
+	calculateOPSAgainst,
+	calculateSLG,
+	calculateSLGAgainst,
+	calculateWHIP,
+} from "@/lib/statUtils";
 import {
 	AdminGameDto,
 	GameStatsDto,
@@ -20,7 +31,7 @@ import { computeSeasonOdds } from "@/services/oddsService";
 
 export async function getGamesByWeekAndSeason(
 	week: number | undefined,
-	season: string | undefined
+	season: string | undefined,
 ) {
 	if ((season !== "current" && isNaN(Number(season))) || !season) {
 		throw new Error("Invalid season");
@@ -44,7 +55,7 @@ export async function getGamesByWeekAndSeason(
 }
 
 export async function getSeasonSchedule(
-	season: string | undefined
+	season: string | undefined,
 ): Promise<SeasonScheduleResponseDto> {
 	if ((season !== "current" && isNaN(Number(season))) || !season) {
 		throw new Error("Invalid season");
@@ -119,33 +130,33 @@ export const updateGame = async (game: UpdateGameRequestDto) => {
 			game.teamScore > game.opponentScore
 				? "Win"
 				: game.teamScore === game.opponentScore
-				? "Tie"
-				: "Loss";
+					? "Tie"
+					: "Loss";
 
 		const opponentOutcome =
 			game.opponentScore > game.teamScore
 				? "Win"
 				: game.opponentScore === game.teamScore
-				? "Tie"
-				: "Loss";
+					? "Tie"
+					: "Loss";
 
 		await updateTeamGameById(
 			game.gameId,
 			game.teamId,
 			game.teamScore,
-			teamOutcome
+			teamOutcome,
 		);
 		await updateTeamGameById(
 			game.gameId,
 			game.opponentId,
 			game.opponentScore,
-			opponentOutcome
+			opponentOutcome,
 		);
 		await createPlayerGameStats(game.teamPlayers, game.teamId, game.gameId);
 		await createPlayerGameStats(
 			game.opponentPlayers,
 			game.opponentId,
-			game.gameId
+			game.gameId,
 		);
 	} catch (error) {
 		console.error(error);
@@ -192,6 +203,8 @@ export async function getGameStats(gameId: string) {
 			playerId: stat.playerId,
 			playerName: stat.player.name,
 			playerImage: stat.player.image,
+
+			// Batting
 			atBats: stat.atBats,
 			hits: stat.hits,
 			runs: stat.runs,
@@ -199,16 +212,131 @@ export async function getGameStats(gameId: string) {
 			walks: stat.walks,
 			strikeouts: stat.strikeouts,
 			homeRuns: stat.homeRuns,
+			plateAppearances: stat.plateAppearances,
+			strikeoutsBatted: stat.strikeoutsBatted,
+			hitByPitch: stat.hitByPitch,
+			singles: stat.singles,
+			doubles: stat.doubles,
+			triples: stat.triples,
+			oneHr: stat.oneHr,
+			twoHr: stat.twoHr,
+			threeHr: stat.threeHr,
+			grandSlams: stat.grandSlams,
+			totalBases: stat.totalBases,
+			sacFlies: stat.sacFlies,
+			startHits: stat.startHits,
+			starsUsedBatting: stat.starsUsedBatting,
+			stolenBases: stat.stolenBases,
+			caughtStealing: stat.caughtStealing,
+			stealAttempts: stat.stealAttempts,
+
+			// Fielding
+			putout: stat.putout,
+			assist: stat.assist,
+			fieldingErrors: stat.fieldingErrors,
+			buddyJumpPutouts: stat.buddyJumpPutouts,
+			buddyJumpAttempts: stat.buddyJumpAttempts,
+			doublePlays: stat.doublePlays,
+			triplePlays: stat.triplePlays,
+			bobbles: stat.bobbles,
+
+			// Pitching
 			inningsPitched: calculateInningsPitched(stat.outsPitched),
+			outsPitched: stat.outsPitched,
 			runsAllowed: stat.runsAllowed,
 			outs: stat.outs,
-			battingAverage: stat.hits / stat.atBats,
+			battersFaced: stat.battersFaced,
+			pitches: stat.pitches,
+			strikes: stat.strikes,
+			balls: stat.balls,
+			beanBalls: stat.beanBalls,
+			hitsAllowed: stat.hitsAllowed,
+			singlesAllowed: stat.singlesAllowed,
+			doublesAllowed: stat.doublesAllowed,
+			triplesAllowed: stat.triplesAllowed,
+			homeRunsAllowed: stat.homeRunsAllowed,
+			inheritedRuns: stat.inheritedRuns,
+			starPitches: stat.starPitches,
+			starsUsedPitching: stat.starsUsedPitching,
+			pickoffs: stat.pickoffs,
+			pickoffAttempts: stat.pickoffAttempts,
+			walksTaken: stat.walksTaken,
+			gamesPlayed: 1,
+
+			// Calculated stats
+			battingAverage: stat.atBats > 0 ? stat.hits / stat.atBats : 0,
 			era: calculateEra(stat.runsAllowed, stat.outsPitched),
+			obp: calculateOBP(
+				stat.hits,
+				stat.walksTaken,
+				stat.hitByPitch,
+				stat.atBats,
+				stat.sacFlies,
+			),
+			slg: calculateSLG(
+				stat.hits,
+				stat.singles,
+				stat.doubles,
+				stat.triples,
+				stat.homeRuns,
+				stat.atBats,
+			),
+			ops: calculateOPS(
+				calculateOBP(
+					stat.hits,
+					stat.walksTaken,
+					stat.hitByPitch,
+					stat.atBats,
+					stat.sacFlies,
+				),
+				calculateSLG(
+					stat.hits,
+					stat.singles,
+					stat.doubles,
+					stat.triples,
+					stat.homeRuns,
+					stat.atBats,
+				),
+			),
+			whip: calculateWHIP(stat.walks, stat.hitsAllowed, stat.outsPitched),
+			baa: calculateBAA(stat.hitsAllowed, stat.battersFaced),
+			obpAgainst: calculateOBPAgainst(
+				stat.hitsAllowed,
+				stat.walks,
+				stat.battersFaced,
+				stat.beanBalls,
+			),
+			slgAgainst: calculateSLGAgainst(
+				stat.hitsAllowed,
+				stat.singlesAllowed,
+				stat.doublesAllowed,
+				stat.triplesAllowed,
+				stat.homeRunsAllowed,
+				stat.battersFaced,
+			),
+			opsAgainst: calculateOPSAgainst(
+				calculateOBPAgainst(
+					stat.hitsAllowed,
+					stat.walks,
+					stat.battersFaced,
+					stat.beanBalls,
+				),
+				calculateSLGAgainst(
+					stat.hitsAllowed,
+					stat.singlesAllowed,
+					stat.doublesAllowed,
+					stat.triplesAllowed,
+					stat.homeRunsAllowed,
+					stat.battersFaced,
+				),
+			),
 		})),
 		opponentPlayers: opponentGameStats.map((stat) => ({
 			playerId: stat.playerId,
 			playerName: stat.player.name,
 			playerImage: stat.player.image,
+
+			// Batting
 			atBats: stat.atBats,
 			hits: stat.hits,
 			runs: stat.runs,
@@ -216,11 +344,124 @@ export async function getGameStats(gameId: string) {
 			walks: stat.walks,
 			strikeouts: stat.strikeouts,
 			homeRuns: stat.homeRuns,
+			plateAppearances: stat.plateAppearances,
+			strikeoutsBatted: stat.strikeoutsBatted,
+			hitByPitch: stat.hitByPitch,
+			singles: stat.singles,
+			doubles: stat.doubles,
+			triples: stat.triples,
+			oneHr: stat.oneHr,
+			twoHr: stat.twoHr,
+			threeHr: stat.threeHr,
+			grandSlams: stat.grandSlams,
+			totalBases: stat.totalBases,
+			sacFlies: stat.sacFlies,
+			startHits: stat.startHits,
+			starsUsedBatting: stat.starsUsedBatting,
+			stolenBases: stat.stolenBases,
+			caughtStealing: stat.caughtStealing,
+			stealAttempts: stat.stealAttempts,
+
+			// Fielding
+			putout: stat.putout,
+			assist: stat.assist,
+			fieldingErrors: stat.fieldingErrors,
+			buddyJumpPutouts: stat.buddyJumpPutouts,
+			buddyJumpAttempts: stat.buddyJumpAttempts,
+			doublePlays: stat.doublePlays,
+			triplePlays: stat.triplePlays,
+			bobbles: stat.bobbles,
+
+			// Pitching
 			inningsPitched: calculateInningsPitched(stat.outsPitched),
+			outsPitched: stat.outsPitched,
 			runsAllowed: stat.runsAllowed,
 			outs: stat.outs,
-			battingAverage: stat.hits / stat.atBats,
+			battersFaced: stat.battersFaced,
+			pitches: stat.pitches,
+			strikes: stat.strikes,
+			balls: stat.balls,
+			beanBalls: stat.beanBalls,
+			hitsAllowed: stat.hitsAllowed,
+			singlesAllowed: stat.singlesAllowed,
+			doublesAllowed: stat.doublesAllowed,
+			triplesAllowed: stat.triplesAllowed,
+			homeRunsAllowed: stat.homeRunsAllowed,
+			inheritedRuns: stat.inheritedRuns,
+			starPitches: stat.starPitches,
+			starsUsedPitching: stat.starsUsedPitching,
+			pickoffs: stat.pickoffs,
+			pickoffAttempts: stat.pickoffAttempts,
+			walksTaken: stat.walksTaken,
+			gamesPlayed: 1,
+
+			// Calculated stats
+			battingAverage: stat.atBats > 0 ? stat.hits / stat.atBats : 0,
 			era: calculateEra(stat.runsAllowed, stat.outsPitched),
+			obp: calculateOBP(
+				stat.hits,
+				stat.walksTaken,
+				stat.hitByPitch,
+				stat.atBats,
+				stat.sacFlies,
+			),
+			slg: calculateSLG(
+				stat.hits,
+				stat.singles,
+				stat.doubles,
+				stat.triples,
+				stat.homeRuns,
+				stat.atBats,
+			),
+			ops: calculateOPS(
+				calculateOBP(
+					stat.hits,
+					stat.walksTaken,
+					stat.hitByPitch,
+					stat.atBats,
+					stat.sacFlies,
+				),
+				calculateSLG(
+					stat.hits,
+					stat.singles,
+					stat.doubles,
+					stat.triples,
+					stat.homeRuns,
+					stat.atBats,
+				),
+			),
+			whip: calculateWHIP(stat.walks, stat.hitsAllowed, stat.outsPitched),
+			baa: calculateBAA(stat.hitsAllowed, stat.battersFaced),
+			obpAgainst: calculateOBPAgainst(
+				stat.hitsAllowed,
+				stat.walks,
+				stat.battersFaced,
+				stat.beanBalls,
+			),
+			slgAgainst: calculateSLGAgainst(
+				stat.hitsAllowed,
+				stat.singlesAllowed,
+				stat.doublesAllowed,
+				stat.triplesAllowed,
+				stat.homeRunsAllowed,
+				stat.battersFaced,
+			),
+			opsAgainst: calculateOPSAgainst(
+				calculateOBPAgainst(
+					stat.hitsAllowed,
+					stat.walks,
+					stat.battersFaced,
+					stat.beanBalls,
+				),
+				calculateSLGAgainst(
+					stat.hitsAllowed,
+					stat.singlesAllowed,
+					stat.doublesAllowed,
+					stat.triplesAllowed,
+					stat.homeRunsAllowed,
+					stat.battersFaced,
+				),
+			),
 		})),
 	};
 

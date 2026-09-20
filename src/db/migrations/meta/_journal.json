@@ -148,6 +148,20 @@
       "when": 1776274941444,
       "tag": "0020_zippy_tomas",
       "breakpoints": true
+    },
+    {
+      "idx": 21,
+      "version": "7",
+      "when": 1789582830027,
+      "tag": "0021_mighty_zodiak",
+      "breakpoints": true
+    },
+    {
+      "idx": 22,
+      "version": "7",
+      "when": 1789876703522,
+      "tag": "0022_kind_jimmy_woo",
+      "breakpoints": true
     }
   ]
 }
