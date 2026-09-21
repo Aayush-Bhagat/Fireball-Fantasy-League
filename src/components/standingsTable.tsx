@@ -2,11 +2,15 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { SeasonScheduleResponseDto } from "@/dtos/gameDtos";
 import { StandingsDto } from "@/dtos/teamDtos";
 import Link from "next/link";
+import { Button } from "./ui/button";
+import { ChartColumn } from "lucide-react";
 
 type Props = {
     standingsData: Promise<StandingsDto>;
     scheduleData: Promise<SeasonScheduleResponseDto>;
 };
+
+type Team = StandingsDto["western"][number];
 
 export default async function StandingTable({
     standingsData,
@@ -15,11 +19,16 @@ export default async function StandingTable({
     const standings = await standingsData;
     const schedule = await scheduleData;
 
+    /* -------------------------------------------------- */
+    /* Run Differential                                   */
+    /* -------------------------------------------------- */
+
     function calculateRunDifferential(
         scheduleData: SeasonScheduleResponseDto,
         teamId: string,
     ): number | string {
         const allGames = scheduleData.schedule.flatMap((week) => week.games);
+
         const teamGames = allGames.filter(
             (game) => game.team.id === teamId || game.opponent.id === teamId,
         );
@@ -40,8 +49,14 @@ export default async function StandingTable({
                 pointsAgainst += game.teamScore ?? 0;
             }
         }
+
         return pointsFor - pointsAgainst;
     }
+
+    /* -------------------------------------------------- */
+    /* Sort Teams                                         */
+    /* -------------------------------------------------- */
+
     function sortTeams(
         teams: StandingsDto["eastern" | "western"],
         scheduleData: SeasonScheduleResponseDto,
@@ -49,8 +64,11 @@ export default async function StandingTable({
         return teams
             .map((team) => {
                 const totalGames = team.wins + team.losses;
+
                 const pct = totalGames === 0 ? 0 : team.wins / totalGames;
+
                 const rd = calculateRunDifferential(scheduleData, team.id);
+
                 return {
                     ...team,
                     pct,
@@ -61,27 +79,45 @@ export default async function StandingTable({
                 if (b.pct !== a.pct) {
                     return b.pct - a.pct;
                 }
+
                 return b.rd - a.rd;
             });
     }
+
+    /* -------------------------------------------------- */
+    /* Clinch Logic                                       */
+    /* -------------------------------------------------- */
+
     function getClinchStatus(
-        team: { id: string; wins: number; losses: number; ties: number },
-        allTeams: { id: string; wins: number; losses: number; ties: number }[],
+        team: {
+            id: string;
+            wins: number;
+            losses: number;
+            ties: number;
+        },
+        allTeams: {
+            id: string;
+            wins: number;
+            losses: number;
+            ties: number;
+        }[],
         scheduleData: SeasonScheduleResponseDto,
     ): string {
         const TOTAL_GAMES = 10;
         const PLAYOFF_SPOTS = 3;
 
         const gamesPlayed = (t: typeof team) => t.wins + t.losses + t.ties;
+
         const gamesRemaining = (t: typeof team) => TOTAL_GAMES - gamesPlayed(t);
 
         const maxWins = (t: typeof team) => t.wins + gamesRemaining(t);
 
-        // ---------- CLINCH PLAYOFFS (X) ----------
-        // Assume our team loses every remaining game.
+        /* ----------------------------- */
+        /* Clinched Playoffs             */
+        /* ----------------------------- */
+
         const myWorstWins = team.wins;
 
-        // Count how many teams could finish with at least as many wins.
         let teamsThatCanTieOrBeat = 0;
 
         for (const other of allTeams) {
@@ -92,13 +128,11 @@ export default async function StandingTable({
             }
         }
 
-        // If three other teams can still tie/pass us,
-        // we can still finish 4th.
         const clinchedPlayoffs = teamsThatCanTieOrBeat < PLAYOFF_SPOTS;
 
-        // ---------- CLINCH BYE (Z) ----------
-        // Assume our team loses out.
-        // If anyone can still tie/pass us, we haven't clinched #1.
+        /* ----------------------------- */
+        /* Clinched First Round Bye      */
+        /* ----------------------------- */
 
         let clinchedBye = true;
 
@@ -111,8 +145,9 @@ export default async function StandingTable({
             }
         }
 
-        // If everyone has completed the season,
-        // allow run differential to break ties.
+        /* ----------------------------- */
+        /* Season Finished               */
+        /* ----------------------------- */
 
         const seasonFinished = allTeams.every((t) => gamesRemaining(t) === 0);
 
@@ -152,207 +187,305 @@ export default async function StandingTable({
 
         return "";
     }
-    function ClinchLegend() {
+
+    /* -------------------------------------------------- */
+    /* Sorted Conferences                                 */
+    /* -------------------------------------------------- */
+
+    const sortedWest = sortTeams(standings.western, schedule);
+
+    const sortedEast = sortTeams(standings.eastern, schedule);
+
+    /* -------------------------------------------------- */
+    /* Helpers                                            */
+    /* -------------------------------------------------- */
+
+    function getStatusLabel(status: string) {
+        if (status === "Z") {
+            return {
+                label: "Z",
+                className: "bg-green-50 text-green-700 border-green-200",
+            };
+        }
+
+        if (status === "X") {
+            return {
+                label: "X",
+                className: "bg-blue-50 text-blue-700 border-blue-200",
+            };
+        }
+
+        return null;
+    }
+
+    function hasAnyClinch(teams: Team[]) {
+        return teams.some((team) => {
+            const status = getClinchStatus(team, teams, schedule);
+
+            return status === "Z" || status === "X";
+        });
+    }
+
+    /* -------------------------------------------------- */
+    /* Team Row                                           */
+    /* -------------------------------------------------- */
+
+    function TeamRow({
+        team,
+        allTeams,
+        index,
+    }: {
+        team: Team;
+        allTeams: Team[];
+        index: number;
+    }) {
+        const clinch = getClinchStatus(team, allTeams, schedule);
+
+        const status = getStatusLabel(clinch);
+
+        const rd = calculateRunDifferential(schedule, team.id);
+
+        const gamesPlayed = team.wins + team.losses;
+
+        const pct =
+            gamesPlayed === 0 ? "0.000" : (team.wins / gamesPlayed).toFixed(3);
+
+        const playoffSpot = index < 3;
+
         return (
-            <div className="mt-4 text-sm text-gray-700 flex space-x-6">
-                <div className="flex items-center space-x-1">
-                    <span className="font-bold text-green-600">Z</span>
-                    <span>– Clinched First Round Bye</span>
-                </div>
-                <div className="flex items-center space-x-1">
-                    <span className="font-bold text-blue-600">X</span>
-                    <span>– Clinched Playoffs</span>
-                </div>
+            <tr
+                key={team.id}
+                className="group border-t border-gray-100 transition-colors hover:bg-gray-50"
+            >
+                {/* Team */}
+                <td className="px-2.5 py-2.5">
+                    <Link
+                        href={`/teams/${team.id}`}
+                        className="flex items-center gap-2 min-w-0"
+                    >
+                        {/* Rank */}
+                        <span
+                            className={`w-4 text-center text-xs font-semibold ${
+                                playoffSpot ? "text-gray-700" : "text-gray-400"
+                            }`}
+                        >
+                            {index + 1}
+                        </span>
+
+                        {/* Logo */}
+                        {team.logo ? (
+                            <img
+                                src={team.logo}
+                                alt={`${team.name} logo`}
+                                className="h-7 w-7 rounded-full object-cover shrink-0"
+                            />
+                        ) : (
+                            <div className="h-7 w-7 rounded-full bg-gray-200 shrink-0" />
+                        )}
+
+                        {/* Name */}
+                        <span className="truncate text-sm font-medium text-gray-800 group-hover:text-violet-700 transition-colors">
+                            {team.name}
+                        </span>
+
+                        {/* Clinch Badge */}
+                        {status && (
+                            <span
+                                className={`hidden sm:inline-flex items-center rounded-full border px-1.5 py-0.5 text-[9px] font-bold uppercase tracking-wide ${status.className}`}
+                            >
+                                {status.label}
+                            </span>
+                        )}
+
+                        {/* Mobile Clinch */}
+                        {clinch && (
+                            <span
+                                className={`sm:hidden text-[10px] font-bold ${
+                                    clinch === "Z"
+                                        ? "text-green-600"
+                                        : "text-blue-600"
+                                }`}
+                            >
+                                {clinch}
+                            </span>
+                        )}
+                    </Link>
+                </td>
+
+                {/* W */}
+                <td className="px-1 py-2.5 text-center">
+                    <span className="font-semibold text-gray-900">
+                        {team.wins}
+                    </span>
+                </td>
+
+                {/* L */}
+                <td className="px-1 py-2.5 text-center">
+                    <span className="text-gray-600">{team.losses}</span>
+                </td>
+
+                {/* T */}
+                <td className="px-1 py-2.5 text-center">
+                    <span className="text-gray-600">{team.ties}</span>
+                </td>
+
+                {/* PCT */}
+                <td className="px-1 py-2.5 text-center">
+                    <span className="font-mono text-xs font-medium text-gray-700">
+                        {pct}
+                    </span>
+                </td>
+
+                {/* RD */}
+                <td className="px-1 py-2.5 text-center">
+                    <span
+                        className={`font-mono text-xs font-semibold ${
+                            typeof rd === "number"
+                                ? rd > 0
+                                    ? "text-green-600"
+                                    : rd < 0
+                                      ? "text-red-500"
+                                      : "text-gray-600"
+                                : "text-gray-400"
+                        }`}
+                    >
+                        {rd === 0 ? "0" : rd}
+                    </span>
+                </td>
+            </tr>
+        );
+    }
+
+    /* -------------------------------------------------- */
+    /* Table                                             */
+    /* -------------------------------------------------- */
+
+    function StandingsContent({ teams }: { teams: Team[] }) {
+        return (
+            <div className="overflow-x-auto">
+                <table className="w-full table-fixed text-sm">
+                    <thead>
+                        <tr className="border-b border-gray-200">
+                            <th className="w-[50%] px-2.5 py-2 text-left text-[10px] font-semibold uppercase tracking-wider text-gray-400">
+                                Team
+                            </th>
+
+                            <th className="w-[8%] px-1 py-2 text-center text-[10px] font-semibold uppercase tracking-wider text-gray-400">
+                                W
+                            </th>
+
+                            <th className="w-[8%] px-1 py-2 text-center text-[10px] font-semibold uppercase tracking-wider text-gray-400">
+                                L
+                            </th>
+
+                            <th className="w-[8%] px-1 py-2 text-center text-[10px] font-semibold uppercase tracking-wider text-gray-400">
+                                T
+                            </th>
+
+                            <th className="w-[13%] px-1 py-2 text-center text-[10px] font-semibold uppercase tracking-wider text-gray-400">
+                                PCT
+                            </th>
+
+                            <th className="w-[13%] px-1 py-2 text-center text-[10px] font-semibold uppercase tracking-wider text-gray-400">
+                                RD
+                            </th>
+                        </tr>
+                    </thead>
+
+                    <tbody>
+                        {teams.map((team, index) => (
+                            <TeamRow
+                                key={team.id}
+                                team={team}
+                                allTeams={teams}
+                                index={index}
+                            />
+                        ))}
+                    </tbody>
+                </table>
             </div>
         );
     }
-    function hasAnyClinch(teams: typeof sortedWest) {
-        return teams.some((team) => {
-            const clinch = getClinchStatus(team, teams, schedule);
-            return clinch === "Z" || clinch === "X";
-        });
-    }
-    const sortedWest = sortTeams(standings.western, schedule);
-    const sortedEast = sortTeams(standings.eastern, schedule);
+
+    /* -------------------------------------------------- */
+    /* Main Component                                     */
+    /* -------------------------------------------------- */
 
     return (
-        <div className="mx-auto p-4 space-y-4 font-sans border border-gray-300 rounded-lg shadow-md bg-white">
-            <div className="text-2xl font-bold">Standings</div>
+        <div className="mx-auto p-4 space-y-3 font-sans border border-gray-200 rounded-lg shadow-md bg-white">
+            {/* Header */}
+            <div className="flex items-center justify-between">
+                <div className="flex items-center gap-3">
+                    <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-violet-50">
+                        <ChartColumn className="h-5 w-5 text-violet-700" />
+                    </div>
+                    <div>
+                        <h2 className="text-xl font-bold tracking-tight text-gray-900">
+                            Standings
+                        </h2>
+
+                        <p className="text-xs text-gray-500 mt-0.5">
+                            Current season
+                        </p>
+                    </div>
+                </div>
+                <Link href="/standings">
+                    <Button
+                        size="sm"
+                        className="bg-violet-700 hover:bg-violet-800 text-xs"
+                    >
+                        Full Standings
+                    </Button>
+                </Link>
+            </div>
+
+            {/* Tabs */}
             <Tabs defaultValue="west" className="w-full">
-                <TabsList>
-                    <TabsTrigger value="west">Western</TabsTrigger>
-                    <TabsTrigger value="east">Eastern</TabsTrigger>
+                <TabsList className="grid w-full max-w-[220px] grid-cols-2 bg-gray-100 p-1">
+                    <TabsTrigger
+                        value="west"
+                        className="text-xs data-[state=active]:bg-white data-[state=active]:shadow-sm"
+                    >
+                        Western
+                    </TabsTrigger>
+
+                    <TabsTrigger
+                        value="east"
+                        className="text-xs data-[state=active]:bg-white data-[state=active]:shadow-sm"
+                    >
+                        Eastern
+                    </TabsTrigger>
                 </TabsList>
-                <TabsContent className="" value="west">
-                    <div className="overflow-x-auto">
-                        <table className="table-auto w-full text-center">
-                            <thead>
-                                <tr>
-                                    <th className="px-4 py-2">Team</th>
-                                    <th className="px-4 py-2">W</th>
-                                    <th className="px-4 py-2">L</th>
-                                    <th className="px-4 py-2">T</th>
-                                    <th className="px-4 py-2">PCT</th>
-                                    <th className="px-4 py-2">RD</th>
-                                </tr>
-                            </thead>
-                            <tbody className="w-full">
-                                {sortedWest.map((team) => {
-                                    const clinch = getClinchStatus(
-                                        team,
-                                        sortedWest,
-                                        schedule,
-                                    );
-                                    return (
-                                        <tr className="border-t" key={team.id}>
-                                            <td className="px-4 py-2 whitespace-nowrap flex items-center">
-                                                {team.logo && (
-                                                    <Link
-                                                        href={`/teams/${team.id}`}
-                                                    >
-                                                        <img
-                                                            src={team.logo}
-                                                            alt={`${team.name} logo`}
-                                                            className="w-10 h-10 mr-2 rounded-full"
-                                                        />
-                                                    </Link>
-                                                )}
-                                                <span className="flex items-center">
-                                                    <span>{team.name}</span>
-                                                    {clinch && (
-                                                        <sup
-                                                            className={`ml-1 font-bold text-xs align-super ${
-                                                                clinch === "Z"
-                                                                    ? "text-green-600"
-                                                                    : "text-blue-600"
-                                                            }`}
-                                                            style={{
-                                                                lineHeight: 1,
-                                                            }}
-                                                        >
-                                                            {clinch}
-                                                        </sup>
-                                                    )}
-                                                </span>
-                                            </td>
-                                            <td className="px-8 sm:px-4 py-2">
-                                                {team.wins}
-                                            </td>
-                                            <td className="px-4 py-2">
-                                                {team.losses}
-                                            </td>
-                                            <td className="px-4 py-2">
-                                                {team.ties}
-                                            </td>
 
-                                            <td className="px-4 py-2">
-                                                {team.wins + team.losses === 0
-                                                    ? "0.000"
-                                                    : (
-                                                          team.wins /
-                                                          (team.wins +
-                                                              team.losses)
-                                                      ).toFixed(3)}
-                                            </td>
-                                            <td className="px-4 py-2">
-                                                {calculateRunDifferential(
-                                                    schedule,
-                                                    team.id,
-                                                ) || "-"}
-                                            </td>
-                                        </tr>
-                                    );
-                                })}
-                            </tbody>
-                        </table>
-                    </div>
+                {/* Western */}
+                <TabsContent value="west" className="mt-3">
+                    <StandingsContent teams={sortedWest} />
                 </TabsContent>
-                <TabsContent value="east">
-                    <div className="overflow-x-auto">
-                        <table className="table-auto w-full text-center">
-                            <thead>
-                                <tr>
-                                    <th className="px-4 py-2">Team</th>
-                                    <th className="px-4 py-2">W</th>
-                                    <th className="px-4 py-2">L</th>
-                                    <th className="px-4 py-2">T</th>
-                                    <th className="px-4 py-2">PCT</th>
-                                    <th className="px-4 py-2">RD</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                {sortedEast.map((team) => {
-                                    const clinch = getClinchStatus(
-                                        team,
-                                        sortedEast,
-                                        schedule,
-                                    );
-                                    return (
-                                        <tr className="border-t" key={team.id}>
-                                            <td className="px-4 py-2 whitespace-nowrap flex items-center">
-                                                {team.logo && (
-                                                    <Link
-                                                        href={`/teams/${team.id}`}
-                                                    >
-                                                        <img
-                                                            src={team.logo}
-                                                            alt={`${team.name} logo`}
-                                                            className="w-10 h-10 mr-2 rounded-full"
-                                                        />
-                                                    </Link>
-                                                )}
-                                                <span className="flex items-center">
-                                                    <span>{team.name}</span>
-                                                    {clinch && (
-                                                        <sup
-                                                            className={`ml-1 font-bold text-xs align-super ${
-                                                                clinch === "Z"
-                                                                    ? "text-green-600"
-                                                                    : "text-blue-600"
-                                                            }`}
-                                                            style={{
-                                                                lineHeight: 1,
-                                                            }}
-                                                        >
-                                                            {clinch}
-                                                        </sup>
-                                                    )}
-                                                </span>
-                                            </td>
-                                            <td className="px-8 sm:px-4 py-2">
-                                                {team.wins}
-                                            </td>
-                                            <td className="px-4 py-2">
-                                                {team.losses}
-                                            </td>
-                                            <td className="px-4 py-2">
-                                                {team.ties}
-                                            </td>
 
-                                            <td className="px-4 py-2">
-                                                {team.wins + team.losses === 0
-                                                    ? "0.000"
-                                                    : (
-                                                          team.wins /
-                                                          (team.wins +
-                                                              team.losses)
-                                                      ).toFixed(3)}
-                                            </td>
-                                            <td className="px-4 py-2">
-                                                {calculateRunDifferential(
-                                                    schedule,
-                                                    team.id,
-                                                ) || "-"}
-                                            </td>
-                                        </tr>
-                                    );
-                                })}
-                            </tbody>
-                        </table>
-                    </div>
+                {/* Eastern */}
+                <TabsContent value="east" className="mt-3">
+                    <StandingsContent teams={sortedEast} />
                 </TabsContent>
+
+                {/* Legend */}
                 {(hasAnyClinch(sortedWest) || hasAnyClinch(sortedEast)) && (
-                    <ClinchLegend />
+                    <div className="mt-3 flex flex-wrap items-center gap-x-4 gap-y-2 border-t border-gray-100 pt-3">
+                        <div className="flex items-center gap-1.5 text-[11px] text-gray-500">
+                            <span className="inline-flex h-4 min-w-4 items-center justify-center rounded-full bg-green-50 border border-green-200 px-1 font-bold text-green-600">
+                                Z
+                            </span>
+
+                            <span>First Round Bye</span>
+                        </div>
+
+                        <div className="flex items-center gap-1.5 text-[11px] text-gray-500">
+                            <span className="inline-flex h-4 min-w-4 items-center justify-center rounded-full bg-blue-50 border border-blue-200 px-1 font-bold text-blue-600">
+                                X
+                            </span>
+
+                            <span>Playoffs Clinched</span>
+                        </div>
+                    </div>
                 )}
             </Tabs>
         </div>

@@ -6,6 +6,7 @@ interface CareerTotals {
     careerHR: number;
     careerRBI: number;
     careerERA: number;
+    ip: number;
     image?: string | null;
 }
 
@@ -26,6 +27,7 @@ export default function StatDeltaSummary({
             b: playerB.careerERA,
             inverse: true,
         },
+        { label: "IP", a: playerA.ip, b: playerB.ip },
     ];
 
     return (

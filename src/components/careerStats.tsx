@@ -36,7 +36,7 @@ export default function CareerStats({ player }: Props) {
     const hasPitchingStats =
         playerCareerStats?.some(
             (game) =>
-                game.inningsPitched > 0 || game.runsAllowed > 0 || game.era > 0
+                game.inningsPitched > 0 || game.runsAllowed > 0 || game.era > 0,
         ) ?? false;
 
     // Filter out seasons with no meaningful stats
@@ -45,7 +45,7 @@ export default function CareerStats({ player }: Props) {
             season.atBats > 0 ||
             season.hits > 0 ||
             season.inningsPitched > 0 ||
-            season.runsAllowed > 0
+            season.runsAllowed > 0,
     );
 
     // Calculate career totals
@@ -77,7 +77,7 @@ export default function CareerStats({ player }: Props) {
             walks: 0,
             strikeouts: 0,
             weightedEraSum: 0,
-        }
+        },
     );
 
     // Batting totals
@@ -90,7 +90,7 @@ export default function CareerStats({ player }: Props) {
     const careerERA =
         careerTotals && careerTotals.outsPitched > 0
             ? (careerTotals.weightedEraSum / careerTotals.outsPitched).toFixed(
-                  2
+                  2,
               )
             : "0.0";
 
