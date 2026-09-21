@@ -205,12 +205,18 @@ A few common scenarios:
 
 - Home-field advantage (the schema has no home/away fields).
 - Stadium-specific scoring environments.
-- Roster changes over time (older games count the same as recent ones).
-- Player-level adjustments (it's purely team-level run totals).
+- ~~Roster changes over time (older games count the same as recent ones).~~
+  *Now partially handled via the roster projection prior — see
+  ROSTER_PROJECTIONS.md. Each team's per-player historical stats feed a
+  projection that's blended into the engine's RS/RA inputs as a Bayesian
+  prior.*
+- ~~Player-level adjustments (it's purely team-level run totals).~~ *Same
+  — the projection is the per-player signal that flows into the engine.*
 
-If you need any of these, the cleanest extension point is the *data assembly*
-in `oddsService` / `oddsRepository` — feed different or weighted numbers into
-the same engine. The math itself rarely needs to change.
+If you need any of the remaining items (home-field, park factors), the
+cleanest extension point is the *data assembly* in `oddsService` /
+`oddsRepository` — feed different or weighted numbers into the same
+engine. The math itself rarely needs to change.
 
 ---
 

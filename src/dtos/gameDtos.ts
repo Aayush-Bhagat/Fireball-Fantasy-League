@@ -53,6 +53,19 @@ export type MatchOddsDto = {
 	sparseSample: boolean;
 	/** True when either team has played fewer than the cold-start threshold. */
 	coldStart: boolean;
+	/**
+	 * Win probability the engine would have produced using only observed
+	 * team-level RS/RA — i.e. without the roster projection blended in.
+	 * `null` when no projection was available for this matchup.
+	 */
+	teamProbWithoutProjection: number | null;
+	opponentProbWithoutProjection: number | null;
+	/** Projection's expected runs scored per game for each side. */
+	teamProjectedRS: number | null;
+	opponentProjectedRS: number | null;
+	/** Projection's expected runs allowed per game for each side. */
+	teamProjectedRA: number | null;
+	opponentProjectedRA: number | null;
 };
 
 /** Response for the team-pair odds calculator (schedule page). */
