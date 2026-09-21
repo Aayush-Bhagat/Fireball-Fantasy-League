@@ -1,6 +1,8 @@
 import { UpdateGameRequestDto, UpdateGameRequestSchema } from "@/dtos/gameDtos";
 import { getUserRoleFromToken } from "@/lib/authUtils";
+import { ROSTER_PROJECTION_CACHE_TAG } from "@/lib/cacheTags";
 import { updateGame } from "@/services/gameService";
+import { revalidateTag } from "next/cache";
 import { NextRequest, NextResponse } from "next/server";
 
 export async function PUT(request: NextRequest) {
@@ -28,6 +30,9 @@ export async function PUT(request: NextRequest) {
 	}
 
 	await updateGame(result.data);
+
+	// New player stats change every team's projection inputs.
+	revalidateTag(ROSTER_PROJECTION_CACHE_TAG);
 
 	return NextResponse.json({ message: "Game updated" }, { status: 200 });
 }
