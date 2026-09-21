@@ -1,5 +1,7 @@
 import { verifyJwtToken } from "@/lib/authUtils";
+import { ROSTER_PROJECTION_CACHE_TAG } from "@/lib/cacheTags";
 import { acceptTrade } from "@/services/tradeService";
+import { revalidateTag } from "next/cache";
 import { NextRequest, NextResponse } from "next/server";
 
 export async function POST(
@@ -22,6 +24,8 @@ export async function POST(
 
 	try {
 		await acceptTrade(userId, tradeId);
+		// An accepted trade moves players between rosters, changing projections.
+		revalidateTag(ROSTER_PROJECTION_CACHE_TAG);
 		return NextResponse.json(
 			{ message: "Trade accepted successfully" },
 			{ status: 200 }
