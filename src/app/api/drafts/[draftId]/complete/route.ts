@@ -1,5 +1,7 @@
 import { verifyJwtToken } from "@/lib/authUtils";
+import { ROSTER_PROJECTION_CACHE_TAG } from "@/lib/cacheTags";
 import { completeDraft } from "@/services/draftService";
+import { revalidateTag } from "next/cache";
 import { NextResponse } from "next/server";
 
 export async function POST(
@@ -17,6 +19,9 @@ export async function POST(
 	const { draftId } = await params;
 
 	await completeDraft(draftId, userId);
+
+	// Completed drafts assign players, changing every team's roster.
+	revalidateTag(ROSTER_PROJECTION_CACHE_TAG);
 
 	return NextResponse.json({ message: "Created Successfully" });
 }

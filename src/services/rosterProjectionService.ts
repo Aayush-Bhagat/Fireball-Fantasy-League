@@ -5,19 +5,24 @@
  * math). Loads the roster aggregates and league averages, hands them
  * to `projectRoster`, and returns the {@link TeamProjection}.
  *
- * Designed for safe failure: if any step throws (e.g. an empty team
- * roster), the service returns `null` rather than letting the caller
- * crash. Callers in the odds engine use `null` to fall back to the
- * pre-projection behavior.
+ * Designed for safe failure: if the cached computation throws (e.g. the
+ * DB pool is exhausted), the public functions return `null` / an empty
+ * map rather than letting the caller crash. Callers in the odds engine
+ * use that to fall back to the pre-projection behavior.
  *
- * Connection-pool awareness: the multi-team entry point fetches the
- * shared inputs (`findActiveSeasonIds`, `findLeagueAverages`) ONCE
- * for the whole batch and processes per-team queries in bounded
- * chunks. This avoids blowing the Supabase pooler's 15-client limit
- * when called from `computeSeasonOdds` over a 10-team league
- * (~30 concurrent queries if fanned out naively).
+ * Caching: projections only change when stats are entered or a roster
+ * moves, so the whole batch is cached in Next's data cache under
+ * {@link ROSTER_PROJECTION_CACHE_TAG}. Route handlers invalidate the tag
+ * on stat entry / roster changes; a TTL is kept as a safety net.
+ *
+ * Connection-pool awareness: the uncached computation fetches the shared
+ * inputs (`findActiveSeasonIds`, `findLeagueAverages`) ONCE per batch and
+ * processes per-team queries in bounded chunks. On a cache miss this
+ * avoids blowing the Supabase pooler's client limit when called from
+ * `computeSeasonOdds` over a 10-team league.
  */
 
+import { unstable_cache } from "next/cache";
 import {
 	findActiveSeasonIds,
 	findLeagueAverages,
@@ -32,6 +37,7 @@ import {
 	RosterStats,
 	TeamProjection,
 } from "@/dtos/projectionDtos";
+import { ROSTER_PROJECTION_CACHE_TAG } from "@/lib/cacheTags";
 
 /**
  * How many per-team `findRosterStats` calls to issue at once. Each call
@@ -40,6 +46,83 @@ import {
  * is also running other queries (e.g. the schedule fetch).
  */
 const PER_TEAM_CONCURRENCY = 5;
+
+/**
+ * Safety-net TTL for the projection cache. Normal freshness comes from
+ * `revalidateTag(ROSTER_PROJECTION_CACHE_TAG)` on stat/roster changes;
+ * this bounds staleness if a mutation path forgets to invalidate.
+ */
+const CACHE_REVALIDATE_SECONDS = 60 * 60;
+
+/** Serializable cache value: a `Map` would not survive the data cache. */
+type CachedProjectionEntry = {
+	teamId: string;
+	projection: TeamProjection;
+};
+
+/**
+ * Uncached batch computation.
+ *
+ * Deliberately lets any DB error propagate: `unstable_cache` does not
+ * cache rejections, so a transient pool failure is retried on the next
+ * request instead of being frozen as "no projections" for the TTL.
+ */
+async function computeProjectionEntries(
+	teamIds: string[],
+	configOverride?: Partial<ProjectionConfig>,
+): Promise<CachedProjectionEntry[]> {
+	const seasonIds = await findActiveSeasonIds(4);
+	if (seasonIds.length === 0) return [];
+
+	const leagueAverages = await findLeagueAverages(seasonIds);
+	const config = mergeConfig(configOverride);
+	const out: CachedProjectionEntry[] = [];
+
+	// Process per-team queries in bounded chunks. Each chunk awaits
+	// before the next one starts, so we never have more than
+	// `PER_TEAM_CONCURRENCY` pooled connections in flight for the
+	// per-team step.
+	for (let i = 0; i < teamIds.length; i += PER_TEAM_CONCURRENCY) {
+		const chunk = teamIds.slice(i, i + PER_TEAM_CONCURRENCY);
+		const chunkResults = await Promise.all(
+			chunk.map(async (teamId) => {
+				const players = await findRosterStats(teamId, seasonIds);
+				if (players.length === 0) return null;
+				const roster: RosterStats = {
+					teamId,
+					players,
+					leagueAverages,
+				};
+				const projection = projectRoster(roster, config);
+				return { teamId, projection };
+			}),
+		);
+		for (const r of chunkResults) {
+			if (r) out.push(r);
+		}
+	}
+
+	return out;
+}
+
+/**
+ * Cached batch computation. Keyed by the (order-independent) team-id
+ * set, so the full-schedule batch (all teams) and the two-team odds
+ * calculator each get their own entry, and repeated renders of the same
+ * set are served without touching the DB. Bump the key part if
+ * DEFAULT_PROJECTION_CONFIG changes so stale projections aren't served.
+ *
+ * Only the default config is cached. Callers passing a `configOverride`
+ * (the calibration scripts) bypass the cache.
+ */
+const getCachedProjectionEntries = unstable_cache(
+	(teamIds: string[]) => computeProjectionEntries(teamIds),
+	["roster-projections-v1"],
+	{
+		revalidate: CACHE_REVALIDATE_SECONDS,
+		tags: [ROSTER_PROJECTION_CACHE_TAG],
+	},
+);
 
 /**
  * Project a single team's roster.
@@ -51,30 +134,11 @@ export async function projectTeamRoster(
 	teamId: string,
 	configOverride?: Partial<ProjectionConfig>,
 ): Promise<TeamProjection | null> {
-	try {
-		const seasonIds = await findActiveSeasonIds(4);
-		if (seasonIds.length === 0) return null;
-
-		const leagueAverages = await findLeagueAverages(seasonIds);
-		const players = await findRosterStats(teamId, seasonIds);
-		if (players.length === 0) return null;
-
-		const roster: RosterStats = {
-			teamId,
-			players,
-			leagueAverages,
-		};
-
-		const config = mergeConfig(configOverride);
-		return projectRoster(roster, config);
-	} catch (error) {
-		// Don't break the odds flow on a bad projection. Log and move on.
-		console.error(
-			`[rosterProjectionService] Failed to project team ${teamId}:`,
-			error,
-		);
-		return null;
-	}
+	const projections = await projectMultipleTeamRosters(
+		[teamId],
+		configOverride,
+	);
+	return projections.get(teamId) ?? null;
 }
 
 /**
@@ -82,71 +146,36 @@ export async function projectTeamRoster(
  * that fail to project are omitted from the map (rather than mapped to
  * `null`) so callers can use a simple `has` check.
  *
- * Internally:
- *   1. `findActiveSeasonIds(4)` once.
- *   2. `findLeagueAverages(seasonIds)` once (shared across teams).
- *   3. `findRosterStats(teamId, seasonIds)` per team, processed in
- *      chunks of `PER_TEAM_CONCURRENCY` to stay under the pool limit.
- *
- * Net cost: 2 + ⌈N / concurrency⌉ pooled connections instead of 3N.
+ * On a cache hit this is zero DB round-trips; on a miss it computes the
+ * batch once and stores it under {@link ROSTER_PROJECTION_CACHE_TAG}.
  */
 export async function projectMultipleTeamRosters(
 	teamIds: string[],
 	configOverride?: Partial<ProjectionConfig>,
 ): Promise<Map<string, TeamProjection>> {
-	const unique = [...new Set(teamIds)];
+	const unique = [...new Set(teamIds.filter(Boolean))].sort();
 	const out = new Map<string, TeamProjection>();
 	if (unique.length === 0) return out;
 
 	try {
-		const seasonIds = await findActiveSeasonIds(4);
-		if (seasonIds.length === 0) return out;
+		const entries = configOverride
+			? await computeProjectionEntries(unique, configOverride)
+			: await getCachedProjectionEntries(unique);
 
-		const leagueAverages = await findLeagueAverages(seasonIds);
-		const config = mergeConfig(configOverride);
-
-		// Process per-team queries in bounded chunks. Each chunk awaits
-		// before the next one starts, so we never have more than
-		// `PER_TEAM_CONCURRENCY` pooled connections in flight for the
-		// per-team step.
-		for (let i = 0; i < unique.length; i += PER_TEAM_CONCURRENCY) {
-			const chunk = unique.slice(i, i + PER_TEAM_CONCURRENCY);
-			const chunkResults = await Promise.all(
-				chunk.map(async (teamId) => {
-					try {
-						const players = await findRosterStats(teamId, seasonIds);
-						if (players.length === 0) return null;
-						const roster: RosterStats = {
-							teamId,
-							players,
-							leagueAverages,
-						};
-						const projection = projectRoster(roster, config);
-						return { teamId, projection };
-					} catch (error) {
-						console.error(
-							`[rosterProjectionService] Failed to project team ${teamId}:`,
-							error,
-						);
-						return null;
-					}
-				}),
-			);
-			for (const r of chunkResults) {
-				if (r) out.set(r.teamId, r.projection);
-			}
+		for (const { teamId, projection } of entries) {
+			out.set(teamId, projection);
 		}
-
-		return out;
 	} catch (error) {
-		// Shared-fetch failure (season ids / league averages). Bail out
-		// for the whole batch — odds flow falls back to no projection.
+		// Don't break the odds flow on a bad projection — and don't cache
+		// the failure (see `computeProjectionEntries`). Callers fall back
+		// to the non-projection odds.
 		console.error(
-			"[rosterProjectionService] Failed to fetch shared inputs:",
+			"[rosterProjectionService] Failed to compute projections:",
 			error,
 		);
-		return out;
 	}
+
+	return out;
 }
 
 /**
