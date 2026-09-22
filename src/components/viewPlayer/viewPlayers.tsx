@@ -256,7 +256,7 @@ export default function ViewPlayers({ players, freeAgents = false }: Props) {
 
     const defaultFieldingRankings = useMemo(() => {
         const maxPutouts = Math.max(
-            ...players.map((p) => p.stats?.putout ?? 0),
+            ...players.map((p) => p.stats?.outs ?? 0),
             0,
         );
 
@@ -264,11 +264,11 @@ export default function ViewPlayers({ players, freeAgents = false }: Props) {
             .filter(
                 (p) =>
                     p.stats &&
-                    p.stats.putout !== null &&
-                    p.stats.putout !== undefined,
+                    p.stats.outs !== null &&
+                    p.stats.outs !== undefined,
             )
             .map((player) => {
-                const putouts = player.stats.putout ?? 0;
+                const putouts = player.stats.outs ?? 0;
 
                 const normalizedPutouts =
                     maxPutouts > 0 ? (putouts / maxPutouts) * 100 : 0;

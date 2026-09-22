@@ -1,6 +1,7 @@
 import {
 	calculateBAA,
 	calculateEra,
+	calculateFieldingErrors,
 	calculateInningsPitched,
 	calculateOBP,
 	calculateOBPAgainst,
@@ -207,6 +208,7 @@ export async function getTeamRoster(teamId: string) {
 				sacFlies: convertStringToNumber(stat?.sacFlies),
 				startHits: convertStringToNumber(stat?.startHits),
 				starsUsedBatting: convertStringToNumber(stat?.starsUsedBatting),
+				walksTaken: convertStringToNumber(stat?.walksTaken),
 
 				// Baserunning
 				stolenBases: convertStringToNumber(stat?.stolenBases),
@@ -214,9 +216,12 @@ export async function getTeamRoster(teamId: string) {
 				stealAttempts: convertStringToNumber(stat?.stealAttempts),
 
 				// Fielding
-				putout: convertStringToNumber(stat?.putout),
 				assist: convertStringToNumber(stat?.assist),
-				fieldingErrors: convertStringToNumber(stat?.fieldingErrors),
+				fieldingErrors: calculateFieldingErrors(
+					convertStringToNumber(stat?.bobbles),
+					convertStringToNumber(stat?.buddyJumpPutouts),
+					convertStringToNumber(stat?.buddyJumpAttempts),
+				),
 				buddyJumpPutouts: convertStringToNumber(stat?.buddyJumpPutouts),
 				buddyJumpAttempts: convertStringToNumber(
 					stat?.buddyJumpAttempts,

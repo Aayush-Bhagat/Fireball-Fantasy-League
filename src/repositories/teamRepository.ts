@@ -190,11 +190,7 @@ export async function findRosterStatsByTeam(teamId: string) {
 			),
 
 			// Fielding
-			putout: sum(playerGamesStats.putout).as("putout"),
 			assist: sum(playerGamesStats.assist).as("assist"),
-			fieldingErrors: sum(playerGamesStats.fieldingErrors).as(
-				"fieldingErrors",
-			),
 			buddyJumpPutouts: sum(playerGamesStats.buddyJumpPutouts).as(
 				"buddyJumpPutouts",
 			),
