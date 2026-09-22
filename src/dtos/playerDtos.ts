@@ -33,7 +33,7 @@ export type PlayerStatsDto = {
 	hits: number;
 	runs: number;
 	rbis: number;
-	walks: number;
+	walksTaken: number | null;
 	strikeouts: number;
 	homeRuns: number;
 	plateAppearances: number | null;
@@ -57,7 +57,6 @@ export type PlayerStatsDto = {
 	stealAttempts: number | null;
 
 	// Fielding
-	putout: number | null;
 	assist: number | null;
 	fieldingErrors: number | null;
 	buddyJumpPutouts: number | null;
@@ -71,6 +70,7 @@ export type PlayerStatsDto = {
 	outsPitched: number;
 	runsAllowed: number;
 	outs: number;
+	walks: number;
 	battersFaced: number | null;
 	pitches: number | null;
 	strikes: number | null;
@@ -123,6 +123,8 @@ export type PlayerStatsWithIdDto = PlayerStatsDto & {
 	playerId: string;
 	playerName: string;
 	playerImage: string | null;
+	position: TeamLineupPosition | null;
+	battingOrder: number | null;
 };
 
 export type PlayerWithStatsDto = {
@@ -188,7 +190,7 @@ export type CareerStatsDto = {
 	hits: number;
 	runs: number;
 	rbis: number;
-	walks: number;
+	walksTaken: number | null;
 	strikeouts: number;
 	homeRuns: number;
 	plateAppearances: number | null;
@@ -212,7 +214,6 @@ export type CareerStatsDto = {
 	stealAttempts: number | null;
 
 	// Fielding
-	putout: number | null;
 	assist: number | null;
 	fieldingErrors: number | null;
 	buddyJumpPutouts: number | null;
@@ -226,6 +227,7 @@ export type CareerStatsDto = {
 	outsPitched: number;
 	runsAllowed: number;
 	outs: number;
+	walks: number;
 	battersFaced: number | null;
 	pitches: number | null;
 	strikes: number | null;

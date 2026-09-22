@@ -1,5 +1,14 @@
 import { db } from "@/db";
-import { eq, sql, sum, and, countDistinct, isNull } from "drizzle-orm";
+import {
+	eq,
+	sql,
+	sum,
+	and,
+	countDistinct,
+	isNull,
+	inArray,
+	or,
+} from "drizzle-orm";
 import { players, playerHistory, playerGamesStats } from "@/models/players";
 import { games } from "@/models/games";
 import { seasonAwards, seasons } from "@/models/seasons";
@@ -99,11 +108,7 @@ export async function findAllPlayerStats(season?: string) {
 			stealAttempts: sum(playerGamesStats.stealAttempts).as(
 				"stealAttempts",
 			),
-			putout: sum(playerGamesStats.putout).as("putout"),
 			assist: sum(playerGamesStats.assist).as("assist"),
-			fieldingErrors: sum(playerGamesStats.fieldingErrors).as(
-				"fieldingErrors",
-			),
 			buddyJumpPutouts: sum(playerGamesStats.buddyJumpPutouts).as(
 				"buddyJumpPutouts",
 			),
@@ -215,11 +220,7 @@ export async function findPlayerCareerStats(playerId: string) {
 			),
 
 			// Fielding
-			putout: sum(playerGamesStats.putout).as("putout"),
 			assist: sum(playerGamesStats.assist).as("assist"),
-			fieldingErrors: sum(playerGamesStats.fieldingErrors).as(
-				"fieldingErrors",
-			),
 			buddyJumpPutouts: sum(playerGamesStats.buddyJumpPutouts).as(
 				"buddyJumpPutouts",
 			),
@@ -401,5 +402,127 @@ export function findPlayerAwards(playerId: string) {
 			season: true,
 			award: true,
 		},
+	});
+}
+
+export async function findPlayersByName(
+	names: string[],
+	miiId: string | null = null,
+) {
+	const conditions = [inArray(players.name, names)];
+
+	if (miiId) {
+		conditions.push(eq(players.id, miiId));
+	}
+
+	return await db.query.players.findMany({
+		where: or(...conditions),
+		with: {
+			teamLineups: true,
+		},
+	});
+}
+import {
+	StatTrackerBattingStatsPlayer,
+	StatTrackerPitchingStatsPlayer,
+} from "@/dtos/statTrackerDtos";
+import { calculateOutsPitched } from "@/lib/statUtils";
+
+export async function createPlayerGameStats(
+	gameId: string,
+	players: StatTrackerBattingStatsPlayer[],
+) {
+	const stats = players.map((player) => ({
+		gameId,
+		playerId: player.playerId,
+		teamId: player.teamId,
+
+		// Batting
+		atBats: player["At-Bats"],
+		hits: player.Hits,
+		runs: player.Runs,
+		rbis: player.RBI,
+		walksTaken: player.Walks,
+		strikeoutsBatted: player.Strikeouts,
+		homeRuns: player["Home Runs"],
+
+		plateAppearances: player["Plate Appearances"],
+		hitByPitch: player["Hit By Pitch"],
+		singles: player.Singles,
+		doubles: player.Doubles,
+		triples: player.Triples,
+		oneHr: player["1HR"],
+		twoHr: player["2HR"],
+		threeHr: player["3HR"],
+		grandSlams: player["Grand Slams"],
+		totalBases: player["Total Bases"],
+		sacFlies: player["Sac Flys"],
+		startHits: player["Star Hits"],
+		starsUsedBatting: player["Stars Used"],
+		stolenBases: player["Stolen Bases"],
+		caughtStealing: player["Caught Stealing"],
+		stealAttempts: player["Steal Attempts"],
+		putout: player.Putouts,
+		assist: player.Assists,
+		buddyJumpPutouts: player["Buddy Jump Putouts"],
+		buddyJumpAttempts: player["Buddy Jump Attempts"],
+		doublePlays: player["Double Plays"],
+		triplePlays: player["Triple Plays"],
+		bobbles: player.Bobbles,
+		outs: player.Putouts,
+
+		// Pitching stats — not present in batting import
+		walks: 0,
+		outsPitched: 0,
+		runsAllowed: 0,
+		strikeouts: 0,
+		position: player.position,
+		battingOrder: player.battingOrder,
+	}));
+
+	if (stats.length === 0) {
+		return [];
+	}
+
+	return await db.insert(playerGamesStats).values(stats).returning();
+}
+
+export async function updatePlayerGamePitchingStats(
+	gameId: string,
+	players: StatTrackerPitchingStatsPlayer[],
+) {
+	await db.transaction(async (tx) => {
+		for (const player of players) {
+			await tx
+				.update(playerGamesStats)
+				.set({
+					outsPitched: calculateOutsPitched(
+						player["Innings Pitched"],
+					),
+					runsAllowed: player["Runs Allowed"],
+					walks: player.Walks,
+					battersFaced: player["Batters Faced"],
+					pitches: player.Pitches,
+					strikes: player.Strikes,
+					balls: player.Balls,
+					beanBalls: player["Bean Balls"],
+					hitsAllowed: player["Hits Allowed"],
+					singlesAllowed: player["Singles Allowed"],
+					doublesAllowed: player["Doubles Allowed"],
+					triplesAllowed: player["Triples Allowed"],
+					homeRunsAllowed: player["HR Allowed"],
+					inheritedRuns: player["Inherited Runs"],
+					starPitches: player["Star Pitches"],
+					starsUsedPitching: player["Stars Used"],
+					pickoffs: player.Pickoffs,
+					pickoffAttempts: player["Pickoff Attempts"],
+				})
+				.where(
+					and(
+						eq(playerGamesStats.gameId, gameId),
+						eq(playerGamesStats.playerId, player.playerId),
+					),
+				);
+		}
 	});
 }

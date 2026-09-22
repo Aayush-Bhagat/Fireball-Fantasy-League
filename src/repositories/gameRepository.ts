@@ -295,9 +295,7 @@ export async function findPlayerGames(playerId: string, season?: string) {
 			stealAttempts: playerGamesStats.stealAttempts,
 
 			// Player stats - fielding
-			putout: playerGamesStats.putout,
 			assist: playerGamesStats.assist,
-			fieldingErrors: playerGamesStats.fieldingErrors,
 			buddyJumpPutouts: playerGamesStats.buddyJumpPutouts,
 			buddyJumpAttempts: playerGamesStats.buddyJumpAttempts,
 			doublePlays: playerGamesStats.doublePlays,
@@ -323,6 +321,8 @@ export async function findPlayerGames(playerId: string, season?: string) {
 			starsUsedPitching: playerGamesStats.starsUsedPitching,
 			pickoffs: playerGamesStats.pickoffs,
 			pickoffAttempts: playerGamesStats.pickoffAttempts,
+			position: playerGamesStats.position,
+			battingOrder: playerGamesStats.battingOrder,
 		})
 		.from(playerGamesStats)
 		.innerJoin(games, eq(playerGamesStats.gameId, games.id))

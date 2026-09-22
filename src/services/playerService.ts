@@ -8,6 +8,7 @@ import {
 import {
 	calculateBAA,
 	calculateEra,
+	calculateFieldingErrors,
 	calculateInningsPitched,
 	calculateOBP,
 	calculateOBPAgainst,
@@ -99,9 +100,12 @@ export async function getPlayerGames(playerId: string, season?: string) {
 				stealAttempts: game.stealAttempts,
 
 				// Fielding
-				putout: game.putout,
 				assist: game.assist,
-				fieldingErrors: game.fieldingErrors,
+				fieldingErrors: calculateFieldingErrors(
+					game.bobbles,
+					game.buddyJumpPutouts,
+					game.buddyJumpAttempts,
+				),
 				buddyJumpPutouts: game.buddyJumpPutouts,
 				buddyJumpAttempts: game.buddyJumpAttempts,
 				doublePlays: game.doublePlays,
@@ -192,6 +196,10 @@ export async function getPlayerGames(playerId: string, season?: string) {
 						game.battersFaced,
 					),
 				),
+
+				//position
+				position: game.position,
+				battingOrder: game.battingOrder,
 			},
 		};
 	});
@@ -311,9 +319,12 @@ export async function getAllPlayerStats(season?: string) {
 					stealAttempts: convertStringToNumber(stat?.stealAttempts),
 
 					// Fielding
-					putout: convertStringToNumber(stat?.putout),
+					fieldingErrors: calculateFieldingErrors(
+						convertStringToNumber(stat?.bobbles),
+						convertStringToNumber(stat?.buddyJumpPutouts),
+						convertStringToNumber(stat?.buddyJumpAttempts),
+					),
 					assist: convertStringToNumber(stat?.assist),
-					fieldingErrors: convertStringToNumber(stat?.fieldingErrors),
 					buddyJumpPutouts: convertStringToNumber(
 						stat?.buddyJumpPutouts,
 					),
@@ -454,7 +465,7 @@ export async function getAllFreeAgents() {
 					hits: Number(stat?.hits) || 0,
 					runs: Number(stat?.runs) || 0,
 					rbis: Number(stat?.rbis) || 0,
-					walks: Number(stat?.walks) || 0,
+					walks: Number(stat?.walksTaken) || 0,
 					strikeouts: Number(stat?.strikeouts) || 0,
 					homeRuns: Number(stat?.homeRuns) || 0,
 					inningsPitched: calculateInningsPitched(
@@ -500,9 +511,12 @@ export async function getAllFreeAgents() {
 					stealAttempts: convertStringToNumber(stat?.stealAttempts),
 
 					// Fielding
-					putout: convertStringToNumber(stat?.putout),
+					fieldingErrors: calculateFieldingErrors(
+						convertStringToNumber(stat?.bobbles),
+						convertStringToNumber(stat?.buddyJumpPutouts),
+						convertStringToNumber(stat?.buddyJumpAttempts),
+					),
 					assist: convertStringToNumber(stat?.assist),
-					fieldingErrors: convertStringToNumber(stat?.fieldingErrors),
 					buddyJumpPutouts: convertStringToNumber(
 						stat?.buddyJumpPutouts,
 					),
@@ -680,9 +694,12 @@ export async function getPlayerCareerStats(playerId: string) {
 			stealAttempts: convertStringToNumber(stat.stealAttempts),
 
 			// Fielding
-			putout: convertStringToNumber(stat.putout),
 			assist: convertStringToNumber(stat.assist),
-			fieldingErrors: convertStringToNumber(stat.fieldingErrors),
+			fieldingErrors: calculateFieldingErrors(
+				convertStringToNumber(stat.bobbles),
+				convertStringToNumber(stat.buddyJumpPutouts),
+				convertStringToNumber(stat.buddyJumpAttempts),
+			),
 			buddyJumpPutouts: convertStringToNumber(stat.buddyJumpPutouts),
 			buddyJumpAttempts: convertStringToNumber(stat.buddyJumpAttempts),
 			doublePlays: convertStringToNumber(stat.doublePlays),

@@ -39,6 +39,16 @@ export function calculateInningsPitched(outsPitched: number | null): number {
 	return Number(`${inningsPitched}.${outs}`);
 }
 
+export function calculateOutsPitched(inningsPitched: number | null): number {
+	if (inningsPitched === null) {
+		return 0;
+	}
+	const wholeInnings = Math.floor(inningsPitched);
+	const partialInning = Math.round((inningsPitched - wholeInnings) * 10);
+
+	return wholeInnings * 3 + partialInning;
+}
+
 export function calculateOBP(
 	hits: number | null,
 	walks: number | null,
@@ -207,4 +217,23 @@ export function calculateOPSAgainst(
 
 	const opsAgainst = obpAgainst + slgAgainst;
 	return parseFloat(opsAgainst.toFixed(3));
+}
+
+export function calculateFieldingErrors(
+	bobbles: number | null,
+	buddyJumpPutouts: number | null,
+	buddyJumpAttempts: number | null,
+): number | null {
+	if (
+		bobbles === null ||
+		buddyJumpPutouts === null ||
+		buddyJumpAttempts === null
+	) {
+		return null;
+	}
+
+	const unSuccessfulBuddyJumps = buddyJumpAttempts - buddyJumpPutouts;
+	const fieldingErrors = bobbles + unSuccessfulBuddyJumps;
+
+	return fieldingErrors;
 }

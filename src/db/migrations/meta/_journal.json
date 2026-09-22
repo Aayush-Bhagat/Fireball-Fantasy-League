@@ -169,6 +169,27 @@
       "when": 1790027530288,
       "tag": "0023_cuddly_firebird",
       "breakpoints": true
+    },
+    {
+      "idx": 24,
+      "version": "7",
+      "when": 1790104139340,
+      "tag": "0024_wandering_mathemanic",
+      "breakpoints": true
+    },
+    {
+      "idx": 25,
+      "version": "7",
+      "when": 1790107508118,
+      "tag": "0025_oval_zeigeist",
+      "breakpoints": true
+    },
+    {
+      "idx": 26,
+      "version": "7",
+      "when": 1790108564745,
+      "tag": "0026_fantastic_jazinda",
+      "breakpoints": true
     }
   ]
 }

@@ -1,6 +1,7 @@
 import {
 	calculateBAA,
 	calculateEra,
+	calculateFieldingErrors,
 	calculateInningsPitched,
 	calculateOBP,
 	calculateOBPAgainst,
@@ -231,9 +232,12 @@ export async function getGameStats(gameId: string) {
 			stealAttempts: stat.stealAttempts,
 
 			// Fielding
-			putout: stat.putout,
 			assist: stat.assist,
-			fieldingErrors: stat.fieldingErrors,
+			fieldingErrors: calculateFieldingErrors(
+				stat.bobbles,
+				stat.buddyJumpPutouts,
+				stat.buddyJumpAttempts,
+			),
 			buddyJumpPutouts: stat.buddyJumpPutouts,
 			buddyJumpAttempts: stat.buddyJumpAttempts,
 			doublePlays: stat.doublePlays,
@@ -330,6 +334,10 @@ export async function getGameStats(gameId: string) {
 					stat.battersFaced,
 				),
 			),
+
+			//position
+			position: stat.position,
+			battingOrder: stat.battingOrder,
 		})),
 		opponentPlayers: opponentGameStats.map((stat) => ({
 			playerId: stat.playerId,
@@ -363,9 +371,12 @@ export async function getGameStats(gameId: string) {
 			stealAttempts: stat.stealAttempts,
 
 			// Fielding
-			putout: stat.putout,
 			assist: stat.assist,
-			fieldingErrors: stat.fieldingErrors,
+			fieldingErrors: calculateFieldingErrors(
+				stat.bobbles,
+				stat.buddyJumpPutouts,
+				stat.buddyJumpAttempts,
+			),
 			buddyJumpPutouts: stat.buddyJumpPutouts,
 			buddyJumpAttempts: stat.buddyJumpAttempts,
 			doublePlays: stat.doublePlays,
@@ -462,6 +473,10 @@ export async function getGameStats(gameId: string) {
 					stat.battersFaced,
 				),
 			),
+
+			// position
+			position: stat.position,
+			battingOrder: stat.battingOrder,
 		})),
 	};
 

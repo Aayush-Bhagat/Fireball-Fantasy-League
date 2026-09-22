@@ -15,6 +15,7 @@ import { games } from "./games";
 import { tradeAssets, trades } from "./trades";
 import { seasons } from "./seasons";
 import { draftPicks } from "./draft";
+import { fieldingPositions } from "./enums";
 
 export const players = pgTable(
 	"players",
@@ -87,9 +88,7 @@ export const playerGamesStats = pgTable(
 		stolenBases: integer("stolen_bases"),
 		caughtStealing: integer("caught_stealing"),
 		stealAttempts: integer("steal_attempts"),
-		putout: integer("putout"),
 		assist: integer("assist"),
-		fieldingErrors: integer("fielding_errors"),
 		buddyJumpPutouts: integer("buddy_jump_putouts"),
 		buddyJumpAttempts: integer("buddy_jump_attempts"),
 		doublePlays: integer("double_plays"),
@@ -111,6 +110,8 @@ export const playerGamesStats = pgTable(
 		pickoffs: integer("pickoffs"),
 		pickoffAttempts: integer("pickoff_attempts"),
 		walksTaken: integer("walks_taken"),
+		position: fieldingPositions("position"),
+		battingOrder: integer("batting_order"),
 	},
 	(table) => [
 		primaryKey({ columns: [table.gameId, table.playerId] }),

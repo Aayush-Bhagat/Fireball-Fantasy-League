@@ -5,7 +5,6 @@ import {
 	text,
 	integer,
 	index,
-	pgEnum,
 	boolean,
 } from "drizzle-orm/pg-core";
 import { relations } from "drizzle-orm";
@@ -14,6 +13,7 @@ import { seasonAwards, seasons } from "./seasons";
 import { players, playerGamesStats, playerHistory } from "./players";
 import { playoffSeries, teamGames } from "./games";
 import { draftPicks } from "./draft";
+import { fieldingPositions } from "./enums";
 
 export const conferences = pgTable("conferences", {
 	id: integer("id").primaryKey(),
@@ -68,18 +68,6 @@ export const teamRelations = relations(teams, ({ one, many }) => ({
 	seasonAwards: many(seasonAwards),
 	playerHistory: many(playerHistory),
 }));
-
-export const fieldingPositions = pgEnum("fielding_positions", [
-	"C",
-	"1B",
-	"2B",
-	"3B",
-	"SS",
-	"LF",
-	"CF",
-	"RF",
-	"P",
-]);
 
 export const teamLineups = pgTable("team_lineups", {
 	playerId: uuid("player_id")

@@ -7,6 +7,7 @@ import {
 	timestamp,
 	pgEnum,
 	index,
+	text,
 } from "drizzle-orm/pg-core";
 import { relations } from "drizzle-orm";
 import { seasons } from "./seasons";
@@ -53,6 +54,8 @@ export const playoffSeriesRelations = relations(
 	}),
 );
 
+export const StadiumTime = pgEnum("Stadium_Time", ["Day", "Night"]);
+
 export const games = pgTable(
 	"games",
 	{
@@ -65,6 +68,11 @@ export const games = pgTable(
 		),
 		week: integer("week").notNull(),
 		playedAt: timestamp("played_at", { withTimezone: true }),
+		stadiumId: uuid("stadium_id").references(() => stadiums.id),
+		bannedStadiumId: uuid("banned_stadium_id").references(
+			() => stadiums.id,
+		),
+		stadiumTime: StadiumTime("stadium_time"),
 	},
 	(table) => [
 		index("idx_game_season_week").on(table.seasonId, table.week),
@@ -87,6 +95,14 @@ export const gameRelations = relations(games, ({ one, many }) => ({
 	}),
 	teams: many(teamGames),
 	playerGamesStats: many(playerGamesStats),
+	stadium: one(stadiums, {
+		fields: [games.stadiumId],
+		references: [stadiums.id],
+	}),
+	bannedStadium: one(stadiums, {
+		fields: [games.bannedStadiumId],
+		references: [stadiums.id],
+	}),
 }));
 
 export const gameOutcome = pgEnum("game_outcome", ["Win", "Loss", "Tie"]);
@@ -114,3 +130,10 @@ export const teamGames = pgTable(
 
 export type TeamGame = typeof teamGames.$inferSelect;
 export type CreateTeamGame = typeof teamGames.$inferInsert;
+
+export const stadiums = pgTable("stadiums", {
+	id: uuid("id").primaryKey(),
+	name: text("name").notNull().unique(),
+	icon: text("icon"),
+	banner: text("banner"),
+});
