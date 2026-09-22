@@ -50,7 +50,7 @@ export const playoffSeriesRelations = relations(
 			references: [teams.id],
 		}),
 		games: many(games),
-	})
+	}),
 );
 
 export const games = pgTable(
@@ -61,7 +61,7 @@ export const games = pgTable(
 			.notNull()
 			.references(() => seasons.id),
 		playoffSeriesId: uuid("playoff_series_id").references(
-			() => playoffSeries.id
+			() => playoffSeries.id,
 		),
 		week: integer("week").notNull(),
 		playedAt: timestamp("played_at", { withTimezone: true }),
@@ -70,7 +70,7 @@ export const games = pgTable(
 		index("idx_game_season_week").on(table.seasonId, table.week),
 		index("idx_game_playoff_series").on(table.playoffSeriesId),
 		index("idx_game_season").on(table.seasonId),
-	]
+	],
 );
 
 export type Game = typeof games.$inferSelect;
@@ -90,6 +90,7 @@ export const gameRelations = relations(games, ({ one, many }) => ({
 }));
 
 export const gameOutcome = pgEnum("game_outcome", ["Win", "Loss", "Tie"]);
+export const side = pgEnum("side", ["Home", "Away"]);
 
 export const teamGames = pgTable(
 	"team_games",
@@ -102,12 +103,13 @@ export const teamGames = pgTable(
 			.references(() => teams.id),
 		score: integer("score"),
 		outcome: gameOutcome("outcome"),
+		side: side("side"),
 	},
 	(table) => [
 		primaryKey({ columns: [table.gameId, table.teamId] }),
 		index("idx_team_games_game").on(table.gameId),
 		index("idx_team_games_team").on(table.teamId),
-	]
+	],
 );
 
 export type TeamGame = typeof teamGames.$inferSelect;

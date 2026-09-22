@@ -5,7 +5,7 @@ import { games, teamGames } from "@/models/games";
 import { playerGamesStats, players } from "@/models/players";
 import { seasons } from "@/models/seasons";
 import { conferences, teams } from "@/models/teams";
-import { eq, and, lt, ne, asc } from "drizzle-orm";
+import { eq, and, lt, ne, asc, isNull, gt, or } from "drizzle-orm";
 import { alias } from "drizzle-orm/pg-core";
 
 export async function findGamesByWeekAndSeason(
@@ -13,7 +13,6 @@ export async function findGamesByWeekAndSeason(
 	week: number | undefined,
 ): Promise<GameData[]> {
 	const opponent = alias(teams, "teamTwo");
-
 	const opponentGames = alias(teamGames, "teamTwoGames");
 
 	const seasonQuery = db
@@ -24,7 +23,6 @@ export async function findGamesByWeekAndSeason(
 		.where(eq(seasons.status, "in_progress"));
 
 	const seasonId = season ? season : seasonQuery;
-
 	const weekId = week ? week : seasons.currentWeek;
 
 	const result = db
@@ -33,18 +31,22 @@ export async function findGamesByWeekAndSeason(
 			playedAt: games.playedAt,
 			seasonId: games.seasonId,
 			week: games.week,
+
 			teamId: teams.id,
 			teamName: teams.name,
 			teamLogo: teams.logo,
 			teamAbbreviation: teams.abbreviation,
 			teamScore: teamGames.score,
 			teamOutcome: teamGames.outcome,
+			teamSide: teamGames.side,
+
 			opponentId: opponent.id,
 			opponentName: opponent.name,
 			opponentScore: opponentGames.score,
 			opponentAbbreviation: opponent.abbreviation,
 			opponentLogo: opponent.logo,
 			opponentOutcome: opponentGames.outcome,
+			opponentSide: opponentGames.side,
 		})
 		.from(teamGames)
 		.innerJoin(games, eq(teamGames.gameId, games.id))
@@ -52,7 +54,18 @@ export async function findGamesByWeekAndSeason(
 			opponentGames,
 			and(
 				eq(opponentGames.gameId, teamGames.gameId),
-				lt(opponentGames.teamId, teamGames.teamId),
+
+				or(
+					and(
+						eq(teamGames.side, "Home"),
+						eq(opponentGames.side, "Away"),
+					),
+					and(
+						isNull(teamGames.side),
+						isNull(opponentGames.side),
+						gt(teamGames.teamId, opponentGames.teamId),
+					),
+				),
 			),
 		)
 		.innerJoin(teams, eq(teamGames.teamId, teams.id))
@@ -92,12 +105,14 @@ export async function findSeasonSchedule(
 			teamAbbreviation: teams.abbreviation,
 			teamScore: teamGames.score,
 			teamOutcome: teamGames.outcome,
+			teamSide: teamGames.side,
 			opponentId: opponent.id,
 			opponentName: opponent.name,
 			opponentScore: opponentGames.score,
 			opponentAbbreviation: opponent.abbreviation,
 			opponentLogo: opponent.logo,
 			opponentOutcome: opponentGames.outcome,
+			opponentSide: opponentGames.side,
 		})
 		.from(teamGames)
 		.innerJoin(games, eq(teamGames.gameId, games.id))
@@ -105,14 +120,25 @@ export async function findSeasonSchedule(
 			opponentGames,
 			and(
 				eq(opponentGames.gameId, teamGames.gameId),
-				lt(opponentGames.teamId, teamGames.teamId),
+
+				or(
+					and(
+						eq(teamGames.side, "Home"),
+						eq(opponentGames.side, "Away"),
+					),
+					and(
+						isNull(teamGames.side),
+						isNull(opponentGames.side),
+						gt(teamGames.teamId, opponentGames.teamId),
+					),
+				),
 			),
 		)
 		.innerJoin(teams, eq(teamGames.teamId, teams.id))
 		.innerJoin(opponent, eq(opponentGames.teamId, opponent.id))
 		.innerJoin(seasons, eq(games.seasonId, seasons.id))
 		.where(eq(games.seasonId, seasonId))
-		.orderBy(games.id);
+		.orderBy(games.id, teamGames.side, opponentGames.side);
 
 	return result;
 }
@@ -146,12 +172,14 @@ export async function findTeamSchedule(
 			teamAbbreviation: teams.abbreviation,
 			teamScore: teamGames.score,
 			teamOutcome: teamGames.outcome,
+			teamSide: teamGames.side,
 			opponentId: opponent.id,
 			opponentName: opponent.name,
 			opponentScore: opponentGames.score,
 			opponentAbbreviation: opponent.abbreviation,
 			opponentLogo: opponent.logo,
 			opponentOutcome: opponentGames.outcome,
+			opponentSide: opponentGames.side,
 		})
 		.from(teamGames)
 		.innerJoin(games, eq(teamGames.gameId, games.id))
@@ -159,13 +187,32 @@ export async function findTeamSchedule(
 			opponentGames,
 			and(
 				eq(opponentGames.gameId, teamGames.gameId),
-				ne(opponentGames.teamId, teamGames.teamId),
+
+				or(
+					and(
+						eq(teamGames.side, "Home"),
+						eq(opponentGames.side, "Away"),
+					),
+					and(
+						isNull(teamGames.side),
+						isNull(opponentGames.side),
+						gt(teamGames.teamId, opponentGames.teamId),
+					),
+				),
 			),
 		)
 		.innerJoin(teams, eq(teamGames.teamId, teams.id))
 		.innerJoin(opponent, eq(opponentGames.teamId, opponent.id))
 		.innerJoin(seasons, eq(games.seasonId, seasons.id))
-		.where(and(eq(games.seasonId, seasonId), eq(teamGames.teamId, teamId)))
+		.where(
+			and(
+				eq(games.seasonId, seasonId),
+				or(
+					eq(teamGames.teamId, teamId),
+					eq(opponentGames.teamId, teamId),
+				),
+			),
+		)
 		.orderBy(games.week, games.playedAt, games.id);
 
 	return result;
@@ -336,6 +383,7 @@ export async function findGameById(gameId: string) {
 			teamAbbreviation: teams.abbreviation,
 			teamScore: teamGames.score,
 			teamOutcome: teamGames.outcome,
+			teamSide: teamGames.side,
 			teamConference: teamConference.name,
 			teamUserId: teams.userId,
 			opponentId: opponent.id,
@@ -344,6 +392,7 @@ export async function findGameById(gameId: string) {
 			opponentAbbreviation: opponent.abbreviation,
 			opponentLogo: opponent.logo,
 			opponentOutcome: opponentGames.outcome,
+			opponentSide: opponentGames.side,
 			opponentConference: opponentConference.name,
 			opponentUserId: opponent.userId,
 		})
@@ -353,7 +402,18 @@ export async function findGameById(gameId: string) {
 			opponentGames,
 			and(
 				eq(opponentGames.gameId, teamGames.gameId),
-				lt(opponentGames.teamId, teamGames.teamId),
+
+				or(
+					and(
+						eq(teamGames.side, "Home"),
+						eq(opponentGames.side, "Away"),
+					),
+					and(
+						isNull(teamGames.side),
+						isNull(opponentGames.side),
+						gt(teamGames.teamId, opponentGames.teamId),
+					),
+				),
 			),
 		)
 		.innerJoin(teams, eq(teamGames.teamId, teams.id))
