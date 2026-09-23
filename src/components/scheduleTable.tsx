@@ -150,7 +150,7 @@ export default function ScheduleTable({ gamesData }: Props) {
                                 opponentAbbreviation={
                                     game.opponent.abbreviation
                                 }
-                                className="justify-center scale-100"
+                                className="justify-center scale-90"
                             />
                         ) : (
                             <span className="text-[10px] text-gray-400">
