@@ -4,6 +4,7 @@ import React from "react";
 import { GameResponseDto } from "@/dtos/gameDtos";
 import { format } from "date-fns";
 import { useRouter } from "next/navigation";
+import { Ban, MapPin } from "lucide-react";
 
 interface Props {
     teamSchedule: Promise<GameResponseDto>;
@@ -118,6 +119,16 @@ export default function TeamSchedule({ teamSchedule, isAdmin }: Props) {
                                                     {game.teamWins} -{" "}
                                                     {game.teamLosses}
                                                 </div>
+
+                                                {/* Picked stadium */}
+                                                {game.stadium?.name && (
+                                                    <div className="mt-1.5 inline-flex items-center gap-1 rounded-md border border-green-200 bg-green-100 px-2 py-1 text-[11px] font-bold leading-tight text-green-800">
+                                                        <MapPin className="h-3 w-3 shrink-0" />
+                                                        <span className="break-words text-left">
+                                                            {game.stadium.name}
+                                                        </span>
+                                                    </div>
+                                                )}
                                             </div>
 
                                             {game.team.logo ? (
@@ -174,6 +185,20 @@ export default function TeamSchedule({ teamSchedule, isAdmin }: Props) {
                                                     {game.opponentWins} -{" "}
                                                     {game.opponentLosses}
                                                 </div>
+
+                                                {/* Banned stadium */}
+                                                {game.bannedStadium?.name && (
+                                                    <div className="mt-1.5 inline-flex items-center gap-1 rounded-md border border-red-200 bg-red-100 px-2 py-1 text-[11px] font-bold leading-tight text-red-700">
+                                                        <Ban className="h-3 w-3 shrink-0" />
+                                                        <span className="break-words  decoration-red-500 decoration-2">
+                                                            {
+                                                                game
+                                                                    .bannedStadium
+                                                                    .name
+                                                            }
+                                                        </span>
+                                                    </div>
+                                                )}
                                             </div>
                                         </div>
                                     </div>

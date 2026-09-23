@@ -21,6 +21,7 @@ import {
     calculateSLGAgainst,
     calculateOPSAgainst,
 } from "@/lib/statUtils";
+import { MapPin, Ban, Moon, Sun } from "lucide-react";
 
 interface Props {
     boxScore: Promise<GameStatsDto>;
@@ -1682,28 +1683,66 @@ export const BoxScore = async ({ boxScore }: Props) => {
     const teamWon = hasScore && teamScore > opponentScore;
 
     const opponentWon = hasScore && opponentScore > teamScore;
-
+    const banner = data.stadium?.banner;
+    const stadiumTime = data.stadiumTime?.toLowerCase();
+    const isDay = stadiumTime === "day";
+    const isNight = stadiumTime === "night";
     return (
         <TooltipProvider>
             <div className="min-h-screen bg-slate-50 px-4 py-6 sm:px-6">
                 <div className="mx-auto max-w-6xl">
                     {/* =====================================================
-                        GAME HEADER
-                    ====================================================== */}
+                                      GAME HEADER
+                ====================================================== */}
 
-                    <div className="mb-6 overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm">
-                        <div className="px-5 py-6 sm:px-8">
+                    <div
+                        className="relative mb-6 overflow-hidden rounded-2xl border border-slate-200 bg-white bg-cover bg-center shadow-sm"
+                        style={
+                            banner
+                                ? { backgroundImage: `url(${banner})` }
+                                : undefined
+                        }
+                    >
+                        {/* Readability overlay (only when there's a banner) */}
+                        {banner && (
+                            <div className="absolute inset-0 bg-white/60" />
+                        )}
+
+                        <div className="relative px-5 py-6 sm:px-8">
                             <div className="mb-5 text-center">
-                                <p className="text-xs font-semibold uppercase tracking-wider text-slate-400">
+                                <p className="text-xs font-semibold uppercase tracking-wider text-black">
                                     Box Score
                                 </p>
 
-                                <h1 className="mt-1 text-xl font-bold text-slate-900 sm:text-2xl">
-                                    {data.team.name} vs {data.opponent.name}
+                                <h1 className="mt-1 grid grid-cols-[1fr_auto_1fr] items-center gap-2 text-xl font-bold text-slate-900 sm:gap-3 sm:text-2xl">
+                                    <span className="min-w-0 truncate text-right">
+                                        {data.team.name}
+                                    </span>
+                                    <span className="text-base font-semibold text-slate-500 sm:text-lg">
+                                        vs
+                                    </span>
+                                    <span className="min-w-0 truncate text-left">
+                                        {data.opponent.name}
+                                    </span>
                                 </h1>
+
+                                {(isDay || isNight) && (
+                                    <div className="mt-2 flex justify-center">
+                                        {isDay ? (
+                                            <span className="inline-flex items-center gap-1.5 rounded-full border border-amber-200 bg-amber-100 px-3 py-1 text-xs font-bold leading-none text-amber-700 shadow-sm">
+                                                <Sun className="h-3.5 w-3.5" />
+                                                Day
+                                            </span>
+                                        ) : (
+                                            <span className="inline-flex items-center gap-1.5 rounded-full border border-indigo-200 bg-indigo-100 px-3 py-1 text-xs font-bold leading-none text-indigo-700 shadow-sm">
+                                                <Moon className="h-3.5 w-3.5" />
+                                                Night
+                                            </span>
+                                        )}
+                                    </div>
+                                )}
                             </div>
 
-                            {/* Score */}
                             <div className="flex items-center justify-center gap-4 sm:gap-10">
                                 {/* Team */}
                                 <div className="flex min-w-0 flex-1 items-center justify-end gap-3 sm:gap-4">
@@ -1718,7 +1757,7 @@ export const BoxScore = async ({ boxScore }: Props) => {
                                             {data.team.name}
                                         </div>
 
-                                        <div className="text-xs text-slate-400">
+                                        <div className="text-xs text-slate-500">
                                             {!hasScore
                                                 ? "Upcoming"
                                                 : teamWon
@@ -1727,13 +1766,23 @@ export const BoxScore = async ({ boxScore }: Props) => {
                                                     ? "Loser"
                                                     : "Tie"}
                                         </div>
+
+                                        {/* Picked stadium */}
+                                        {data.stadium?.name && (
+                                            <div className="mt-1.5 inline-flex items-center gap-1 rounded-md border border-green-200 bg-green-100 px-2 py-1 text-xs font-bold leading-tight text-green-800">
+                                                <MapPin className="h-3 w-3 shrink-0" />
+                                                <span className="break-words">
+                                                    {data.stadium.name}
+                                                </span>
+                                            </div>
+                                        )}
                                     </div>
 
                                     {data.team.logo && (
                                         <img
                                             src={data.team.logo}
                                             alt={`${data.team.name} logo`}
-                                            className="h-14 w-14 shrink-0 rounded-full border border-slate-200 object-cover sm:h-16 sm:w-16"
+                                            className="h-14 w-14 shrink-0 rounded-full border border-slate-200 bg-white object-cover sm:h-16 sm:w-16"
                                         />
                                     )}
                                 </div>
@@ -1771,7 +1820,7 @@ export const BoxScore = async ({ boxScore }: Props) => {
                                         <img
                                             src={data.opponent.logo}
                                             alt={`${data.opponent.name} logo`}
-                                            className="h-14 w-14 shrink-0 rounded-full border border-slate-200 object-cover sm:h-16 sm:w-16"
+                                            className="h-14 w-14 shrink-0 rounded-full border border-slate-200 bg-white object-cover sm:h-16 sm:w-16"
                                         />
                                     )}
 
@@ -1786,7 +1835,7 @@ export const BoxScore = async ({ boxScore }: Props) => {
                                             {data.opponent.name}
                                         </div>
 
-                                        <div className="text-xs text-slate-400">
+                                        <div className="text-xs text-slate-500">
                                             {!hasScore
                                                 ? "Upcoming"
                                                 : opponentWon
@@ -1795,6 +1844,16 @@ export const BoxScore = async ({ boxScore }: Props) => {
                                                     ? "Loser"
                                                     : "Tie"}
                                         </div>
+
+                                        {/* Banned stadium */}
+                                        {data.bannedStadium?.name && (
+                                            <div className="mt-1.5 inline-flex items-center gap-1 rounded-md border border-red-200 bg-red-100 px-2 py-1 text-xs font-bold leading-tight text-red-700">
+                                                <Ban className="h-3 w-3 shrink-0" />
+                                                <span className="break-words  decoration-red-500 decoration-2">
+                                                    {data.bannedStadium.name}
+                                                </span>
+                                            </div>
+                                        )}
                                     </div>
                                 </div>
                             </div>
