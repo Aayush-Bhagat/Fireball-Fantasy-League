@@ -9,6 +9,16 @@ import {
     TooltipTrigger,
 } from "@/components/ui/tooltip";
 import { ArrowUpRight, Users } from "lucide-react";
+import {
+    calculateOBP,
+    calculateSLG,
+    calculateOPS,
+    calculateWHIP,
+    calculateBAA,
+    calculateOBPAgainst,
+    calculateSLGAgainst,
+    calculateOPSAgainst,
+} from "@/lib/statUtils";
 
 type Props = {
     playersData: Promise<PlayerStatsResponseDto>;
@@ -18,72 +28,113 @@ type Props = {
 /* Ranking Logic                                           */
 /* ====================================================== */
 
+/* ====================================================== */
+/* Ranking Logic                                          */
+/* ====================================================== */
+
 function getTopBatters(players: PlayerWithStatsDto[], count = 5) {
-    const weights = {
-        hr: 2,
-        rbi: 1,
-        avg: 2.5,
-    };
+    const qualifiedPlayers = players.filter((p) => p.stats);
 
-    const validPlayers = players.filter(
-        (p) => p.stats && p.stats.battingAverage !== undefined,
-    );
-
-    if (validPlayers.length === 0) {
+    if (qualifiedPlayers.length === 0) {
         return [];
     }
 
-    const maxHR = Math.max(...validPlayers.map((p) => p.stats.homeRuns ?? 0));
+    const getBattingStats = (player: PlayerWithStatsDto) => {
+        const s = player.stats!;
 
-    const maxRBI = Math.max(...validPlayers.map((p) => p.stats.rbis ?? 0));
+        const atBats = s.atBats ?? 0;
+        const hits = s.hits ?? 0;
+        const walks = s.walksTaken ?? 0;
+        const hitByPitch = s.hitByPitch ?? 0;
+        const sacFlies = s.sacFlies ?? 0;
 
-    const maxAVG = Math.max(
-        ...validPlayers.map((p) => p.stats.battingAverage ?? 0),
-    );
+        const singles = s.singles ?? 0;
+        const doubles = s.doubles ?? 0;
+        const triples = s.triples ?? 0;
+        const homeRuns = s.homeRuns ?? 0;
 
-    return validPlayers
-        .map((p) => {
-            const { homeRuns = 0, rbis = 0, battingAverage = 0 } = p.stats;
+        const plateAppearances = s.plateAppearances ?? 0;
+        const runs = s.runs ?? 0;
+        const rbis = s.rbis ?? 0;
 
-            const normalizedHR = maxHR ? homeRuns / maxHR : 0;
+        const battingAverage = atBats > 0 ? hits / atBats : 0;
 
-            const normalizedRBI = maxRBI ? rbis / maxRBI : 0;
+        const obp =
+            calculateOBP(hits, walks, hitByPitch, atBats, sacFlies) ?? 0;
 
-            const normalizedAVG = maxAVG ? battingAverage / maxAVG : 0;
+        const slg =
+            calculateSLG(hits, singles, doubles, triples, homeRuns, atBats) ??
+            0;
 
-            const score =
-                normalizedHR * weights.hr +
-                normalizedRBI * weights.rbi +
-                normalizedAVG * weights.avg;
+        const ops = calculateOPS(obp, slg) ?? 0;
 
-            return {
-                ...p,
-                score,
-            };
-        })
-        .sort((a, b) => b.score - a.score)
-        .slice(0, count);
-}
+        // Calculate directly from hit types
+        const totalBases = singles + 2 * doubles + 3 * triples + 4 * homeRuns;
 
-function getTopPitchers(players: PlayerWithStatsDto[], count = 5) {
-    const weights = {
-        era: -4,
-        so: 0.15,
-        ip: 2,
+        const tbPerPA =
+            plateAppearances > 0 ? totalBases / plateAppearances : 0;
+
+        const rbiPerPA = plateAppearances > 0 ? rbis / plateAppearances : 0;
+
+        const runsPerPA = plateAppearances > 0 ? runs / plateAppearances : 0;
+
+        return {
+            battingAverage,
+            obp,
+            slg,
+            ops,
+            totalBases,
+            tbPerPA,
+            rbiPerPA,
+            runsPerPA,
+            plateAppearances,
+        };
     };
 
-    return players
-        .filter(
-            (p) =>
-                p.stats &&
-                p.stats.era !== undefined &&
-                p.stats.inningsPitched >= p.stats.gamesPlayed,
-        )
-        .map((player) => {
+    const allStats = qualifiedPlayers.map(getBattingStats);
+
+    const normalize = (value: number, values: number[]) => {
+        const min = Math.min(...values);
+        const max = Math.max(...values);
+
+        if (max === min) return 100;
+
+        return ((value - min) / (max - min)) * 100;
+    };
+
+    const opsValues = allStats.map((s) => s.ops);
+    const battingAverageValues = allStats.map((s) => s.battingAverage);
+    const rbiPerPAValues = allStats.map((s) => s.rbiPerPA);
+    const tbPerPAValues = allStats.map((s) => s.tbPerPA);
+    const runsPerPAValues = allStats.map((s) => s.runsPerPA);
+    const paValues = allStats.map((s) => s.plateAppearances);
+
+    return qualifiedPlayers
+        .map((player, index) => {
+            const stats = allStats[index];
+
+            const opsScore = normalize(stats.ops, opsValues);
+
+            const battingAverageScore = normalize(
+                stats.battingAverage,
+                battingAverageValues,
+            );
+
+            const rbiScore = normalize(stats.rbiPerPA, rbiPerPAValues);
+
+            const tbScore = normalize(stats.tbPerPA, tbPerPAValues);
+
+            const runsScore = normalize(stats.runsPerPA, runsPerPAValues);
+
+            const volumeScore = normalize(stats.plateAppearances, paValues);
+
             const score =
-                player.stats.era * weights.era +
-                player.stats.strikeouts * weights.so +
-                player.stats.inningsPitched * weights.ip;
+                opsScore * 0.3 +
+                battingAverageScore * 0.25 +
+                rbiScore * 0.15 +
+                tbScore * 0.15 +
+                runsScore * 0.1 +
+                volumeScore * 0.05;
 
             return {
                 ...player,
@@ -94,6 +145,170 @@ function getTopPitchers(players: PlayerWithStatsDto[], count = 5) {
         .slice(0, count);
 }
 
+function getTopPitchers(players: PlayerWithStatsDto[], count = 5) {
+    const qualifiedPlayers = players.filter((p) => {
+        if (!p.stats) return false;
+
+        const outsPitched = p.stats.outsPitched ?? 0;
+        const gamesPlayed = p.stats.gamesPlayed ?? 0;
+
+        // Must have > 0 IP and meet IP >= games played
+        return outsPitched > 0 && outsPitched >= gamesPlayed * 3;
+    });
+
+    if (qualifiedPlayers.length === 0) {
+        return [];
+    }
+
+    const getPitchingStats = (player: PlayerWithStatsDto) => {
+        const s = player.stats!;
+
+        const outsPitched = s.outsPitched ?? 0;
+        const runsAllowed = s.runsAllowed ?? 0;
+        const hitsAllowed = s.hitsAllowed ?? 0;
+        const walks = s.walks ?? 0;
+
+        const inningsPitched = outsPitched / 3;
+
+        const era = inningsPitched > 0 ? (runsAllowed / inningsPitched) * 9 : 0;
+
+        const whip = calculateWHIP(walks, hitsAllowed, outsPitched) ?? 0;
+
+        const atBatsAgainst =
+            s.battersFaced !== null && s.walks !== null && s.beanBalls !== null
+                ? Math.max(0, s.battersFaced - s.walks - s.beanBalls)
+                : null;
+
+        const baa = calculateBAA(hitsAllowed, atBatsAgainst) ?? 0;
+
+        const obpAgainst =
+            calculateOBPAgainst(
+                hitsAllowed,
+                walks,
+                atBatsAgainst,
+                s.beanBalls ?? 0,
+            ) ?? 0;
+
+        const slgAgainst =
+            calculateSLGAgainst(
+                hitsAllowed,
+                s.singlesAllowed ?? 0,
+                s.doublesAllowed ?? 0,
+                s.triplesAllowed ?? 0,
+                s.homeRunsAllowed ?? 0,
+                atBatsAgainst,
+            ) ?? 0;
+
+        const opsAgainst = calculateOPSAgainst(obpAgainst, slgAgainst) ?? 0;
+
+        const strikeouts = s.strikeouts ?? 0;
+
+        const gamesPlayed = s.gamesPlayed ?? 0;
+
+        return {
+            era,
+            whip,
+            baa,
+            obpAgainst,
+            slgAgainst,
+            opsAgainst,
+            strikeouts,
+            inningsPitched,
+            gamesPlayed,
+        };
+    };
+
+    const allStats = qualifiedPlayers.map(getPitchingStats);
+
+    const normalize = (
+        value: number,
+        values: number[],
+        higherIsBetter = true,
+    ) => {
+        const min = Math.min(...values);
+        const max = Math.max(...values);
+
+        if (max === min) return 100;
+
+        return higherIsBetter
+            ? ((value - min) / (max - min)) * 100
+            : ((max - value) / (max - min)) * 100;
+    };
+
+    const eraValues = allStats.map((s) => s.era);
+    const whipValues = allStats.map((s) => s.whip);
+    const baaValues = allStats.map((s) => s.baa);
+    const obpAgainstValues = allStats.map((s) => s.obpAgainst);
+    const slgAgainstValues = allStats.map((s) => s.slgAgainst);
+    const inningsValues = allStats.map((s) => s.inningsPitched);
+    const gamesValues = allStats.map((s) => s.gamesPlayed);
+    const strikeoutValues = allStats.map((s) => s.strikeouts);
+
+    return qualifiedPlayers
+        .map((player, index) => {
+            const stats = allStats[index];
+
+            // Run prevention: 40%
+            const eraScore = normalize(stats.era, eraValues, false);
+
+            const whipScore = normalize(stats.whip, whipValues, false);
+
+            const runPreventionScore = eraScore * 0.6 + whipScore * 0.4;
+
+            // Contact suppression: 30%
+            const baaScore = normalize(stats.baa, baaValues, false);
+
+            const obpAgainstScore = normalize(
+                stats.obpAgainst,
+                obpAgainstValues,
+                false,
+            );
+
+            const slgAgainstScore = normalize(
+                stats.slgAgainst,
+                slgAgainstValues,
+                false,
+            );
+
+            const contactSuppressionScore =
+                baaScore * 0.4 + obpAgainstScore * 0.3 + slgAgainstScore * 0.3;
+
+            // Volume: 15%
+            const inningsScore = normalize(
+                stats.inningsPitched,
+                inningsValues,
+                true,
+            );
+
+            const gamesScore = normalize(stats.gamesPlayed, gamesValues, true);
+
+            const volumeScore = inningsScore * 0.7 + gamesScore * 0.3;
+
+            // Control: 10%
+            const controlScore = normalize(stats.whip, whipValues, false);
+
+            // Strikeouts: 5%
+            const strikeoutScore = normalize(
+                stats.strikeouts,
+                strikeoutValues,
+                true,
+            );
+
+            const score =
+                runPreventionScore * 0.4 +
+                contactSuppressionScore * 0.3 +
+                volumeScore * 0.15 +
+                controlScore * 0.1 +
+                strikeoutScore * 0.05;
+
+            return {
+                ...player,
+                score,
+            };
+        })
+        .sort((a, b) => b.score - a.score)
+        .slice(0, count);
+}
 /* ====================================================== */
 /* Player Identity                                         */
 /* ====================================================== */
@@ -233,7 +448,17 @@ export default async function PlayerStatsTable({ playersData }: Props) {
                                             <th className="py-3 px-2 text-left text-xs font-semibold uppercase tracking-wider text-gray-500">
                                                 Player
                                             </th>
+                                            <Tooltip>
+                                                <TooltipTrigger asChild>
+                                                    <th className="w-16 py-3 px-2 text-center text-xs font-semibold uppercase tracking-wider text-gray-500 cursor-help">
+                                                        H
+                                                    </th>
+                                                </TooltipTrigger>
 
+                                                <TooltipContent>
+                                                    <p>Hits</p>
+                                                </TooltipContent>
+                                            </Tooltip>
                                             <Tooltip>
                                                 <TooltipTrigger asChild>
                                                     <th className="w-16 py-3 px-2 text-center text-xs font-semibold uppercase tracking-wider text-gray-500 cursor-help">
@@ -294,7 +519,11 @@ export default async function PlayerStatsTable({ playersData }: Props) {
                                                     rank={index + 1}
                                                 />
                                             </td>
-
+                                            <td className="py-3 px-2 text-center">
+                                                <span className="text-sm font-bold text-gray-800">
+                                                    {player.stats.hits}
+                                                </span>
+                                            </td>
                                             <td className="py-3 px-2 text-center">
                                                 <span className="text-sm font-bold text-gray-800">
                                                     {player.stats.homeRuns}

@@ -30,6 +30,17 @@ import AdvancedStatsTable, {
     ADVANCED_PITCHING_STATS,
     getAdvancedStatValue,
 } from "./AdvancedStatsTable";
+import {
+    calculateBAA,
+    calculateEra,
+    calculateOBP,
+    calculateOBPAgainst,
+    calculateOPS,
+    calculateOPSAgainst,
+    calculateSLG,
+    calculateSLGAgainst,
+    calculateWHIP,
+} from "@/lib/statUtils";
 
 /*
  * ============================================================
@@ -146,6 +157,42 @@ export default function ViewPlayers({ players, freeAgents = false }: Props) {
         setSelectedPlayer(null);
     };
 
+    const percentileScore = (
+        value: number,
+        values: number[],
+        higherIsBetter = true,
+    ) => {
+        if (values.length <= 1) return 100;
+
+        const validValues = values.filter((v) => Number.isFinite(v));
+
+        if (validValues.length <= 1) return 100;
+
+        const sorted = [...validValues].sort((a, b) => a - b);
+
+        // Average percentile for tied values
+        const firstIndex = sorted.findIndex((v) => v === value);
+        const lastIndex = sorted.findLastIndex((v) => v === value);
+
+        if (firstIndex === -1) {
+            // Value isn't exactly present due to floating point differences.
+            // Count how many values are below/above it instead.
+            const betterCount = higherIsBetter
+                ? sorted.filter((v) => v < value).length
+                : sorted.filter((v) => v > value).length;
+
+            return (betterCount / (sorted.length - 1)) * 100;
+        }
+
+        const averageIndex = (firstIndex + lastIndex) / 2;
+
+        if (higherIsBetter) {
+            return (averageIndex / (sorted.length - 1)) * 100;
+        }
+
+        return ((sorted.length - 1 - averageIndex) / (sorted.length - 1)) * 100;
+    };
+
     /*
      * ========================================================
      * Default Batting Rankings
@@ -153,51 +200,120 @@ export default function ViewPlayers({ players, freeAgents = false }: Props) {
      */
 
     const defaultBattingRankings = useMemo(() => {
-        const weights = {
-            hr: 2,
-            rbi: 1,
-            avg: 2.5,
+        const qualifiedPlayers = players.filter((p) => p.stats);
+
+        const getBattingStats = (player: (typeof qualifiedPlayers)[number]) => {
+            const s = player.stats!;
+
+            const atBats = s.atBats ?? 0;
+            const hits = s.hits ?? 0;
+            const walks = s.walksTaken ?? 0;
+            const hitByPitch = s.hitByPitch ?? 0;
+            const sacFlies = s.sacFlies ?? 0;
+
+            const singles = s.singles ?? 0;
+            const doubles = s.doubles ?? 0;
+            const triples = s.triples ?? 0;
+            const homeRuns = s.homeRuns ?? 0;
+
+            const plateAppearances = s.plateAppearances ?? 0;
+            const runs = s.runs ?? 0;
+            const rbis = s.rbis ?? 0;
+
+            const battingAverage = atBats > 0 ? hits / atBats : 0;
+
+            const obp =
+                calculateOBP(hits, walks, hitByPitch, atBats, sacFlies) ?? 0;
+
+            const slg =
+                calculateSLG(
+                    hits,
+                    singles,
+                    doubles,
+                    triples,
+                    homeRuns,
+                    atBats,
+                ) ?? 0;
+
+            const ops = calculateOPS(obp, slg) ?? 0;
+
+            // Calculate total bases directly.
+            // Do NOT use s.totalBases here.
+            const totalBases =
+                singles + 2 * doubles + 3 * triples + 4 * homeRuns;
+
+            const tbPerPA =
+                plateAppearances > 0 ? totalBases / plateAppearances : 0;
+
+            const rbiPerPA = plateAppearances > 0 ? rbis / plateAppearances : 0;
+
+            const runsPerPA =
+                plateAppearances > 0 ? runs / plateAppearances : 0;
+
+            return {
+                battingAverage,
+                obp,
+                slg,
+                ops,
+                totalBases,
+                tbPerPA,
+                rbiPerPA,
+                runsPerPA,
+                plateAppearances,
+            };
         };
 
-        const maxHR = Math.max(
-            ...players.map((p) => p.stats?.homeRuns ?? 0),
-            0,
-        );
+        const allStats = qualifiedPlayers.map(getBattingStats);
 
-        const maxRBI = Math.max(...players.map((p) => p.stats?.rbis ?? 0), 0);
+        const normalize = (value: number, values: number[]) => {
+            const min = Math.min(...values);
+            const max = Math.max(...values);
 
-        const maxAVG = Math.max(
-            ...players.map((p) => p.stats?.battingAverage ?? 0),
-            0,
-        );
+            // Everyone has the same value.
+            if (max === min) {
+                return 100;
+            }
 
-        return players
-            .filter(
-                (p) =>
-                    p.stats &&
-                    p.stats.battingAverage !== undefined &&
-                    p.stats.battingAverage !== null,
-            )
-            .map((player) => {
-                const stats = player.stats;
+            return ((value - min) / (max - min)) * 100;
+        };
 
-                const normalizedHR =
-                    maxHR > 0 ? (stats.homeRuns / maxHR) * 100 : 0;
+        const opsValues = allStats.map((s) => s.ops);
+        const battingAverageValues = allStats.map((s) => s.battingAverage);
+        const rbiPerPAValues = allStats.map((s) => s.rbiPerPA);
+        const tbPerPAValues = allStats.map((s) => s.tbPerPA);
+        const runsPerPAValues = allStats.map((s) => s.runsPerPA);
+        const paValues = allStats.map((s) => s.plateAppearances);
 
-                const normalizedRBI =
-                    maxRBI > 0 ? (stats.rbis / maxRBI) * 100 : 0;
+        return qualifiedPlayers
+            .map((player, index) => {
+                const stats = allStats[index];
 
-                const normalizedAVG =
-                    maxAVG > 0 ? (stats.battingAverage / maxAVG) * 100 : 0;
+                const opsScore = normalize(stats.ops, opsValues);
 
-                const score =
-                    normalizedHR * weights.hr +
-                    normalizedRBI * weights.rbi +
-                    normalizedAVG * weights.avg;
+                const battingAverageScore = normalize(
+                    stats.battingAverage,
+                    battingAverageValues,
+                );
+
+                const rbiScore = normalize(stats.rbiPerPA, rbiPerPAValues);
+
+                const tbScore = normalize(stats.tbPerPA, tbPerPAValues);
+
+                const runsScore = normalize(stats.runsPerPA, runsPerPAValues);
+
+                const volumeScore = normalize(stats.plateAppearances, paValues);
+
+                const rankingScore =
+                    opsScore * 0.3 +
+                    battingAverageScore * 0.25 +
+                    rbiScore * 0.15 +
+                    tbScore * 0.15 +
+                    runsScore * 0.1 +
+                    volumeScore * 0.05;
 
                 return {
                     ...player,
-                    rankingScore: score,
+                    rankingScore,
                 };
             })
             .sort((a, b) => b.rankingScore - a.rankingScore)
@@ -214,31 +330,198 @@ export default function ViewPlayers({ players, freeAgents = false }: Props) {
      */
 
     const defaultPitchingRankings = useMemo(() => {
-        const weights = {
-            era: -4,
-            so: 0.15,
-            ip: 2,
+        const qualifiedPlayers = players.filter((p) => {
+            if (!p.stats) return false;
+
+            const outsPitched = p.stats.outsPitched ?? 0;
+            const gamesPlayed = p.stats.gamesPlayed ?? 0;
+
+            // Must have pitched at least 1 out and meet the IP >= games played requirement
+            return outsPitched > 0 && outsPitched >= gamesPlayed * 3;
+        });
+
+        const getValues = (
+            getter: (p: (typeof qualifiedPlayers)[number]) => number,
+        ) => qualifiedPlayers.map((p) => getter(p));
+
+        const getPitchingStats = (
+            player: (typeof qualifiedPlayers)[number],
+        ) => {
+            const s = player.stats!;
+
+            const runsAllowed = s.runsAllowed ?? 0;
+            const outsPitched = s.outsPitched ?? 0;
+            const walks = s.walks ?? 0;
+            const hitsAllowed = s.hitsAllowed ?? 0;
+            const beanBalls = s.beanBalls ?? 0;
+
+            const atBatsAgainst =
+                s.battersFaced !== null &&
+                s.walks !== null &&
+                s.beanBalls !== null
+                    ? Math.max(0, s.battersFaced - s.walks - s.beanBalls)
+                    : null;
+
+            const singlesAllowed = s.singlesAllowed ?? 0;
+            const doublesAllowed = s.doublesAllowed ?? 0;
+            const triplesAllowed = s.triplesAllowed ?? 0;
+            const homeRunsAllowed = s.homeRunsAllowed ?? 0;
+
+            // Derived pitching stats from statUtils
+            const era = calculateEra(runsAllowed, outsPitched);
+
+            const whip = calculateWHIP(walks, hitsAllowed, outsPitched);
+
+            const baa = calculateBAA(hitsAllowed, atBatsAgainst);
+
+            const obpAgainst = calculateOBPAgainst(
+                hitsAllowed,
+                walks,
+                atBatsAgainst,
+                beanBalls,
+            );
+
+            const slgAgainst = calculateSLGAgainst(
+                hitsAllowed,
+                singlesAllowed,
+                doublesAllowed,
+                triplesAllowed,
+                homeRunsAllowed,
+                atBatsAgainst,
+            );
+
+            const opsAgainst = calculateOPSAgainst(obpAgainst, slgAgainst);
+
+            return {
+                era,
+                whip: whip ?? 0,
+                baa: baa ?? 0,
+                obpAgainst: obpAgainst ?? 0,
+                slgAgainst: slgAgainst ?? 0,
+                opsAgainst: opsAgainst ?? 0,
+            };
         };
 
-        return players
-            .filter(
-                (p) =>
-                    p.stats &&
-                    p.stats.era !== undefined &&
-                    p.stats.era !== null &&
-                    p.stats.inningsPitched >= p.stats.gamesPlayed,
-            )
-            .map((player) => {
-                const stats = player.stats;
+        const scores = {
+            era: getValues((p) => getPitchingStats(p).era),
 
-                const score =
-                    stats.era * weights.era +
-                    stats.strikeouts * weights.so +
-                    stats.inningsPitched * weights.ip;
+            whip: getValues((p) => getPitchingStats(p).whip),
+
+            baa: getValues((p) => getPitchingStats(p).baa),
+
+            obpAgainst: getValues((p) => getPitchingStats(p).obpAgainst),
+
+            slgAgainst: getValues((p) => getPitchingStats(p).slgAgainst),
+
+            kRate: getValues((p) => {
+                const s = p.stats!;
+                const battersFaced = s.battersFaced ?? 0;
+
+                return battersFaced > 0
+                    ? (s.strikeouts ?? 0) / battersFaced
+                    : 0;
+            }),
+
+            bbRate: getValues((p) => {
+                const s = p.stats!;
+                const battersFaced = s.battersFaced ?? 0;
+
+                return battersFaced > 0 ? (s.walks ?? 0) / battersFaced : 0;
+            }),
+
+            inningsPitched: getValues((p) => p.stats!.inningsPitched ?? 0),
+        };
+
+        return qualifiedPlayers
+            .map((player) => {
+                const s = player.stats!;
+                const derived = getPitchingStats(player);
+
+                const inningsPitched = s.inningsPitched ?? 0;
+
+                const battersFaced = Math.max(s.battersFaced ?? 0, 1);
+
+                const strikeouts = s.strikeouts ?? 0;
+                const walks = s.walks ?? 0;
+
+                const kRate = strikeouts / battersFaced;
+
+                const bbRate = walks / battersFaced;
+
+                // --------------------------------
+                // 40% - Run Prevention
+                // --------------------------------
+                const runPreventionScore =
+                    percentileScore(derived.era, scores.era, false) * 0.6 +
+                    percentileScore(derived.whip, scores.whip, false) * 0.4;
+
+                // --------------------------------
+                // 5% - Strikeout Dominance
+                //
+                // Strikeouts are rare in this league,
+                // so they are treated as a small bonus.
+                // --------------------------------
+                const strikeoutScore = percentileScore(
+                    kRate,
+                    scores.kRate,
+                    true,
+                );
+
+                // --------------------------------
+                // 10% - Control
+                // --------------------------------
+                const controlScore = percentileScore(
+                    bbRate,
+                    scores.bbRate,
+                    false,
+                );
+
+                // --------------------------------
+                // 30% - Contact Suppression
+                // --------------------------------
+                const contactScore =
+                    percentileScore(derived.baa, scores.baa, false) * 0.4 +
+                    percentileScore(
+                        derived.obpAgainst,
+                        scores.obpAgainst,
+                        false,
+                    ) *
+                        0.3 +
+                    percentileScore(
+                        derived.slgAgainst,
+                        scores.slgAgainst,
+                        false,
+                    ) *
+                        0.3;
+
+                // --------------------------------
+                // 15% - Volume
+                // --------------------------------
+                const volumeScore = percentileScore(
+                    inningsPitched,
+                    scores.inningsPitched,
+                    true,
+                );
+
+                // --------------------------------
+                // Final Ranking Score
+                //
+                // Run Prevention:       40%
+                // Contact Suppression:  30%
+                // Volume:               15%
+                // Control:              10%
+                // Strikeouts:            5%
+                // --------------------------------
+                const rankingScore =
+                    runPreventionScore * 0.4 +
+                    contactScore * 0.3 +
+                    volumeScore * 0.15 +
+                    controlScore * 0.1 +
+                    strikeoutScore * 0.05;
 
                 return {
                     ...player,
-                    rankingScore: score,
+                    rankingScore,
                 };
             })
             .sort((a, b) => b.rankingScore - a.rankingScore)
@@ -255,27 +538,94 @@ export default function ViewPlayers({ players, freeAgents = false }: Props) {
      */
 
     const defaultFieldingRankings = useMemo(() => {
-        const maxPutouts = Math.max(
-            ...players.map((p) => p.stats?.outs ?? 0),
-            0,
+        const qualifiedPlayers = players.filter(
+            (p) =>
+                p.stats &&
+                (p.stats.outs ?? 0) +
+                    (p.stats.assist ?? 0) +
+                    (p.stats.fieldingErrors ?? 0) >
+                    0,
         );
 
-        return players
-            .filter(
-                (p) =>
-                    p.stats &&
-                    p.stats.outs !== null &&
-                    p.stats.outs !== undefined,
-            )
-            .map((player) => {
-                const putouts = player.stats.outs ?? 0;
+        const getFieldingStats = (
+            player: (typeof qualifiedPlayers)[number],
+        ) => {
+            const s = player.stats!;
 
-                const normalizedPutouts =
-                    maxPutouts > 0 ? (putouts / maxPutouts) * 100 : 0;
+            const putouts = s.outs ?? 0;
+            const assists = s.assist ?? 0;
+
+            const fieldingErrors = s.fieldingErrors ?? 0;
+
+            const fieldingChances = putouts + assists + fieldingErrors;
+
+            const errorRate =
+                fieldingChances > 0 ? fieldingErrors / fieldingChances : 0;
+
+            return {
+                putouts,
+                assists,
+                fieldingErrors,
+                fieldingChances,
+                errorRate,
+            };
+        };
+
+        const allStats = qualifiedPlayers.map(getFieldingStats);
+
+        const normalize = (
+            value: number,
+            values: number[],
+            higherIsBetter = true,
+        ) => {
+            const min = Math.min(...values);
+            const max = Math.max(...values);
+
+            if (max === min) {
+                return 100;
+            }
+
+            const score = higherIsBetter
+                ? ((value - min) / (max - min)) * 100
+                : ((max - value) / (max - min)) * 100;
+
+            return score;
+        };
+
+        const putoutValues = allStats.map((s) => s.putouts);
+
+        const assistValues = allStats.map((s) => s.assists);
+
+        const errorRateValues = allStats.map((s) => s.errorRate);
+
+        return qualifiedPlayers
+            .map((player, index) => {
+                const stats = allStats[index];
+
+                const putoutScore = normalize(
+                    stats.putouts,
+                    putoutValues,
+                    true,
+                );
+
+                const assistScore = normalize(
+                    stats.assists,
+                    assistValues,
+                    true,
+                );
+
+                const errorScore = normalize(
+                    stats.errorRate,
+                    errorRateValues,
+                    false,
+                );
+
+                const rankingScore =
+                    putoutScore * 0.4 + assistScore * 0.35 + errorScore * 0.25;
 
                 return {
                     ...player,
-                    rankingScore: normalizedPutouts,
+                    rankingScore,
                 };
             })
             .sort((a, b) => b.rankingScore - a.rankingScore)
@@ -438,38 +788,31 @@ export default function ViewPlayers({ players, freeAgents = false }: Props) {
      */
 
     const advancedBatters = useMemo(() => {
-        const filtered = players.filter((player) =>
+        const filtered = defaultBattingRankings.filter((player) =>
             player.name.toLowerCase().includes(normalizedSearch),
         );
 
         const sortKey = advancedBatSort.key;
 
+        // No column selected = use batting ranking algorithm
         if (!sortKey || !advancedBatSort.direction) {
             return filtered;
         }
 
+        // User selected an advanced stat = override ranking
         return [...filtered].sort((a, b) => {
             const aValue = getAdvancedStatValue(a, sortKey);
             const bValue = getAdvancedStatValue(b, sortKey);
 
-            if (aValue === null && bValue === null) {
-                return 0;
-            }
-
-            if (aValue === null) {
-                return 1;
-            }
-
-            if (bValue === null) {
-                return -1;
-            }
+            if (aValue === null && bValue === null) return 0;
+            if (aValue === null) return 1;
+            if (bValue === null) return -1;
 
             return advancedBatSort.direction === "asc"
                 ? aValue - bValue
                 : bValue - aValue;
         });
-    }, [players, normalizedSearch, advancedBatSort]);
-
+    }, [defaultBattingRankings, normalizedSearch, advancedBatSort]);
     /*
      * ========================================================
      * Advanced Pitchers
@@ -477,18 +820,18 @@ export default function ViewPlayers({ players, freeAgents = false }: Props) {
      */
 
     const advancedPitchers = useMemo(() => {
-        const filtered = players.filter(
-            (player) =>
-                player.name.toLowerCase().includes(normalizedSearch) &&
-                (player.stats?.inningsPitched ?? 0) >= 1,
+        const filtered = defaultPitchingRankings.filter((player) =>
+            player.name.toLowerCase().includes(normalizedSearch),
         );
 
         const sortKey = advancedPitchSort.key;
 
+        // No column selected = use pitching ranking algorithm
         if (!sortKey || !advancedPitchSort.direction) {
             return filtered;
         }
 
+        // User selected an advanced stat = override ranking
         return [...filtered].sort((a, b) => {
             const aValue = getAdvancedStatValue(a, sortKey);
             const bValue = getAdvancedStatValue(b, sortKey);
@@ -501,7 +844,7 @@ export default function ViewPlayers({ players, freeAgents = false }: Props) {
                 ? aValue - bValue
                 : bValue - aValue;
         });
-    }, [players, normalizedSearch, advancedPitchSort]);
+    }, [defaultPitchingRankings, normalizedSearch, advancedPitchSort]);
 
     /*
      * ========================================================
@@ -510,37 +853,31 @@ export default function ViewPlayers({ players, freeAgents = false }: Props) {
      */
 
     const advancedFielders = useMemo(() => {
-        const filtered = players.filter((player) =>
+        const filtered = defaultFieldingRankings.filter((player) =>
             player.name.toLowerCase().includes(normalizedSearch),
         );
 
         const sortKey = advancedFieldSort.key;
 
+        // No column selected = use fielding ranking algorithm
         if (!sortKey || !advancedFieldSort.direction) {
             return filtered;
         }
 
+        // User selected an advanced stat = override ranking
         return [...filtered].sort((a, b) => {
             const aValue = getAdvancedStatValue(a, sortKey);
             const bValue = getAdvancedStatValue(b, sortKey);
 
-            if (aValue === null && bValue === null) {
-                return 0;
-            }
-
-            if (aValue === null) {
-                return 1;
-            }
-
-            if (bValue === null) {
-                return -1;
-            }
+            if (aValue === null && bValue === null) return 0;
+            if (aValue === null) return 1;
+            if (bValue === null) return -1;
 
             return advancedFieldSort.direction === "asc"
                 ? aValue - bValue
                 : bValue - aValue;
         });
-    }, [players, normalizedSearch, advancedFieldSort]);
+    }, [defaultFieldingRankings, normalizedSearch, advancedFieldSort]);
 
     /*
      * ========================================================

@@ -91,8 +91,13 @@ export default async function MyTeamSchedule({ scheduleData }: Props) {
                                         {/* Team */}
                                         <div className="flex min-w-0 flex-1 items-center justify-end gap-2 sm:gap-3">
                                             <div className="min-w-0 text-right">
-                                                <div className="truncate text-sm font-semibold text-slate-900 sm:text-base">
-                                                    {game.team.name}
+                                                <div className="flex min-w-0 items-center justify-end gap-1 text-sm font-semibold text-gray-900 sm:text-base">
+                                                    <span className="truncate">
+                                                        {game.team.name}
+                                                    </span>
+                                                    <span className="shrink-0">
+                                                        (H)
+                                                    </span>
                                                 </div>
 
                                                 <div className="mt-0.5 text-xs text-slate-400">
@@ -130,8 +135,13 @@ export default async function MyTeamSchedule({ scheduleData }: Props) {
                                             )}
 
                                             <div className="min-w-0">
-                                                <div className="truncate text-sm font-semibold text-slate-900 sm:text-base">
-                                                    {game.opponent.name}
+                                                <div className="flex min-w-0 items-center justify-end gap-1 text-sm font-semibold text-gray-900 sm:text-base">
+                                                    <span className="truncate">
+                                                        {game.opponent.name}
+                                                    </span>
+                                                    <span className="shrink-0">
+                                                        (A)
+                                                    </span>
                                                 </div>
 
                                                 <div className="mt-0.5 text-xs text-slate-400">

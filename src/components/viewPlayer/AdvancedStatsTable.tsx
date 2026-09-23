@@ -27,7 +27,7 @@ export type AdvancedBattingStatKey =
     | "hits"
     | "rbis"
     | "strikeouts"
-    | "walks"
+    | "walksTaken"
     | "hitByPitch"
     | "singles"
     | "doubles"
@@ -135,7 +135,7 @@ export const ADVANCED_BATTING_STATS: AdvancedStatDefinition<AdvancedBattingStatK
             description: "Strikeouts by the batter.",
         },
         {
-            key: "walks",
+            key: "walksTaken",
             label: "BB",
             description: "Base on balls.",
         },

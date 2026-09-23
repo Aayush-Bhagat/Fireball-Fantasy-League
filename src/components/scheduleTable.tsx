@@ -393,7 +393,7 @@ function TeamRow({
                             : "font-medium text-gray-700",
                     )}
                 >
-                    {name}
+                    {name} ({away ? "A" : "H"})
                 </span>
 
                 {favored && (
