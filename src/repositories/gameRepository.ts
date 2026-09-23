@@ -1,7 +1,7 @@
-import { UpdatePlayerGameStatsDto } from "./../dtos/gameDtos";
+import { StadiumTime, UpdatePlayerGameStatsDto } from "./../dtos/gameDtos";
 import { db } from "@/db";
 import { GameData } from "@/dtos/gameDtos";
-import { games, teamGames } from "@/models/games";
+import { games, stadiums, teamGames } from "@/models/games";
 import { playerGamesStats, players } from "@/models/players";
 import { seasons } from "@/models/seasons";
 import { conferences, teams } from "@/models/teams";
@@ -14,6 +14,7 @@ export async function findGamesByWeekAndSeason(
 ): Promise<GameData[]> {
 	const opponent = alias(teams, "teamTwo");
 	const opponentGames = alias(teamGames, "teamTwoGames");
+	const bannedStadium = alias(stadiums, "bannedStadium");
 
 	const seasonQuery = db
 		.select({
@@ -47,6 +48,16 @@ export async function findGamesByWeekAndSeason(
 			opponentLogo: opponent.logo,
 			opponentOutcome: opponentGames.outcome,
 			opponentSide: opponentGames.side,
+
+			stadiumTime: games.stadiumTime,
+			stadiumId: stadiums.id,
+			stadiumName: stadiums.name,
+			stadiumIcon: stadiums.icon,
+			stadiumBanner: stadiums.banner,
+			bannedStadiumId: bannedStadium.id,
+			bannedStadiumName: bannedStadium.name,
+			bannedStadiumIcon: bannedStadium.icon,
+			bannedStadiumBanner: bannedStadium.banner,
 		})
 		.from(teamGames)
 		.innerJoin(games, eq(teamGames.gameId, games.id))
@@ -71,6 +82,8 @@ export async function findGamesByWeekAndSeason(
 		.innerJoin(teams, eq(teamGames.teamId, teams.id))
 		.innerJoin(opponent, eq(opponentGames.teamId, opponent.id))
 		.innerJoin(seasons, eq(games.seasonId, seasons.id))
+		.leftJoin(stadiums, eq(games.stadiumId, stadiums.id))
+		.leftJoin(bannedStadium, eq(games.bannedStadiumId, bannedStadium.id))
 		.where(and(eq(games.week, weekId), eq(games.seasonId, seasonId)))
 		.orderBy(games.id);
 
@@ -83,6 +96,7 @@ export async function findSeasonSchedule(
 	const opponent = alias(teams, "teamTwo");
 
 	const opponentGames = alias(teamGames, "teamTwoGames");
+	const bannedStadium = alias(stadiums, "bannedStadium");
 
 	const seasonQuery = db
 		.select({
@@ -113,6 +127,16 @@ export async function findSeasonSchedule(
 			opponentLogo: opponent.logo,
 			opponentOutcome: opponentGames.outcome,
 			opponentSide: opponentGames.side,
+
+			stadiumTime: games.stadiumTime,
+			stadiumId: stadiums.id,
+			stadiumName: stadiums.name,
+			stadiumIcon: stadiums.icon,
+			stadiumBanner: stadiums.banner,
+			bannedStadiumId: bannedStadium.id,
+			bannedStadiumName: bannedStadium.name,
+			bannedStadiumIcon: bannedStadium.icon,
+			bannedStadiumBanner: bannedStadium.banner,
 		})
 		.from(teamGames)
 		.innerJoin(games, eq(teamGames.gameId, games.id))
@@ -137,6 +161,8 @@ export async function findSeasonSchedule(
 		.innerJoin(teams, eq(teamGames.teamId, teams.id))
 		.innerJoin(opponent, eq(opponentGames.teamId, opponent.id))
 		.innerJoin(seasons, eq(games.seasonId, seasons.id))
+		.leftJoin(stadiums, eq(games.stadiumId, stadiums.id))
+		.leftJoin(bannedStadium, eq(games.bannedStadiumId, bannedStadium.id))
 		.where(eq(games.seasonId, seasonId))
 		.orderBy(games.id, teamGames.side, opponentGames.side);
 
@@ -150,6 +176,7 @@ export async function findTeamSchedule(
 	const opponent = alias(teams, "teamTwo");
 
 	const opponentGames = alias(teamGames, "teamTwoGames");
+	const bannedStadium = alias(stadiums, "bannedStadium");
 
 	const seasonQuery = db
 		.select({
@@ -180,6 +207,16 @@ export async function findTeamSchedule(
 			opponentLogo: opponent.logo,
 			opponentOutcome: opponentGames.outcome,
 			opponentSide: opponentGames.side,
+
+			stadiumTime: games.stadiumTime,
+			stadiumId: stadiums.id,
+			stadiumName: stadiums.name,
+			stadiumIcon: stadiums.icon,
+			stadiumBanner: stadiums.banner,
+			bannedStadiumId: bannedStadium.id,
+			bannedStadiumName: bannedStadium.name,
+			bannedStadiumIcon: bannedStadium.icon,
+			bannedStadiumBanner: bannedStadium.banner,
 		})
 		.from(teamGames)
 		.innerJoin(games, eq(teamGames.gameId, games.id))
@@ -204,6 +241,8 @@ export async function findTeamSchedule(
 		.innerJoin(teams, eq(teamGames.teamId, teams.id))
 		.innerJoin(opponent, eq(opponentGames.teamId, opponent.id))
 		.innerJoin(seasons, eq(games.seasonId, seasons.id))
+		.leftJoin(stadiums, eq(games.stadiumId, stadiums.id))
+		.leftJoin(bannedStadium, eq(games.bannedStadiumId, bannedStadium.id))
 		.where(
 			and(
 				eq(games.seasonId, seasonId),
@@ -364,6 +403,7 @@ export async function findPlayerGames(playerId: string, season?: string) {
 }
 
 export async function findGameById(gameId: string) {
+	const bannedStadium = alias(stadiums, "bannedStadium");
 	const opponent = alias(teams, "teamTwo");
 
 	const opponentGames = alias(teamGames, "teamTwoGames");
@@ -395,6 +435,15 @@ export async function findGameById(gameId: string) {
 			opponentSide: opponentGames.side,
 			opponentConference: opponentConference.name,
 			opponentUserId: opponent.userId,
+			stadiumTime: games.stadiumTime,
+			stadiumId: stadiums.id,
+			stadiumName: stadiums.name,
+			stadiumIcon: stadiums.icon,
+			stadiumBanner: stadiums.banner,
+			bannedStadiumId: bannedStadium.id,
+			bannedStadiumName: bannedStadium.name,
+			bannedStadiumIcon: bannedStadium.icon,
+			bannedStadiumBanner: bannedStadium.banner,
 		})
 		.from(teamGames)
 		.innerJoin(games, eq(teamGames.gameId, games.id))
@@ -420,6 +469,8 @@ export async function findGameById(gameId: string) {
 		.innerJoin(opponent, eq(opponentGames.teamId, opponent.id))
 		.innerJoin(seasons, eq(games.seasonId, seasons.id))
 		.innerJoin(teamConference, eq(teams.conferenceId, teamConference.id))
+		.leftJoin(stadiums, eq(games.stadiumId, stadiums.id))
+		.leftJoin(bannedStadium, eq(games.bannedStadiumId, bannedStadium.id))
 		.innerJoin(
 			opponentConference,
 			eq(opponent.conferenceId, opponentConference.id),
@@ -491,4 +542,28 @@ export async function createPlayerGameStats(
 		console.error(error);
 		throw error;
 	}
+}
+
+export async function findStadiums() {
+	const stadiums = await db.query.stadiums.findMany();
+
+	return stadiums;
+}
+
+export async function updateGameStadium(
+	gameId: string,
+	gameStadiums: {
+		stadiumId: string;
+		bannedStadiumId: string;
+		stadiumTime: StadiumTime;
+	},
+) {
+	await db
+		.update(games)
+		.set({
+			stadiumId: gameStadiums.stadiumId,
+			bannedStadiumId: gameStadiums.bannedStadiumId,
+			stadiumTime: gameStadiums.stadiumTime,
+		})
+		.where(eq(games.id, gameId));
 }

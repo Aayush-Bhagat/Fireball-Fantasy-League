@@ -25,7 +25,7 @@ export async function PUT(request: NextRequest) {
 	if (!result.success) {
 		return NextResponse.json(
 			{ error: result.error.message },
-			{ status: 400 }
+			{ status: 400 },
 		);
 	}
 

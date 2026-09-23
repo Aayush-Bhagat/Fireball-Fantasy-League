@@ -1,10 +1,11 @@
 import React from "react";
-import AdminGame from "@/components/AdminGame";
+import AdminGame from "@/components/admin/AdminGame";
 import { createClient } from "@/lib/supabase/server";
 import { redirect } from "next/navigation";
 import { getAdminGame } from "@/requests/admin";
 import { Suspense } from "react";
 import AdminGameSkeleton from "@/components/loaders/AdminGameSkelton";
+import { getStadiums } from "@/requests/games";
 
 export default async function page({
 	params,
@@ -40,11 +41,12 @@ export default async function page({
 	const { game } = await params;
 
 	const gameData = getAdminGame(game, token);
+	const stadiums = getStadiums();
 
 	return (
 		<>
 			<Suspense fallback={<AdminGameSkeleton />}>
-				<AdminGame gameData={gameData} />
+				<AdminGame gameData={gameData} stadiumsData={stadiums} />
 			</Suspense>
 		</>
 	);

@@ -1,10 +1,13 @@
 import { TeamDto, TeamGameDto } from "./teamDtos";
 import { BasicPlayerDto, PlayerStatsWithIdDto } from "./playerDtos";
 import { z } from "zod";
+import { StadiumTime } from "@/models/games";
 
 export type GameResponseDto = {
 	games: GameDto[];
 };
+
+export type StadiumTime = "Day" | "Night" | null;
 
 export type GameDto = {
 	gameId: string;
@@ -21,8 +24,11 @@ export type GameDto = {
 	opponentScore: number | null;
 	teamOutcome: string | null;
 	opponentOutcome: string | null;
+	stadiumTime: StadiumTime;
 	/** Win probability / odds. Null for completed games. */
 	odds: MatchOddsDto | null;
+	stadium: StadiumDto | null;
+	bannedStadium: StadiumDto | null;
 };
 
 /**
@@ -114,6 +120,15 @@ export type GameData = {
 	opponentScore: number | null;
 	teamOutcome: string | null;
 	opponentOutcome: string | null;
+	stadiumTime: StadiumTime;
+	stadiumId: string | null;
+	stadiumName: string | null;
+	stadiumIcon: string | null;
+	stadiumBanner: string | null;
+	bannedStadiumId: string | null;
+	bannedStadiumName: string | null;
+	bannedStadiumIcon: string | null;
+	bannedStadiumBanner: string | null;
 };
 
 export const UpdatePlayerGameStatsSchema = z.object({
@@ -145,6 +160,20 @@ export type UpdatePlayerGameStatsDto = z.infer<
 	typeof UpdatePlayerGameStatsSchema
 >;
 
+export const UpdateGameScoreRequestSchema = z.object({
+	teamId: z.string(),
+	opponentId: z.string(),
+	teamScore: z.number().int().nonnegative(),
+	opponentScore: z.number().int().nonnegative(),
+	stadiumId: z.string().uuid(),
+	bannedStadiumId: z.string().uuid(),
+	stadiumTime: z.enum(StadiumTime.enumValues),
+});
+
+export type UpdateGameScoreRequestDto = z.infer<
+	typeof UpdateGameScoreRequestSchema
+>;
+
 export type GameStatsDto = {
 	gameId: string;
 	team: TeamDto;
@@ -155,4 +184,18 @@ export type GameStatsDto = {
 	opponentOutcome: string | null;
 	teamPlayers: PlayerStatsWithIdDto[];
 	opponentPlayers: PlayerStatsWithIdDto[];
+	stadiumTime: StadiumTime;
+	stadium: StadiumDto | null;
+	bannedStadium: StadiumDto | null;
+};
+
+export type StadiumDto = {
+	stadiumId: string;
+	name: string;
+	icon: string | null;
+	banner: string | null;
+};
+
+export type StadiumResponseDto = {
+	stadiums: StadiumDto[];
 };

@@ -39,6 +39,25 @@ export function GameDtoMapper(
 			opponentScore: game.opponentScore,
 			teamOutcome: game.teamOutcome,
 			opponentOutcome: game.opponentOutcome,
+			stadiumTime: game.stadiumTime,
+			stadium:
+				game.stadiumId && game.stadiumName
+					? {
+							stadiumId: game.stadiumId,
+							name: game.stadiumName,
+							icon: game.stadiumIcon,
+							banner: game.stadiumBanner,
+						}
+					: null,
+			bannedStadium:
+				game.bannedStadiumId && game.bannedStadiumName
+					? {
+							stadiumId: game.bannedStadiumId,
+							name: game.bannedStadiumName,
+							icon: game.bannedStadiumIcon,
+							banner: game.bannedStadiumBanner,
+						}
+					: null,
 			odds: oddsByGame ? (oddsByGame.get(game.gameId) ?? null) : null,
 		};
 	});
@@ -61,7 +80,7 @@ export function mapToSeasonSchedule(
 			acc[game.week].push(game);
 			return acc;
 		},
-		{}
+		{},
 	);
 
 	// Convert to SeasonScheduleDto array

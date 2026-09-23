@@ -15,14 +15,18 @@ import {
 	AdminGameDto,
 	GameStatsDto,
 	SeasonScheduleResponseDto,
+	StadiumDto,
 	UpdateGameRequestDto,
+	UpdateGameScoreRequestDto,
 } from "./../dtos/gameDtos";
 import {
 	createPlayerGameStats,
 	findGameById,
 	findGamesByWeekAndSeason,
 	findSeasonSchedule,
+	findStadiums,
 	findTeamGameStats,
+	updateGameStadium,
 	updateTeamGameById,
 } from "@/repositories/gameRepository";
 import { GameDtoMapper, mapToSeasonSchedule } from "@/lib/mappers/gameMappers";
@@ -200,6 +204,25 @@ export async function getGameStats(gameId: string) {
 		opponentScore: game.opponentScore,
 		teamOutcome: game.teamOutcome,
 		opponentOutcome: game.opponentOutcome,
+		stadiumTime: game.stadiumTime,
+		stadium:
+			game.stadiumId && game.stadiumName
+				? {
+						stadiumId: game.stadiumId,
+						name: game.stadiumName,
+						icon: game.stadiumIcon,
+						banner: game.stadiumBanner,
+					}
+				: null,
+		bannedStadium:
+			game.bannedStadiumId && game.bannedStadiumName
+				? {
+						stadiumId: game.bannedStadiumId,
+						name: game.bannedStadiumName,
+						icon: game.bannedStadiumIcon,
+						banner: game.bannedStadiumBanner,
+					}
+				: null,
 		teamPlayers: teamGameStats.map((stat) => ({
 			playerId: stat.playerId,
 			playerName: stat.player.name,
@@ -481,4 +504,50 @@ export async function getGameStats(gameId: string) {
 	};
 
 	return result;
+}
+
+export async function getStadiums(): Promise<StadiumDto[]> {
+	const stadiumsData = await findStadiums();
+
+	const stadiums: StadiumDto[] = stadiumsData.map((s) => ({
+		stadiumId: s.id,
+		name: s.name,
+		icon: s.icon,
+		banner: s.banner,
+	}));
+
+	return stadiums;
+}
+
+export async function UpdateGameScore(
+	gameId: string,
+	game: UpdateGameScoreRequestDto,
+) {
+	const teamOutcome =
+		game.teamScore > game.opponentScore
+			? "Win"
+			: game.teamScore === game.opponentScore
+				? "Tie"
+				: "Loss";
+
+	const opponentOutcome =
+		game.opponentScore > game.teamScore
+			? "Win"
+			: game.opponentScore === game.teamScore
+				? "Tie"
+				: "Loss";
+
+	await updateTeamGameById(gameId, game.teamId, game.teamScore, teamOutcome);
+	await updateTeamGameById(
+		gameId,
+		game.opponentId,
+		game.opponentScore,
+		opponentOutcome,
+	);
+
+	await updateGameStadium(gameId, {
+		stadiumId: game.stadiumId,
+		bannedStadiumId: game.bannedStadiumId,
+		stadiumTime: game.stadiumTime,
+	});
 }

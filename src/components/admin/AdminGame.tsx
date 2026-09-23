@@ -1,6 +1,10 @@
 "use client";
 
-import { AdminGameDto, UpdateGameRequestDto } from "@/dtos/gameDtos";
+import {
+	AdminGameDto,
+	StadiumResponseDto,
+	UpdateGameRequestDto,
+} from "@/dtos/gameDtos";
 import { use, useEffect, useState } from "react";
 import PlayGameTable from "@/components/PlayGameTable";
 import playerStatsReducer, {
@@ -10,27 +14,31 @@ import playerStatsReducer, {
 import { useReducer } from "react";
 import AdminNumberField from "@/components/ui/numberInput";
 import { useMutation } from "@tanstack/react-query";
-import { Button } from "./ui/button";
+import { Button } from "../ui/button";
 import { updateGame } from "@/requests/games";
 import { Loader2 } from "lucide-react";
 import { createClient } from "@/lib/supabase/client";
+import AdminGameSettings from "./AdminGameSettings";
+import StatTrackerFileDrop from "./StatTrackerFileDrop";
 
 type Props = {
 	gameData: Promise<AdminGameDto>;
+	stadiumsData: Promise<StadiumResponseDto>;
 };
 
-export default function AdminGame({ gameData }: Props) {
+export default function AdminGame({ gameData, stadiumsData }: Props) {
 	const game = use(gameData);
+	const stadiums = use(stadiumsData).stadiums;
 	const supabase = createClient();
 
 	const [teamPlayerStats, dispatch] = useReducer(
 		playerStatsReducer,
-		initialPlayerStatsState(game.teamRoster)
+		initialPlayerStatsState(game.teamRoster),
 	);
 
 	const [opponentPlayerStats, dispatchOpponent] = useReducer(
 		playerStatsReducer,
-		initialPlayerStatsState(game.opponentRoster)
+		initialPlayerStatsState(game.opponentRoster),
 	);
 
 	const [teamScore, setTeamScore] = useState(0);
@@ -39,17 +47,17 @@ export default function AdminGame({ gameData }: Props) {
 	// Load saved data from localStorage after component mounts (client-side only)
 	useEffect(() => {
 		const savedTeamStats = sessionStorage.getItem(
-			`teamPlayerStats-${game.gameId}`
+			`teamPlayerStats-${game.gameId}`,
 		);
 		const savedOpponentStats = sessionStorage.getItem(
-			`opponentPlayerStats-${game.gameId}`
+			`opponentPlayerStats-${game.gameId}`,
 		);
 
 		const savedTeamScore = sessionStorage.getItem(
-			`teamScore-${game.gameId}`
+			`teamScore-${game.gameId}`,
 		);
 		const savedOpponentScore = sessionStorage.getItem(
-			`opponentScore-${game.gameId}`
+			`opponentScore-${game.gameId}`,
 		);
 
 		if (savedTeamStats) {
@@ -74,11 +82,11 @@ export default function AdminGame({ gameData }: Props) {
 	useEffect(() => {
 		sessionStorage.setItem(
 			`teamScore-${game.gameId}`,
-			teamScore.toString()
+			teamScore.toString(),
 		);
 		sessionStorage.setItem(
 			`opponentScore-${game.gameId}`,
-			opponentScore.toString()
+			opponentScore.toString(),
 		);
 	}, [teamScore, opponentScore, game.gameId]);
 
@@ -86,11 +94,11 @@ export default function AdminGame({ gameData }: Props) {
 	useEffect(() => {
 		sessionStorage.setItem(
 			`teamPlayerStats-${game.gameId}`,
-			JSON.stringify(teamPlayerStats)
+			JSON.stringify(teamPlayerStats),
 		);
 		sessionStorage.setItem(
 			`opponentPlayerStats-${game.gameId}`,
-			JSON.stringify(opponentPlayerStats)
+			JSON.stringify(opponentPlayerStats),
 		);
 	}, [teamPlayerStats, opponentPlayerStats, game.gameId]);
 
@@ -124,11 +132,21 @@ export default function AdminGame({ gameData }: Props) {
 
 	return (
 		<div className="pt-20 px-6 max-w-full mx-auto">
-			<div className="flex flex-col items-center justify-center">
-				<h1 className="text-3xl font-bold mb-10 text-center">
+			<div className="flex flex-col gap-6 items-center justify-center">
+				<h1 className="text-3xl font-bold mb-8 text-center">
 					Admin Game
 				</h1>
-				<div className="mb-12 flex flex-row gap-4">
+				<AdminGameSettings
+					game={game}
+					stadiums={stadiums}
+					teamScore={teamScore}
+					opponentScore={opponentScore}
+					setTeamScore={setTeamScore}
+					setOpponentScore={setOpponentScore}
+				/>
+
+				<StatTrackerFileDrop gameId={game.gameId} />
+				<div className="mb-12 mt-32 flex flex-row gap-4">
 					<Button
 						className="py-5 bg-violet-600 text-white hover:bg-violet-700"
 						onClick={() => updateGameMutation()}
@@ -136,7 +154,7 @@ export default function AdminGame({ gameData }: Props) {
 						{isPending && (
 							<Loader2 className="w-4 h-4 mr-2 animate-spin" />
 						)}
-						{isPending ? "Submitting..." : "Submit Game"}
+						{isPending ? "Submitting..." : "OLD BUTTON"}
 					</Button>
 				</div>
 			</div>
