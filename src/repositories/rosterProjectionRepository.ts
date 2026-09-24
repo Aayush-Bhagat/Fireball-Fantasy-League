@@ -12,7 +12,7 @@
  * `oddsRepository.findTeamRunAverages`.
  */
 
-import { sql, eq, and, isNotNull } from "drizzle-orm";
+import { sql, eq, and, inArray, isNotNull } from "drizzle-orm";
 import { alias } from "drizzle-orm/pg-core";
 import { db } from "@/db";
 import { players, playerGamesStats } from "@/models/players";
@@ -28,22 +28,30 @@ import {
 /* -------------------------------------------------------------------------- */
 
 /**
- * One row per (player, season) with summed stats for the team's roster
- * across the given seasons. `dataVersion` is derived from `seasonId`
+ * A per-(team, player, season) aggregate row. Same shape the projector
+ * consumes, plus the owning `teamId` so a batched result can be grouped
+ * by team in the service.
+ */
+export type RosterStatsRow = PlayerSeasonStats & { teamId: string };
+
+/**
+ * One row per (team, player, season) with summed stats, for every team
+ * in `teamIds` at once. `dataVersion` is derived from `seasonId`
  * (`<= 4` → `"legacy"`, otherwise `"new"`).
  *
- * Players with zero stats in a given season still appear once (with
- * zeros), so the projector can decide whether to skip them based on its
- * own rules.
+ * Batched deliberately: a single query replaces N per-team round trips,
+ * and filtering `teamId` in SQL means a 2-team odds request doesn't pull
+ * the whole league's rows. Callers group the result by `teamId`.
  */
-export async function findRosterStats(
-	teamId: string,
+export async function findRostersStats(
+	teamIds: string[],
 	seasonIds: number[],
-): Promise<PlayerSeasonStats[]> {
-	if (seasonIds.length === 0) return [];
+): Promise<RosterStatsRow[]> {
+	if (teamIds.length === 0 || seasonIds.length === 0) return [];
 
 	const rows = await db
 		.select({
+			teamId: players.teamId,
 			playerId: players.id,
 			seasonId: games.seasonId,
 			atBats: sql<number>`COALESCE(SUM(${playerGamesStats.atBats}), 0)`,
@@ -62,17 +70,18 @@ export async function findRosterStats(
 		.leftJoin(games, eq(games.id, playerGamesStats.gameId))
 		.where(
 			and(
-				eq(players.teamId, teamId),
-				sql`${games.seasonId} = ANY(${sql.raw(`ARRAY[${seasonIds.join(",")}]::integer[]`)})`,
+				inArray(players.teamId, teamIds),
+				inArray(games.seasonId, seasonIds),
 			),
 		)
-		.groupBy(players.id, games.seasonId)
-		.orderBy(players.id, games.seasonId);
+		.groupBy(players.teamId, players.id, games.seasonId)
+		.orderBy(players.teamId, players.id, games.seasonId);
 
 	return rows.map((row) => {
 		const seasonId = Number(row.seasonId);
 		const dataVersion: DataVersion = seasonId <= 4 ? "legacy" : "new";
 		return {
+			teamId: row.teamId ?? "",
 			playerId: row.playerId,
 			seasonId,
 			dataVersion,
