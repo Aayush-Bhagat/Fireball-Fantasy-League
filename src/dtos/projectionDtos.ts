@@ -231,12 +231,20 @@ export const DEFAULT_LEGACY_CALIBRATION: CalibrationConfig = {
 	eraConstant: 8.6860,
 };
 
-/** v2 calibration for post-season-5 data. Same placeholders for now. */
+/**
+ * v2 calibration for post-season-5 data. Fitted against the first
+ * season-5 games. With only a handful of games the AVG/SLG columns are
+ * collinear, so the raw fit returns a negative `wAVG`; we keep the fitted
+ * combined weight but split it using the legacy-fit AVG/SLG ratio so both
+ * weights stay positive. `kCoefficient` is 0 because season 5 has no
+ * strikeout signal yet. Replace with a fresh `projectionCalibration` run
+ * once more season-5 games accumulate.
+ */
 export const DEFAULT_NEW_CALIBRATION: CalibrationConfig = {
-	wAVG: 1.0,
-	wSLG: 1.5,
-	runRateConstant: -0.3,
-	kCoefficient: 0.15,
+	wAVG: 0.25,
+	wSLG: 0.42,
+	runRateConstant: -0.13,
+	kCoefficient: 0,
 	eraConstant: 0,
 };
 
