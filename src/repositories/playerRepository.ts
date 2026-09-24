@@ -14,6 +14,10 @@ import { games } from "@/models/games";
 import { seasonAwards, seasons } from "@/models/seasons";
 import { teamLineups, teams } from "@/models/teams";
 import { TeamLineupPosition } from "@/dtos/teamDtos";
+import {
+	StatTrackerBattingStatsPlayer,
+	StatTrackerPitchingStatsPlayer,
+} from "@/dtos/statTrackerDtos";
 
 export async function findPlayersByTeam(teamId: string) {
 	const teamPlayers = await db.query.players.findMany({
@@ -422,11 +426,6 @@ export async function findPlayersByName(
 		},
 	});
 }
-import {
-	StatTrackerBattingStatsPlayer,
-	StatTrackerPitchingStatsPlayer,
-} from "@/dtos/statTrackerDtos";
-import { calculateOutsPitched } from "@/lib/statUtils";
 
 export async function createPlayerGameStats(
 	gameId: string,
@@ -496,14 +495,13 @@ export async function updatePlayerGamePitchingStats(
 			await tx
 				.update(playerGamesStats)
 				.set({
-					outsPitched: calculateOutsPitched(
-						player["Innings Pitched"],
-					),
+					outsPitched: Math.round(player["Innings Pitched"] * 3),
 					runsAllowed: player["Runs Allowed"],
 					walks: player.Walks,
 					battersFaced: player["Batters Faced"],
 					pitches: player.Pitches,
 					strikes: player.Strikes,
+					strikeouts: player.Strikeouts,
 					balls: player.Balls,
 					beanBalls: player["Bean Balls"],
 					hitsAllowed: player["Hits Allowed"],

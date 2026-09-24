@@ -11,7 +11,7 @@ import { relations } from "drizzle-orm";
 import { users } from "./users";
 import { seasonAwards, seasons } from "./seasons";
 import { players, playerGamesStats, playerHistory } from "./players";
-import { playoffSeries, teamGames } from "./games";
+import { gameInnings, playoffSeries, teamGames } from "./games";
 import { draftPicks } from "./draft";
 import { fieldingPositions } from "./enums";
 
@@ -67,6 +67,7 @@ export const teamRelations = relations(teams, ({ one, many }) => ({
 	playoffSeries: many(playoffSeries),
 	seasonAwards: many(seasonAwards),
 	playerHistory: many(playerHistory),
+	gameInnings: many(gameInnings),
 }));
 
 export const teamLineups = pgTable("team_lineups", {

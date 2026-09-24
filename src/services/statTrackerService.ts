@@ -10,6 +10,16 @@ import {
 } from "@/repositories/playerRepository";
 import * as XLSX from "xlsx";
 
+const STAT_TRACKER_PLAYER_MAP: Record<string, string> = {
+	"Boomerang Bro.": "Boomerang Bro",
+	"Hammer Bro.": "Hammer Bro",
+	Paratroopa: "Red Paratroopa",
+	"Koopa Troopa": "Green Koopa Troopa",
+	"Shy Guy": "Red Shy Guy",
+	"Fire Bro.": "Fire Bro",
+	"Baby DK": "Baby Donkey Kong",
+};
+
 export async function setPlayerGameStats(gameId: string, file: Buffer) {
 	const MII_ID = "01969260-eab9-76cb-95e6-6ef3ed3b8422";
 	let isMii = false;
@@ -28,6 +38,11 @@ export async function setPlayerGameStats(gameId: string, file: Buffer) {
 		if (row.Player.includes("Mii")) {
 			isMii = true;
 		}
+
+		if (row.Player in STAT_TRACKER_PLAYER_MAP) {
+			row.Player = STAT_TRACKER_PLAYER_MAP[row.Player];
+		}
+
 		return row.Player;
 	});
 
@@ -63,7 +78,17 @@ export async function setPlayerGameStats(gameId: string, file: Buffer) {
 	let pitchingData =
 		XLSX.utils.sheet_to_json<StatTrackerPitchingStats>(pitchingSheet);
 
-	pitchingData = pitchingData.filter((row) => row.Pitches !== undefined);
+	pitchingData = pitchingData.filter((row) => {
+		if (row.Player.includes("Mii")) {
+			return players.some((p) => p.id === MII_ID);
+		}
+
+		if (row.Player in STAT_TRACKER_PLAYER_MAP) {
+			row.Player = STAT_TRACKER_PLAYER_MAP[row.Player];
+		}
+
+		return players.some((p) => p.name === row.Player);
+	});
 
 	const playerPitchingStats = pitchingData.map((row) => {
 		const player = players.find((p) => {

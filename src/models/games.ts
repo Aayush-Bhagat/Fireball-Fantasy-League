@@ -103,6 +103,7 @@ export const gameRelations = relations(games, ({ one, many }) => ({
 		fields: [games.bannedStadiumId],
 		references: [stadiums.id],
 	}),
+	innings: many(gameInnings),
 }));
 
 export const gameOutcome = pgEnum("game_outcome", ["Win", "Loss", "Tie"]);
@@ -137,3 +138,41 @@ export const stadiums = pgTable("stadiums", {
 	icon: text("icon"),
 	banner: text("banner"),
 });
+
+export const inningHalf = pgEnum("inning_half", ["Top", "Bottom"]);
+
+export const gameInnings = pgTable(
+	"game_innings",
+	{
+		gameId: uuid("game_id")
+			.notNull()
+			.references(() => games.id),
+
+		teamId: uuid("team_id")
+			.notNull()
+			.references(() => teams.id),
+
+		inning: integer("inning").notNull(),
+
+		half: inningHalf("half").notNull(),
+
+		runs: integer("runs"),
+	},
+	(table) => [
+		primaryKey({
+			columns: [table.gameId, table.inning, table.half],
+		}),
+	],
+);
+
+export const gameInningsRelations = relations(gameInnings, ({ one }) => ({
+	game: one(games, {
+		fields: [gameInnings.gameId],
+		references: [games.id],
+	}),
+
+	team: one(teams, {
+		fields: [gameInnings.teamId],
+		references: [teams.id],
+	}),
+}));

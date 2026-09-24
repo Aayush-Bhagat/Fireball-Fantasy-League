@@ -1,33 +1,36 @@
 import {
-    calculateBAA,
-    calculateEra,
-    calculateFieldingErrors,
-    calculateInningsPitched,
-    calculateOBP,
-    calculateOBPAgainst,
-    calculateOPS,
-    calculateOPSAgainst,
-    calculateSLG,
-    calculateSLGAgainst,
-    calculateWHIP,
+	calculateBAA,
+	calculateEra,
+	calculateFieldingErrors,
+	calculateInningsPitched,
+	calculateOBP,
+	calculateOBPAgainst,
+	calculateOPS,
+	calculateOPSAgainst,
+	calculateSLG,
+	calculateSLGAgainst,
+	calculateWHIP,
 } from "@/lib/statUtils";
 import {
-    AdminGameDto,
-    GameStatsDto,
-    SeasonScheduleResponseDto,
-    StadiumDto,
-    UpdateGameRequestDto,
-    UpdateGameScoreRequestDto,
+	AdminGameDto,
+	GameStatsDto,
+	InsertGameInning,
+	SeasonScheduleResponseDto,
+	StadiumDto,
+	UpdateGameRequestDto,
+	UpdateGameScoreRequestDto,
 } from "./../dtos/gameDtos";
 import {
-    createPlayerGameStats,
-    findGameById,
-    findGamesByWeekAndSeason,
-    findSeasonSchedule,
-    findStadiums,
-    findTeamGameStats,
-    updateGameStadium,
-    updateTeamGameById,
+	createPlayerGameStats,
+	findGameById,
+	findGameInnings,
+	findGamesByWeekAndSeason,
+	findSeasonSchedule,
+	findStadiums,
+	findTeamGameStats,
+	insertGameInnings,
+	updateGameStadium,
+	updateTeamGameById,
 } from "@/repositories/gameRepository";
 import { GameDtoMapper, mapToSeasonSchedule } from "@/lib/mappers/gameMappers";
 import { findAllTeamRecordsBySeason } from "@/repositories/teamRepository";
@@ -35,519 +38,572 @@ import { findPlayersByTeamId } from "@/repositories/playerRepository";
 import { computeSeasonOdds } from "@/services/oddsService";
 
 export async function getGamesByWeekAndSeason(
-    week: number | undefined,
-    season: string | undefined,
+	week: number | undefined,
+	season: string | undefined,
 ) {
-    if ((season !== "current" && isNaN(Number(season))) || !season) {
-        throw new Error("Invalid season");
-    }
+	if ((season !== "current" && isNaN(Number(season))) || !season) {
+		throw new Error("Invalid season");
+	}
 
-    const seasonId = season === "current" ? null : parseInt(season);
+	const seasonId = season === "current" ? null : parseInt(season);
 
-    const games = await findGamesByWeekAndSeason(seasonId, week);
+	const games = await findGamesByWeekAndSeason(seasonId, week);
 
-    // Going-in odds need the full season schedule: each game's odds are
-    // derived only from the games played before it.
-    const schedule = await findSeasonSchedule(seasonId);
+	// Going-in odds need the full season schedule: each game's odds are
+	// derived only from the games played before it.
+	const schedule = await findSeasonSchedule(seasonId);
 
-    const records = await findAllTeamRecordsBySeason(seasonId);
+	const records = await findAllTeamRecordsBySeason(seasonId);
 
-    const oddsByGame = await computeSeasonOdds(schedule);
+	const oddsByGame = await computeSeasonOdds(schedule);
 
-    const gamesWithRecords = GameDtoMapper(games, records, oddsByGame);
+	const gamesWithRecords = GameDtoMapper(games, records, oddsByGame);
 
-    return gamesWithRecords;
+	return gamesWithRecords;
 }
 
 export async function getSeasonSchedule(
-    season: string | undefined,
+	season: string | undefined,
 ): Promise<SeasonScheduleResponseDto> {
-    if ((season !== "current" && isNaN(Number(season))) || !season) {
-        throw new Error("Invalid season");
-    }
+	if ((season !== "current" && isNaN(Number(season))) || !season) {
+		throw new Error("Invalid season");
+	}
 
-    const seasonId = season === "current" ? null : parseInt(season);
+	const seasonId = season === "current" ? null : parseInt(season);
 
-    const schedule = await findSeasonSchedule(seasonId);
+	const schedule = await findSeasonSchedule(seasonId);
 
-    const records = await findAllTeamRecordsBySeason(seasonId);
+	const records = await findAllTeamRecordsBySeason(seasonId);
 
-    const oddsByGame = await computeSeasonOdds(schedule);
+	const oddsByGame = await computeSeasonOdds(schedule);
 
-    const seasonSchedule = mapToSeasonSchedule(schedule, records, oddsByGame);
+	const seasonSchedule = mapToSeasonSchedule(schedule, records, oddsByGame);
 
-    const seasonNumber = schedule.at(0)?.seasonId || 0;
+	const seasonNumber = schedule.at(0)?.seasonId || 0;
 
-    return {
-        season: seasonNumber,
-        schedule: seasonSchedule,
-    };
+	return {
+		season: seasonNumber,
+		schedule: seasonSchedule,
+	};
 }
 
 export async function getGameById(gameId: string) {
-    const games = await findGameById(gameId);
+	const games = await findGameById(gameId);
 
-    const game = games.at(0);
+	const game = games.at(0);
 
-    if (!game) {
-        throw new Error("Game not found");
-    }
+	if (!game) {
+		throw new Error("Game not found");
+	}
 
-    const teamPlayers = await findPlayersByTeamId(game.teamId);
+	const teamPlayers = await findPlayersByTeamId(game.teamId);
 
-    const opponentPlayers = await findPlayersByTeamId(game.opponentId);
+	const opponentPlayers = await findPlayersByTeamId(game.opponentId);
 
-    const gameDto: AdminGameDto = {
-        gameId: game.gameId,
-        playedAt: game.playedAt,
-        seasonId: game.seasonId,
-        week: game.week,
-        team: {
-            id: game.teamId,
-            name: game.teamName,
-            logo: game.teamLogo,
-            abbreviation: game.teamAbbreviation,
-        },
-        opponent: {
-            id: game.opponentId,
-            name: game.opponentName,
-            logo: game.opponentLogo,
-            abbreviation: game.opponentAbbreviation,
-        },
-        teamRoster: teamPlayers.map((player) => ({
-            id: player.id,
-            name: player.name,
-            image: player.image,
-        })),
-        opponentRoster: opponentPlayers.map((player) => ({
-            id: player.id,
-            name: player.name,
-            image: player.image,
-        })),
-    };
+	const gameDto: AdminGameDto = {
+		gameId: game.gameId,
+		playedAt: game.playedAt,
+		seasonId: game.seasonId,
+		week: game.week,
+		team: {
+			id: game.teamId,
+			name: game.teamName,
+			logo: game.teamLogo,
+			abbreviation: game.teamAbbreviation,
+		},
+		opponent: {
+			id: game.opponentId,
+			name: game.opponentName,
+			logo: game.opponentLogo,
+			abbreviation: game.opponentAbbreviation,
+		},
+		teamRoster: teamPlayers.map((player) => ({
+			id: player.id,
+			name: player.name,
+			image: player.image,
+		})),
+		opponentRoster: opponentPlayers.map((player) => ({
+			id: player.id,
+			name: player.name,
+			image: player.image,
+		})),
+	};
 
-    return gameDto;
+	return gameDto;
 }
 
 export const updateGame = async (game: UpdateGameRequestDto) => {
-    try {
-        const teamOutcome =
-            game.teamScore > game.opponentScore
-                ? "Win"
-                : game.teamScore === game.opponentScore
-                  ? "Tie"
-                  : "Loss";
+	try {
+		const teamOutcome =
+			game.teamScore > game.opponentScore
+				? "Win"
+				: game.teamScore === game.opponentScore
+					? "Tie"
+					: "Loss";
 
-        const opponentOutcome =
-            game.opponentScore > game.teamScore
-                ? "Win"
-                : game.opponentScore === game.teamScore
-                  ? "Tie"
-                  : "Loss";
+		const opponentOutcome =
+			game.opponentScore > game.teamScore
+				? "Win"
+				: game.opponentScore === game.teamScore
+					? "Tie"
+					: "Loss";
 
-        await updateTeamGameById(
-            game.gameId,
-            game.teamId,
-            game.teamScore,
-            teamOutcome,
-        );
-        await updateTeamGameById(
-            game.gameId,
-            game.opponentId,
-            game.opponentScore,
-            opponentOutcome,
-        );
-        await createPlayerGameStats(game.teamPlayers, game.teamId, game.gameId);
-        await createPlayerGameStats(
-            game.opponentPlayers,
-            game.opponentId,
-            game.gameId,
-        );
-    } catch (error) {
-        console.error(error);
-        throw error;
-    }
+		await updateTeamGameById(
+			game.gameId,
+			game.teamId,
+			game.teamScore,
+			teamOutcome,
+		);
+		await updateTeamGameById(
+			game.gameId,
+			game.opponentId,
+			game.opponentScore,
+			opponentOutcome,
+		);
+		await createPlayerGameStats(game.teamPlayers, game.teamId, game.gameId);
+		await createPlayerGameStats(
+			game.opponentPlayers,
+			game.opponentId,
+			game.gameId,
+		);
+	} catch (error) {
+		console.error(error);
+		throw error;
+	}
 };
 
 export async function getGameStats(gameId: string) {
-    const playedGame = await findGameById(gameId);
+	const playedGame = await findGameById(gameId);
 
-    const game = playedGame.at(0);
+	const game = playedGame.at(0);
 
-    if (!game) {
-        throw new Error("Game not found");
-    }
+	if (!game) {
+		throw new Error("Game not found");
+	}
 
-    const teamGameStats = await findTeamGameStats(gameId, game.teamId);
+	const innings = await findGameInnings(gameId);
+	let topTeamId = null;
+	let bottomTeamId = null;
 
-    const opponentGameStats = await findTeamGameStats(gameId, game.opponentId);
+	if (innings.length > 1) {
+		topTeamId = innings[0].teamId;
+		bottomTeamId = innings[1].teamId;
+	}
 
-    const result: GameStatsDto = {
-        gameId: game.gameId,
-        team: {
-            id: game.teamId,
-            name: game.teamName,
-            logo: game.teamLogo,
-            abbreviation: game.teamAbbreviation,
-            conference: game.teamConference,
-            userId: game.teamUserId,
-        },
-        opponent: {
-            id: game.opponentId,
-            name: game.opponentName,
-            logo: game.opponentLogo,
-            abbreviation: game.opponentAbbreviation,
-            conference: game.opponentConference,
-            userId: game.opponentUserId,
-        },
-        teamScore: game.teamScore,
-        opponentScore: game.opponentScore,
-        teamOutcome: game.teamOutcome,
-        opponentOutcome: game.opponentOutcome,
-        stadiumTime: game.stadiumTime,
-        stadium:
-            game.stadiumId && game.stadiumName
-                ? {
-                      stadiumId: game.stadiumId,
-                      name: game.stadiumName,
-                      icon: game.stadiumIcon,
-                      banner: game.stadiumBanner,
-                  }
-                : null,
-        bannedStadium:
-            game.bannedStadiumId && game.bannedStadiumName
-                ? {
-                      stadiumId: game.bannedStadiumId,
-                      name: game.bannedStadiumName,
-                      icon: game.bannedStadiumIcon,
-                      banner: game.bannedStadiumBanner,
-                  }
-                : null,
-        teamPlayers: teamGameStats.map((stat) => ({
-            playerId: stat.playerId,
-            playerName: stat.player.name,
-            playerImage: stat.player.image,
+	const teamGameStats = await findTeamGameStats(gameId, game.teamId);
 
-            // Batting
-            atBats: stat.atBats,
-            hits: stat.hits,
-            runs: stat.runs,
-            rbis: stat.rbis,
-            walks: stat.walks,
-            strikeouts: stat.strikeouts,
-            homeRuns: stat.homeRuns,
-            plateAppearances: stat.plateAppearances,
-            strikeoutsBatted: stat.strikeoutsBatted,
-            hitByPitch: stat.hitByPitch,
-            singles: stat.singles,
-            doubles: stat.doubles,
-            triples: stat.triples,
-            oneHr: stat.oneHr,
-            twoHr: stat.twoHr,
-            threeHr: stat.threeHr,
-            grandSlams: stat.grandSlams,
-            totalBases: stat.totalBases,
-            sacFlies: stat.sacFlies,
-            startHits: stat.startHits,
-            starsUsedBatting: stat.starsUsedBatting,
-            stolenBases: stat.stolenBases,
-            caughtStealing: stat.caughtStealing,
-            stealAttempts: stat.stealAttempts,
+	const opponentGameStats = await findTeamGameStats(gameId, game.opponentId);
 
-            // Fielding
-            assist: stat.assist,
-            fieldingErrors: calculateFieldingErrors(
-                stat.bobbles,
-                stat.buddyJumpPutouts,
-                stat.buddyJumpAttempts,
-            ),
-            buddyJumpPutouts: stat.buddyJumpPutouts,
-            buddyJumpAttempts: stat.buddyJumpAttempts,
-            doublePlays: stat.doublePlays,
-            triplePlays: stat.triplePlays,
-            bobbles: stat.bobbles,
+	const team = {
+		id: game.teamId,
+		name: game.teamName,
+		logo: game.teamLogo,
+		abbreviation: game.teamAbbreviation,
+		conference: game.teamConference,
+		userId: game.teamUserId,
+	};
 
-            // Pitching
-            inningsPitched: calculateInningsPitched(stat.outsPitched),
-            outsPitched: stat.outsPitched,
-            runsAllowed: stat.runsAllowed,
-            outs: stat.outs,
-            battersFaced: stat.battersFaced,
-            pitches: stat.pitches,
-            strikes: stat.strikes,
-            balls: stat.balls,
-            beanBalls: stat.beanBalls,
-            hitsAllowed: stat.hitsAllowed,
-            singlesAllowed: stat.singlesAllowed,
-            doublesAllowed: stat.doublesAllowed,
-            triplesAllowed: stat.triplesAllowed,
-            homeRunsAllowed: stat.homeRunsAllowed,
-            inheritedRuns: stat.inheritedRuns,
-            starPitches: stat.starPitches,
-            starsUsedPitching: stat.starsUsedPitching,
-            pickoffs: stat.pickoffs,
-            pickoffAttempts: stat.pickoffAttempts,
-            walksTaken: stat.walksTaken,
-            gamesPlayed: 1,
+	const opponent = {
+		id: game.opponentId,
+		name: game.opponentName,
+		logo: game.opponentLogo,
+		abbreviation: game.opponentAbbreviation,
+		conference: game.opponentConference,
+		userId: game.opponentUserId,
+	};
 
-            // Calculated stats
-            battingAverage: stat.atBats > 0 ? stat.hits / stat.atBats : 0,
-            era: calculateEra(stat.runsAllowed, stat.outsPitched),
-            obp: calculateOBP(
-                stat.hits,
-                stat.walksTaken,
-                stat.hitByPitch,
-                stat.atBats,
-                stat.sacFlies,
-            ),
-            slg: calculateSLG(
-                stat.hits,
-                stat.singles,
-                stat.doubles,
-                stat.triples,
-                stat.homeRuns,
-                stat.atBats,
-            ),
-            ops: calculateOPS(
-                calculateOBP(
-                    stat.hits,
-                    stat.walksTaken,
-                    stat.hitByPitch,
-                    stat.atBats,
-                    stat.sacFlies,
-                ),
-                calculateSLG(
-                    stat.hits,
-                    stat.singles,
-                    stat.doubles,
-                    stat.triples,
-                    stat.homeRuns,
-                    stat.atBats,
-                ),
-            ),
-            whip: calculateWHIP(stat.walks, stat.hitsAllowed, stat.outsPitched),
-            baa: calculateBAA(stat.hitsAllowed, stat.battersFaced),
-            obpAgainst: calculateOBPAgainst(
-                stat.hitsAllowed,
-                stat.walks,
-                stat.battersFaced,
-                stat.beanBalls,
-            ),
-            slgAgainst: calculateSLGAgainst(
-                stat.hitsAllowed,
-                stat.singlesAllowed,
-                stat.doublesAllowed,
-                stat.triplesAllowed,
-                stat.homeRunsAllowed,
-                stat.battersFaced,
-            ),
-            opsAgainst: calculateOPSAgainst(
-                calculateOBPAgainst(
-                    stat.hitsAllowed,
-                    stat.walks,
-                    stat.battersFaced,
-                    stat.beanBalls,
-                ),
-                calculateSLGAgainst(
-                    stat.hitsAllowed,
-                    stat.singlesAllowed,
-                    stat.doublesAllowed,
-                    stat.triplesAllowed,
-                    stat.homeRunsAllowed,
-                    stat.battersFaced,
-                ),
-            ),
+	let topTeam = null;
+	let bottomTeam = null;
 
-            //position
-            position: stat.position,
-            battingOrder: stat.battingOrder,
-        })),
-        opponentPlayers: opponentGameStats.map((stat) => ({
-            playerId: stat.playerId,
-            playerName: stat.player.name,
-            playerImage: stat.player.image,
+	if (innings.length > 1) {
+		topTeam = topTeamId === game.teamId ? team : opponent;
+		bottomTeam = bottomTeamId === game.teamId ? team : opponent;
+	}
 
-            // Batting
-            atBats: stat.atBats,
-            hits: stat.hits,
-            runs: stat.runs,
-            rbis: stat.rbis,
-            walks: stat.walks,
-            strikeouts: stat.strikeouts,
-            homeRuns: stat.homeRuns,
-            plateAppearances: stat.plateAppearances,
-            strikeoutsBatted: stat.strikeoutsBatted,
-            hitByPitch: stat.hitByPitch,
-            singles: stat.singles,
-            doubles: stat.doubles,
-            triples: stat.triples,
-            oneHr: stat.oneHr,
-            twoHr: stat.twoHr,
-            threeHr: stat.threeHr,
-            grandSlams: stat.grandSlams,
-            totalBases: stat.totalBases,
-            sacFlies: stat.sacFlies,
-            startHits: stat.startHits,
-            starsUsedBatting: stat.starsUsedBatting,
-            stolenBases: stat.stolenBases,
-            caughtStealing: stat.caughtStealing,
-            stealAttempts: stat.stealAttempts,
+	const result: GameStatsDto = {
+		gameId: game.gameId,
+		team: team,
+		opponent: opponent,
+		teamScore: game.teamScore,
+		opponentScore: game.opponentScore,
+		teamOutcome: game.teamOutcome,
+		opponentOutcome: game.opponentOutcome,
+		stadiumTime: game.stadiumTime,
+		stadium:
+			game.stadiumId && game.stadiumName
+				? {
+						stadiumId: game.stadiumId,
+						name: game.stadiumName,
+						icon: game.stadiumIcon,
+						banner: game.stadiumBanner,
+					}
+				: null,
+		bannedStadium:
+			game.bannedStadiumId && game.bannedStadiumName
+				? {
+						stadiumId: game.bannedStadiumId,
+						name: game.bannedStadiumName,
+						icon: game.bannedStadiumIcon,
+						banner: game.bannedStadiumBanner,
+					}
+				: null,
+		scoreCard:
+			topTeam && bottomTeam
+				? {
+						topTeam: topTeam,
+						bottomTeam: bottomTeam,
+						innings: innings,
+					}
+				: null,
+		teamPlayers: teamGameStats.map((stat) => ({
+			playerId: stat.playerId,
+			playerName: stat.player.name,
+			playerImage: stat.player.image,
 
-            // Fielding
-            assist: stat.assist,
-            fieldingErrors: calculateFieldingErrors(
-                stat.bobbles,
-                stat.buddyJumpPutouts,
-                stat.buddyJumpAttempts,
-            ),
-            buddyJumpPutouts: stat.buddyJumpPutouts,
-            buddyJumpAttempts: stat.buddyJumpAttempts,
-            doublePlays: stat.doublePlays,
-            triplePlays: stat.triplePlays,
-            bobbles: stat.bobbles,
+			// Batting
+			atBats: stat.atBats,
+			hits: stat.hits,
+			runs: stat.runs,
+			rbis: stat.rbis,
+			walks: stat.walks,
+			strikeouts: stat.strikeouts,
+			homeRuns: stat.homeRuns,
+			plateAppearances: stat.plateAppearances,
+			strikeoutsBatted: stat.strikeoutsBatted,
+			hitByPitch: stat.hitByPitch,
+			singles: stat.singles,
+			doubles: stat.doubles,
+			triples: stat.triples,
+			oneHr: stat.oneHr,
+			twoHr: stat.twoHr,
+			threeHr: stat.threeHr,
+			grandSlams: stat.grandSlams,
+			totalBases: stat.totalBases,
+			sacFlies: stat.sacFlies,
+			startHits: stat.startHits,
+			starsUsedBatting: stat.starsUsedBatting,
+			stolenBases: stat.stolenBases,
+			caughtStealing: stat.caughtStealing,
+			stealAttempts: stat.stealAttempts,
 
-            // Pitching
-            inningsPitched: calculateInningsPitched(stat.outsPitched),
-            outsPitched: stat.outsPitched,
-            runsAllowed: stat.runsAllowed,
-            outs: stat.outs,
-            battersFaced: stat.battersFaced,
-            pitches: stat.pitches,
-            strikes: stat.strikes,
-            balls: stat.balls,
-            beanBalls: stat.beanBalls,
-            hitsAllowed: stat.hitsAllowed,
-            singlesAllowed: stat.singlesAllowed,
-            doublesAllowed: stat.doublesAllowed,
-            triplesAllowed: stat.triplesAllowed,
-            homeRunsAllowed: stat.homeRunsAllowed,
-            inheritedRuns: stat.inheritedRuns,
-            starPitches: stat.starPitches,
-            starsUsedPitching: stat.starsUsedPitching,
-            pickoffs: stat.pickoffs,
-            pickoffAttempts: stat.pickoffAttempts,
-            walksTaken: stat.walksTaken,
-            gamesPlayed: 1,
+			// Fielding
+			assist: stat.assist,
+			fieldingErrors: calculateFieldingErrors(
+				stat.bobbles,
+				stat.buddyJumpPutouts,
+				stat.buddyJumpAttempts,
+			),
+			buddyJumpPutouts: stat.buddyJumpPutouts,
+			buddyJumpAttempts: stat.buddyJumpAttempts,
+			doublePlays: stat.doublePlays,
+			triplePlays: stat.triplePlays,
+			bobbles: stat.bobbles,
 
-            // Calculated stats
-            battingAverage: stat.atBats > 0 ? stat.hits / stat.atBats : 0,
-            era: calculateEra(stat.runsAllowed, stat.outsPitched),
-            obp: calculateOBP(
-                stat.hits,
-                stat.walksTaken,
-                stat.hitByPitch,
-                stat.atBats,
-                stat.sacFlies,
-            ),
-            slg: calculateSLG(
-                stat.hits,
-                stat.singles,
-                stat.doubles,
-                stat.triples,
-                stat.homeRuns,
-                stat.atBats,
-            ),
-            ops: calculateOPS(
-                calculateOBP(
-                    stat.hits,
-                    stat.walksTaken,
-                    stat.hitByPitch,
-                    stat.atBats,
-                    stat.sacFlies,
-                ),
-                calculateSLG(
-                    stat.hits,
-                    stat.singles,
-                    stat.doubles,
-                    stat.triples,
-                    stat.homeRuns,
-                    stat.atBats,
-                ),
-            ),
-            whip: calculateWHIP(stat.walks, stat.hitsAllowed, stat.outsPitched),
-            baa: calculateBAA(stat.hitsAllowed, stat.battersFaced),
-            obpAgainst: calculateOBPAgainst(
-                stat.hitsAllowed,
-                stat.walks,
-                stat.battersFaced,
-                stat.beanBalls,
-            ),
-            slgAgainst: calculateSLGAgainst(
-                stat.hitsAllowed,
-                stat.singlesAllowed,
-                stat.doublesAllowed,
-                stat.triplesAllowed,
-                stat.homeRunsAllowed,
-                stat.battersFaced,
-            ),
-            opsAgainst: calculateOPSAgainst(
-                calculateOBPAgainst(
-                    stat.hitsAllowed,
-                    stat.walks,
-                    stat.battersFaced,
-                    stat.beanBalls,
-                ),
-                calculateSLGAgainst(
-                    stat.hitsAllowed,
-                    stat.singlesAllowed,
-                    stat.doublesAllowed,
-                    stat.triplesAllowed,
-                    stat.homeRunsAllowed,
-                    stat.battersFaced,
-                ),
-            ),
+			// Pitching
+			inningsPitched: calculateInningsPitched(stat.outsPitched),
+			outsPitched: stat.outsPitched,
+			runsAllowed: stat.runsAllowed,
+			outs: stat.outs,
+			battersFaced: stat.battersFaced,
+			pitches: stat.pitches,
+			strikes: stat.strikes,
+			balls: stat.balls,
+			beanBalls: stat.beanBalls,
+			hitsAllowed: stat.hitsAllowed,
+			singlesAllowed: stat.singlesAllowed,
+			doublesAllowed: stat.doublesAllowed,
+			triplesAllowed: stat.triplesAllowed,
+			homeRunsAllowed: stat.homeRunsAllowed,
+			inheritedRuns: stat.inheritedRuns,
+			starPitches: stat.starPitches,
+			starsUsedPitching: stat.starsUsedPitching,
+			pickoffs: stat.pickoffs,
+			pickoffAttempts: stat.pickoffAttempts,
+			walksTaken: stat.walksTaken,
+			gamesPlayed: 1,
 
-            // position
-            position: stat.position,
-            battingOrder: stat.battingOrder,
-        })),
-    };
+			// Calculated stats
+			battingAverage: stat.atBats > 0 ? stat.hits / stat.atBats : 0,
+			era: calculateEra(stat.runsAllowed, stat.outsPitched),
+			obp: calculateOBP(
+				stat.hits,
+				stat.walksTaken,
+				stat.hitByPitch,
+				stat.atBats,
+				stat.sacFlies,
+			),
+			slg: calculateSLG(
+				stat.hits,
+				stat.singles,
+				stat.doubles,
+				stat.triples,
+				stat.homeRuns,
+				stat.atBats,
+			),
+			ops: calculateOPS(
+				calculateOBP(
+					stat.hits,
+					stat.walksTaken,
+					stat.hitByPitch,
+					stat.atBats,
+					stat.sacFlies,
+				),
+				calculateSLG(
+					stat.hits,
+					stat.singles,
+					stat.doubles,
+					stat.triples,
+					stat.homeRuns,
+					stat.atBats,
+				),
+			),
+			whip: calculateWHIP(stat.walks, stat.hitsAllowed, stat.outsPitched),
+			baa: calculateBAA(stat.hitsAllowed, stat.battersFaced),
+			obpAgainst: calculateOBPAgainst(
+				stat.hitsAllowed,
+				stat.walks,
+				stat.battersFaced,
+				stat.beanBalls,
+			),
+			slgAgainst: calculateSLGAgainst(
+				stat.hitsAllowed,
+				stat.singlesAllowed,
+				stat.doublesAllowed,
+				stat.triplesAllowed,
+				stat.homeRunsAllowed,
+				stat.battersFaced,
+			),
+			opsAgainst: calculateOPSAgainst(
+				calculateOBPAgainst(
+					stat.hitsAllowed,
+					stat.walks,
+					stat.battersFaced,
+					stat.beanBalls,
+				),
+				calculateSLGAgainst(
+					stat.hitsAllowed,
+					stat.singlesAllowed,
+					stat.doublesAllowed,
+					stat.triplesAllowed,
+					stat.homeRunsAllowed,
+					stat.battersFaced,
+				),
+			),
 
-    return result;
+			//position
+			position: stat.position,
+			battingOrder: stat.battingOrder,
+		})),
+		opponentPlayers: opponentGameStats.map((stat) => ({
+			playerId: stat.playerId,
+			playerName: stat.player.name,
+			playerImage: stat.player.image,
+
+			// Batting
+			atBats: stat.atBats,
+			hits: stat.hits,
+			runs: stat.runs,
+			rbis: stat.rbis,
+			walks: stat.walks,
+			strikeouts: stat.strikeouts,
+			homeRuns: stat.homeRuns,
+			plateAppearances: stat.plateAppearances,
+			strikeoutsBatted: stat.strikeoutsBatted,
+			hitByPitch: stat.hitByPitch,
+			singles: stat.singles,
+			doubles: stat.doubles,
+			triples: stat.triples,
+			oneHr: stat.oneHr,
+			twoHr: stat.twoHr,
+			threeHr: stat.threeHr,
+			grandSlams: stat.grandSlams,
+			totalBases: stat.totalBases,
+			sacFlies: stat.sacFlies,
+			startHits: stat.startHits,
+			starsUsedBatting: stat.starsUsedBatting,
+			stolenBases: stat.stolenBases,
+			caughtStealing: stat.caughtStealing,
+			stealAttempts: stat.stealAttempts,
+
+			// Fielding
+			assist: stat.assist,
+			fieldingErrors: calculateFieldingErrors(
+				stat.bobbles,
+				stat.buddyJumpPutouts,
+				stat.buddyJumpAttempts,
+			),
+			buddyJumpPutouts: stat.buddyJumpPutouts,
+			buddyJumpAttempts: stat.buddyJumpAttempts,
+			doublePlays: stat.doublePlays,
+			triplePlays: stat.triplePlays,
+			bobbles: stat.bobbles,
+
+			// Pitching
+			inningsPitched: calculateInningsPitched(stat.outsPitched),
+			outsPitched: stat.outsPitched,
+			runsAllowed: stat.runsAllowed,
+			outs: stat.outs,
+			battersFaced: stat.battersFaced,
+			pitches: stat.pitches,
+			strikes: stat.strikes,
+			balls: stat.balls,
+			beanBalls: stat.beanBalls,
+			hitsAllowed: stat.hitsAllowed,
+			singlesAllowed: stat.singlesAllowed,
+			doublesAllowed: stat.doublesAllowed,
+			triplesAllowed: stat.triplesAllowed,
+			homeRunsAllowed: stat.homeRunsAllowed,
+			inheritedRuns: stat.inheritedRuns,
+			starPitches: stat.starPitches,
+			starsUsedPitching: stat.starsUsedPitching,
+			pickoffs: stat.pickoffs,
+			pickoffAttempts: stat.pickoffAttempts,
+			walksTaken: stat.walksTaken,
+			gamesPlayed: 1,
+
+			// Calculated stats
+			battingAverage: stat.atBats > 0 ? stat.hits / stat.atBats : 0,
+			era: calculateEra(stat.runsAllowed, stat.outsPitched),
+			obp: calculateOBP(
+				stat.hits,
+				stat.walksTaken,
+				stat.hitByPitch,
+				stat.atBats,
+				stat.sacFlies,
+			),
+			slg: calculateSLG(
+				stat.hits,
+				stat.singles,
+				stat.doubles,
+				stat.triples,
+				stat.homeRuns,
+				stat.atBats,
+			),
+			ops: calculateOPS(
+				calculateOBP(
+					stat.hits,
+					stat.walksTaken,
+					stat.hitByPitch,
+					stat.atBats,
+					stat.sacFlies,
+				),
+				calculateSLG(
+					stat.hits,
+					stat.singles,
+					stat.doubles,
+					stat.triples,
+					stat.homeRuns,
+					stat.atBats,
+				),
+			),
+			whip: calculateWHIP(stat.walks, stat.hitsAllowed, stat.outsPitched),
+			baa: calculateBAA(stat.hitsAllowed, stat.battersFaced),
+			obpAgainst: calculateOBPAgainst(
+				stat.hitsAllowed,
+				stat.walks,
+				stat.battersFaced,
+				stat.beanBalls,
+			),
+			slgAgainst: calculateSLGAgainst(
+				stat.hitsAllowed,
+				stat.singlesAllowed,
+				stat.doublesAllowed,
+				stat.triplesAllowed,
+				stat.homeRunsAllowed,
+				stat.battersFaced,
+			),
+			opsAgainst: calculateOPSAgainst(
+				calculateOBPAgainst(
+					stat.hitsAllowed,
+					stat.walks,
+					stat.battersFaced,
+					stat.beanBalls,
+				),
+				calculateSLGAgainst(
+					stat.hitsAllowed,
+					stat.singlesAllowed,
+					stat.doublesAllowed,
+					stat.triplesAllowed,
+					stat.homeRunsAllowed,
+					stat.battersFaced,
+				),
+			),
+
+			// position
+			position: stat.position,
+			battingOrder: stat.battingOrder,
+		})),
+	};
+
+	return result;
 }
 
 export async function getStadiums(): Promise<StadiumDto[]> {
-    const stadiumsData = await findStadiums();
+	const stadiumsData = await findStadiums();
 
-    const stadiums: StadiumDto[] = stadiumsData.map((s) => ({
-        stadiumId: s.id,
-        name: s.name,
-        icon: s.icon,
-        banner: s.banner,
-    }));
+	const stadiums: StadiumDto[] = stadiumsData.map((s) => ({
+		stadiumId: s.id,
+		name: s.name,
+		icon: s.icon,
+		banner: s.banner,
+	}));
 
-    return stadiums;
+	return stadiums;
 }
 
 export async function UpdateGameScore(
-    gameId: string,
-    game: UpdateGameScoreRequestDto,
+	gameId: string,
+	game: UpdateGameScoreRequestDto,
 ) {
-    const teamOutcome =
-        game.teamScore > game.opponentScore
-            ? "Win"
-            : game.teamScore === game.opponentScore
-              ? "Tie"
-              : "Loss";
+	const teamOutcome =
+		game.teamScore > game.opponentScore
+			? "Win"
+			: game.teamScore === game.opponentScore
+				? "Tie"
+				: "Loss";
 
-    const opponentOutcome =
-        game.opponentScore > game.teamScore
-            ? "Win"
-            : game.opponentScore === game.teamScore
-              ? "Tie"
-              : "Loss";
+	const opponentOutcome =
+		game.opponentScore > game.teamScore
+			? "Win"
+			: game.opponentScore === game.teamScore
+				? "Tie"
+				: "Loss";
 
-    await updateTeamGameById(gameId, game.teamId, game.teamScore, teamOutcome);
-    await updateTeamGameById(
-        gameId,
-        game.opponentId,
-        game.opponentScore,
-        opponentOutcome,
-    );
+	await updateTeamGameById(gameId, game.teamId, game.teamScore, teamOutcome);
+	await updateTeamGameById(
+		gameId,
+		game.opponentId,
+		game.opponentScore,
+		opponentOutcome,
+	);
 
-    await updateGameStadium(gameId, {
-        stadiumId: game.stadiumId,
-        bannedStadiumId: game.bannedStadiumId,
-        stadiumTime: game.stadiumTime,
-    });
+	await updateGameStadium(gameId, {
+		stadiumId: game.stadiumId,
+		bannedStadiumId: game.bannedStadiumId,
+		stadiumTime: game.stadiumTime,
+	});
+
+	const topInnings: InsertGameInning[] = game.topInningRuns.map(
+		(runs, idx) => ({
+			gameId: gameId,
+			teamId: game.topTeamId,
+			runs: runs,
+			inning: idx + 1,
+			half: "Top",
+		}),
+	);
+
+	const bottomInnings: InsertGameInning[] = game.bottomInningRuns.map(
+		(runs, idx) => ({
+			gameId: gameId,
+			teamId: game.bottomTeamId,
+			runs: runs,
+			inning: idx + 1,
+			half: "Bottom",
+		}),
+	);
+
+	const allInnings = [...topInnings, ...bottomInnings];
+
+	await insertGameInnings(allInnings);
 }

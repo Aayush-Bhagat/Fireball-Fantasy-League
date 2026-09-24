@@ -168,6 +168,10 @@ export const UpdateGameScoreRequestSchema = z.object({
 	stadiumId: z.string().uuid(),
 	bannedStadiumId: z.string().uuid(),
 	stadiumTime: z.enum(StadiumTime.enumValues),
+	topTeamId: z.string().uuid(),
+	bottomTeamId: z.string().uuid(),
+	topInningRuns: z.array(z.number().nullable()),
+	bottomInningRuns: z.array(z.number().nullable()),
 });
 
 export type UpdateGameScoreRequestDto = z.infer<
@@ -187,6 +191,23 @@ export type GameStatsDto = {
 	stadiumTime: StadiumTime;
 	stadium: StadiumDto | null;
 	bannedStadium: StadiumDto | null;
+	scoreCard: ScoreCardDto | null;
+};
+
+export type InningHalf = "Top" | "Bottom";
+
+export type InningScoresDto = {
+	gameId: string;
+	inning: number;
+	half: InningHalf;
+	teamId: string;
+	runs: number | null;
+};
+
+export type ScoreCardDto = {
+	topTeam: TeamDto;
+	bottomTeam: TeamDto;
+	innings: InningScoresDto[];
 };
 
 export type StadiumDto = {
@@ -198,4 +219,12 @@ export type StadiumDto = {
 
 export type StadiumResponseDto = {
 	stadiums: StadiumDto[];
+};
+
+export type InsertGameInning = {
+	gameId: string;
+	teamId: string;
+	inning: number;
+	half: InningHalf;
+	runs?: number | null;
 };

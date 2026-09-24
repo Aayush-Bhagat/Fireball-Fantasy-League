@@ -1,7 +1,11 @@
-import { StadiumTime, UpdatePlayerGameStatsDto } from "./../dtos/gameDtos";
+import {
+	InsertGameInning,
+	StadiumTime,
+	UpdatePlayerGameStatsDto,
+} from "./../dtos/gameDtos";
 import { db } from "@/db";
 import { GameData } from "@/dtos/gameDtos";
-import { games, stadiums, teamGames } from "@/models/games";
+import { gameInnings, games, stadiums, teamGames } from "@/models/games";
 import { playerGamesStats, players } from "@/models/players";
 import { seasons } from "@/models/seasons";
 import { conferences, teams } from "@/models/teams";
@@ -566,4 +570,28 @@ export async function updateGameStadium(
 			stadiumTime: gameStadiums.stadiumTime,
 		})
 		.where(eq(games.id, gameId));
+}
+
+export async function findGameInnings(gameId: string) {
+	return await db.query.gameInnings.findMany({
+		where: eq(gameInnings.gameId, gameId),
+		orderBy: [asc(gameInnings.inning), asc(gameInnings.half)],
+	});
+}
+
+export async function insertGameInnings(data: InsertGameInning[]) {
+	const innings = await db
+		.insert(gameInnings)
+		.values(
+			data.map((inning) => ({
+				gameId: inning.gameId,
+				teamId: inning.teamId,
+				inning: inning.inning,
+				half: inning.half,
+				runs: inning.runs,
+			})),
+		)
+		.returning();
+
+	return innings;
 }
