@@ -133,7 +133,13 @@ export async function findLeagueAverages(
 			gamesPlayed: sql<number>`COUNT(DISTINCT ${teamGames.gameId})`,
 		})
 		.from(playerGamesStats)
-		.innerJoin(teamGames, eq(teamGames.gameId, playerGamesStats.gameId))
+		.innerJoin(
+			teamGames,
+			and(
+				eq(teamGames.gameId, playerGamesStats.gameId),
+				eq(teamGames.teamId, playerGamesStats.teamId),
+			),
+		)
 		.innerJoin(games, eq(games.id, playerGamesStats.gameId))
 		.innerJoin(
 			opponent,
