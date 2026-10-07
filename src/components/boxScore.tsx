@@ -7,6 +7,7 @@ import {
     TooltipProvider,
     TooltipTrigger,
 } from "@/components/ui/tooltip";
+import { cn } from "@/lib/utils";
 
 // Change this import path if your calculation file is somewhere else.
 import {
@@ -1676,6 +1677,145 @@ export const BoxScore = async ({ boxScore }: Props) => {
 
     /*
      * ============================================================
+     * INNING-BY-INNING (LINE SCORE)
+     * ============================================================
+     */
+
+    const renderScoreboardTable = () => {
+        const scoreCard = data.scoreCard;
+
+        if (!scoreCard) {
+            return null;
+        }
+
+        const { topTeam, bottomTeam, innings } = scoreCard;
+
+        const maxInning = innings.reduce(
+            (max, i) => Math.max(max, i.inning),
+            0,
+        );
+
+        const inningNumbers = Array.from(
+            { length: Math.max(maxInning, 9) },
+            (_, i) => i + 1,
+        );
+
+        const getRuns = (half: "Top" | "Bottom", inning: number) => {
+            const entry = innings.find(
+                (i) => i.half === half && i.inning === inning,
+            );
+
+            return entry ? entry.runs : null;
+        };
+
+        const sumRuns = (half: "Top" | "Bottom") =>
+            innings
+                .filter((i) => i.half === half)
+                .reduce((total, i) => total + (i.runs ?? 0), 0);
+
+        const topTotal = sumRuns("Top");
+        const bottomTotal = sumRuns("Bottom");
+
+        const renderRow = (
+            team: GameStatsDto["team"],
+            half: "Top" | "Bottom",
+            total: number,
+            isWinner: boolean,
+        ) => (
+            <tr
+                className={cn(
+                    "border-b border-slate-100",
+                    isWinner && "bg-slate-50",
+                )}
+            >
+                <td className="sticky left-0 z-10 flex min-w-[160px] items-center gap-2 border-r border-slate-100 bg-white px-4 py-3">
+                    {team.logo && (
+                        <img
+                            src={team.logo}
+                            alt={`${team.name} logo`}
+                            className="h-6 w-6 shrink-0 rounded-full border border-slate-200 bg-white object-cover"
+                        />
+                    )}
+                    <span className="truncate text-sm font-bold text-slate-800">
+                        {team.name}
+                    </span>
+                </td>
+
+                {inningNumbers.map((n) => {
+                    const runs = getRuns(half, n);
+
+                    return (
+                        <td
+                            key={n}
+                            className="w-10 px-2 py-3 text-center text-sm font-semibold text-slate-700"
+                        >
+                            {runs ?? STAT_PLACEHOLDER}
+                        </td>
+                    );
+                })}
+
+                <td className="w-12 border-l-2 border-slate-200 px-3 py-3 text-center text-base font-extrabold text-violet-700">
+                    {total}
+                </td>
+            </tr>
+        );
+
+        return (
+            <div className="overflow-hidden rounded-xl border border-slate-200 bg-white shadow-sm">
+                <div className="border-b border-slate-200 bg-slate-50 px-5 py-4">
+                    <h2 className="text-base font-bold text-slate-900 sm:text-lg">
+                        Inning by Inning
+                    </h2>
+                    <p className="text-xs font-medium uppercase tracking-wide text-slate-400">
+                        Line Score
+                    </p>
+                </div>
+
+                <div className="overflow-x-auto">
+                    <table className="w-full text-sm">
+                        <thead>
+                            <tr className="border-b border-slate-200 bg-white">
+                                <th className="sticky left-0 z-10 min-w-[160px] border-r border-slate-100 bg-white px-4 py-2.5 text-left text-[11px] font-bold uppercase tracking-wide text-slate-400">
+                                    Team
+                                </th>
+
+                                {inningNumbers.map((n) => (
+                                    <th
+                                        key={n}
+                                        className="w-10 px-2 py-2.5 text-center text-[11px] font-bold uppercase tracking-wide text-slate-400"
+                                    >
+                                        {n}
+                                    </th>
+                                ))}
+
+                                <th className="w-12 border-l-2 border-slate-200 px-3 py-2.5 text-center text-[11px] font-bold uppercase tracking-wide text-slate-400">
+                                    R
+                                </th>
+                            </tr>
+                        </thead>
+
+                        <tbody>
+                            {renderRow(
+                                topTeam,
+                                "Top",
+                                topTotal,
+                                topTotal > bottomTotal,
+                            )}
+                            {renderRow(
+                                bottomTeam,
+                                "Bottom",
+                                bottomTotal,
+                                bottomTotal > topTotal,
+                            )}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        );
+    };
+
+    /*
+     * ============================================================
      * GAME RESULT
      * ============================================================
      */
@@ -1861,6 +2001,16 @@ export const BoxScore = async ({ boxScore }: Props) => {
                     </div>
 
                     {/* =====================================================
+                        INNING BY INNING
+                    ====================================================== */}
+
+                    {data.scoreCard && (
+                        <section className="mb-6">
+                            {renderScoreboardTable()}
+                        </section>
+                    )}
+
+                    {/* =====================================================
                         BATTING
                     ====================================================== */}
 
@@ -1980,36 +2130,6 @@ export const BoxScore = async ({ boxScore }: Props) => {
                     </section>
 
                     {/* =====================================================
-                        BASERUNNING
-                    ====================================================== */}
-
-                    <section className="mt-8">
-                        <div className="mb-3">
-                            <h2 className="text-lg font-bold text-slate-900">
-                                Baserunning
-                            </h2>
-
-                            <p className="text-sm text-slate-500">
-                                Stolen bases and baserunning statistics
-                            </p>
-                        </div>
-
-                        <div className="grid grid-cols-1 gap-5">
-                            {renderBaserunningTable(
-                                data.team.name,
-                                data.team.logo,
-                                data.teamPlayers,
-                            )}
-
-                            {renderBaserunningTable(
-                                data.opponent.name,
-                                data.opponent.logo,
-                                data.opponentPlayers,
-                            )}
-                        </div>
-                    </section>
-
-                    {/* =====================================================
                         FIELDING
                     ====================================================== */}
 
@@ -2032,6 +2152,36 @@ export const BoxScore = async ({ boxScore }: Props) => {
                             )}
 
                             {renderFieldingTable(
+                                data.opponent.name,
+                                data.opponent.logo,
+                                data.opponentPlayers,
+                            )}
+                        </div>
+                    </section>
+
+                    {/* =====================================================
+                        BASERUNNING
+                    ====================================================== */}
+
+                    <section className="mt-8">
+                        <div className="mb-3">
+                            <h2 className="text-lg font-bold text-slate-900">
+                                Baserunning
+                            </h2>
+
+                            <p className="text-sm text-slate-500">
+                                Stolen bases and baserunning statistics
+                            </p>
+                        </div>
+
+                        <div className="grid grid-cols-1 gap-5">
+                            {renderBaserunningTable(
+                                data.team.name,
+                                data.team.logo,
+                                data.teamPlayers,
+                            )}
+
+                            {renderBaserunningTable(
                                 data.opponent.name,
                                 data.opponent.logo,
                                 data.opponentPlayers,

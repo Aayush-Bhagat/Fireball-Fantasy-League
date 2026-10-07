@@ -65,7 +65,10 @@ export default async function Page({
                             </TabsContent>
                             <TabsContent className="" value="schedule">
                                 <Suspense fallback={<div>Loading...</div>}>
-                                    <TeamSchedule teamSchedule={teamSchedule} />
+                                    <TeamSchedule
+                                        teamId={team}
+                                        teamSchedule={teamSchedule}
+                                    />
                                 </Suspense>
                             </TabsContent>
                             <TabsContent className="" value="lineup">

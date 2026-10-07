@@ -33,6 +33,8 @@ export default async function Roster() {
     const teamInfo = getUserTeamById(token);
     const roster = getUserTeamRoster(token);
     const schedule = getMyTeamSchedule(token);
+
+    const teamInfoData = await teamInfo;
     return (
         <>
             <div className="min-h-screen bg-gray-100 font-sans pt-">
@@ -76,7 +78,10 @@ export default async function Roster() {
                             </TabsContent>
                             <TabsContent value="schedule">
                                 <Suspense fallback={<div>Loading...</div>}>
-                                    <MyTeamSchedule scheduleData={schedule} />
+                                    <MyTeamSchedule
+                                        teamId={teamInfoData.team.id}
+                                        scheduleData={schedule}
+                                    />
                                 </Suspense>
                             </TabsContent>
                         </Tabs>

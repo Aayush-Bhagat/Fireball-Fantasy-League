@@ -7,38 +7,18 @@ import { useRouter } from "next/navigation";
 import { Ban, MapPin } from "lucide-react";
 
 interface Props {
+    teamId?: string;
     teamSchedule: Promise<GameResponseDto>;
     isAdmin?: boolean;
 }
 
-export default function TeamSchedule({ teamSchedule, isAdmin }: Props) {
+export default function TeamSchedule({ teamId, teamSchedule, isAdmin }: Props) {
     const router = useRouter();
     const [games, setGames] = React.useState<GameResponseDto["games"]>([]);
 
     React.useEffect(() => {
         teamSchedule.then((data) => setGames(data.games));
     }, [teamSchedule]);
-
-    const getGameResult = (game: GameResponseDto["games"][number]) => {
-        if (
-            game.teamScore === null ||
-            game.opponentScore === null ||
-            game.teamScore === undefined ||
-            game.opponentScore === undefined
-        ) {
-            return null;
-        }
-
-        if (game.teamScore > game.opponentScore) {
-            return "W";
-        }
-
-        if (game.teamScore < game.opponentScore) {
-            return "L";
-        }
-
-        return "T";
-    };
 
     return (
         <div className="pb-20">
@@ -52,7 +32,50 @@ export default function TeamSchedule({ teamSchedule, isAdmin }: Props) {
             {/* Schedule */}
             <div className="space-y-3">
                 {games.map((game) => {
-                    const result = getGameResult(game);
+                    // Orient the game around the team whose schedule we're viewing,
+                    // since `game.team` is just the home side, not "this" team.
+                    const viewedIsHome = game.team.id === teamId;
+
+                    const us = viewedIsHome ? game.team : game.opponent;
+                    const usWins = viewedIsHome
+                        ? game.teamWins
+                        : game.opponentWins;
+                    const usLosses = viewedIsHome
+                        ? game.teamLosses
+                        : game.opponentLosses;
+                    const usScore = viewedIsHome
+                        ? game.teamScore
+                        : game.opponentScore;
+                    const usTag = viewedIsHome ? "H" : "A";
+
+                    const them = viewedIsHome ? game.opponent : game.team;
+                    const themWins = viewedIsHome
+                        ? game.opponentWins
+                        : game.teamWins;
+                    const themLosses = viewedIsHome
+                        ? game.opponentLosses
+                        : game.teamLosses;
+                    const themScore = viewedIsHome
+                        ? game.opponentScore
+                        : game.teamScore;
+                    const themTag = viewedIsHome ? "A" : "H";
+
+                    // Stadium pills always go with "us" (left) and "them" (right),
+                    // same spot as before, independent of who's home.
+                    const usStadium = game.stadium;
+                    const themBannedStadium = game.bannedStadium;
+
+                    const result =
+                        usScore === null ||
+                        usScore === undefined ||
+                        themScore === null ||
+                        themScore === undefined
+                            ? null
+                            : usScore > themScore
+                              ? "W"
+                              : usScore < themScore
+                                ? "L"
+                                : "T";
 
                     const gameDate = game.playedAt
                         ? new Date(game.playedAt)
@@ -100,46 +123,44 @@ export default function TeamSchedule({ teamSchedule, isAdmin }: Props) {
                                     </div>
                                 </div>
 
-                                {/* Matchup */}
+                                {/* Matchup: viewed team always on the left */}
                                 <div className="flex min-w-0 flex-1 items-center px-4 py-4 sm:px-6">
                                     <div className="flex w-full items-center justify-center gap-3 sm:gap-6">
-                                        {/* Team */}
+                                        {/* Us */}
                                         <div className="flex min-w-0 flex-1 items-center justify-end gap-2 sm:gap-3">
                                             <div className="min-w-0 text-right">
                                                 <div className="flex min-w-0 items-center justify-end gap-1 text-sm font-semibold text-gray-900 sm:text-base">
                                                     <span className="truncate">
-                                                        {game.team.name}
+                                                        {us.name}
                                                     </span>
                                                     <span className="shrink-0">
-                                                        (H)
+                                                        ({usTag})
                                                     </span>
                                                 </div>
 
                                                 <div className="mt-0.5 text-xs text-slate-400">
-                                                    {game.teamWins} -{" "}
-                                                    {game.teamLosses}
+                                                    {usWins} - {usLosses}
                                                 </div>
 
-                                                {/* Picked stadium */}
-                                                {game.stadium?.name && (
+                                                {usStadium?.name && (
                                                     <div className="mt-1.5 inline-flex items-center gap-1 rounded-md border border-green-200 bg-green-100 px-2 py-1 text-[11px] font-bold leading-tight text-green-800">
                                                         <MapPin className="h-3 w-3 shrink-0" />
                                                         <span className="break-words text-left">
-                                                            {game.stadium.name}
+                                                            {usStadium.name}
                                                         </span>
                                                     </div>
                                                 )}
                                             </div>
 
-                                            {game.team.logo ? (
+                                            {us.logo ? (
                                                 <img
-                                                    src={game.team.logo}
-                                                    alt={`${game.team.name} logo`}
+                                                    src={us.logo}
+                                                    alt={`${us.name} logo`}
                                                     className="h-11 w-11 shrink-0 rounded-full border border-slate-200 bg-white object-cover sm:h-12 sm:w-12"
                                                     onClick={(e) => {
                                                         e.stopPropagation();
                                                         router.push(
-                                                            `/teams/${game.team.id}`,
+                                                            `/teams/${us.id}`,
                                                         );
                                                     }}
                                                 />
@@ -153,17 +174,17 @@ export default function TeamSchedule({ teamSchedule, isAdmin }: Props) {
                                             VS
                                         </div>
 
-                                        {/* Opponent */}
+                                        {/* Them */}
                                         <div className="flex min-w-0 flex-1 items-center gap-2 sm:gap-3">
-                                            {game.opponent.logo ? (
+                                            {them.logo ? (
                                                 <img
-                                                    src={game.opponent.logo}
-                                                    alt={`${game.opponent.name} logo`}
+                                                    src={them.logo}
+                                                    alt={`${them.name} logo`}
                                                     className="h-11 w-11 shrink-0 rounded-full border border-slate-200 bg-white object-cover sm:h-12 sm:w-12"
                                                     onClick={(e) => {
                                                         e.stopPropagation();
                                                         router.push(
-                                                            `/teams/${game.opponent.id}`,
+                                                            `/teams/${them.id}`,
                                                         );
                                                     }}
                                                 />
@@ -172,29 +193,25 @@ export default function TeamSchedule({ teamSchedule, isAdmin }: Props) {
                                             )}
 
                                             <div className="min-w-0">
-                                                <div className="flex min-w-0 items-center justify-end gap-1 text-sm font-semibold text-gray-900 sm:text-base">
+                                                <div className="flex min-w-0 items-center gap-1 text-sm font-semibold text-gray-900 sm:text-base">
                                                     <span className="truncate">
-                                                        {game.opponent.name}
+                                                        {them.name}
                                                     </span>
                                                     <span className="shrink-0">
-                                                        (A)
+                                                        ({themTag})
                                                     </span>
                                                 </div>
 
                                                 <div className="mt-0.5 text-xs text-slate-400">
-                                                    {game.opponentWins} -{" "}
-                                                    {game.opponentLosses}
+                                                    {themWins} - {themLosses}
                                                 </div>
 
-                                                {/* Banned stadium */}
-                                                {game.bannedStadium?.name && (
+                                                {themBannedStadium?.name && (
                                                     <div className="mt-1.5 inline-flex items-center gap-1 rounded-md border border-red-200 bg-red-100 px-2 py-1 text-[11px] font-bold leading-tight text-red-700">
                                                         <Ban className="h-3 w-3 shrink-0" />
-                                                        <span className="break-words  decoration-red-500 decoration-2">
+                                                        <span className="break-words decoration-red-500 decoration-2">
                                                             {
-                                                                game
-                                                                    .bannedStadium
-                                                                    .name
+                                                                themBannedStadium.name
                                                             }
                                                         </span>
                                                     </div>
@@ -221,8 +238,7 @@ export default function TeamSchedule({ teamSchedule, isAdmin }: Props) {
                                             </span>
 
                                             <span className="text-sm font-bold text-slate-800">
-                                                {game.teamScore} -{" "}
-                                                {game.opponentScore}
+                                                {usScore} - {themScore}
                                             </span>
                                         </div>
                                     ) : (
@@ -235,8 +251,7 @@ export default function TeamSchedule({ teamSchedule, isAdmin }: Props) {
                         </div>
                     );
                 })}
-
-                {/* Empty State */}
+                ){/* Empty State */}
                 {games.length === 0 && (
                     <div className="rounded-xl border border-slate-200 bg-white px-6 py-12 text-center shadow-sm">
                         <p className="font-semibold text-slate-700">

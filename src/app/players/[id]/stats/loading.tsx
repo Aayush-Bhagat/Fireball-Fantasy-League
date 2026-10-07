@@ -3,7 +3,7 @@ import { FullPlayerStatsSkeleton } from "@/components/loaders/FullPlayerStatsSke
 export default function Loading() {
     return (
         <div className="pt-16">
-            <FullPlayerStatsSkeleton />
+            <FullPlayerStatsSkeleton />;
         </div>
     );
 }
