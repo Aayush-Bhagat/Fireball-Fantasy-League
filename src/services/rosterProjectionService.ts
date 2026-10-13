@@ -15,37 +15,30 @@
  * {@link ROSTER_PROJECTION_CACHE_TAG}. Route handlers invalidate the tag
  * on stat entry / roster changes; a TTL is kept as a safety net.
  *
- * Connection-pool awareness: the uncached computation fetches the shared
- * inputs (`findActiveSeasonIds`, `findLeagueAverages`) ONCE per batch and
- * processes per-team queries in bounded chunks. On a cache miss this
- * avoids blowing the Supabase pooler's client limit when called from
- * `computeSeasonOdds` over a 10-team league.
+ * Connection-pool awareness: the uncached computation needs only three
+ * queries per batch (`findActiveSeasonIds`, `findLeagueAverages`, and one
+ * batched roster query). The roster query runs alongside the league
+ * averages, so a cache miss uses at most two pooled connections no
+ * matter how many teams were requested.
  */
 
 import { unstable_cache } from "next/cache";
 import {
 	findActiveSeasonIds,
 	findLeagueAverages,
-	findRosterStats,
+	findRostersStats,
 } from "@/repositories/rosterProjectionRepository";
 import {
 	projectRoster,
 } from "@/lib/rosterProjector";
 import {
 	DEFAULT_PROJECTION_CONFIG,
+	PlayerSeasonStats,
 	ProjectionConfig,
 	RosterStats,
 	TeamProjection,
 } from "@/dtos/projectionDtos";
 import { ROSTER_PROJECTION_CACHE_TAG } from "@/lib/cacheTags";
-
-/**
- * How many per-team `findRosterStats` calls to issue at once. Each call
- * uses one pooled connection; with Supabase's pooler capped at 15
- * clients, 5 keeps us well under the limit even when the same request
- * is also running other queries (e.g. the schedule fetch).
- */
-const PER_TEAM_CONCURRENCY = 5;
 
 /**
  * Safety-net TTL for the projection cache. Normal freshness comes from
@@ -74,32 +67,29 @@ async function computeProjectionEntries(
 	const seasonIds = await findActiveSeasonIds(4);
 	if (seasonIds.length === 0) return [];
 
-	const leagueAverages = await findLeagueAverages(seasonIds);
+	// One batched roster query for every requested team, alongside the
+	// league averages. Both hit the pool once, in parallel.
+	const [leagueAverages, rosterRows] = await Promise.all([
+		findLeagueAverages(seasonIds),
+		findRostersStats(teamIds, seasonIds),
+	]);
+
+	// Group the rows by team, then project each requested team. A team
+	// with no roster rows is omitted (same as the old per-team skip).
+	const byTeam = new Map<string, PlayerSeasonStats[]>();
+	for (const { teamId, ...stats } of rosterRows) {
+		const list = byTeam.get(teamId);
+		if (list) list.push(stats);
+		else byTeam.set(teamId, [stats]);
+	}
+
 	const config = mergeConfig(configOverride);
 	const out: CachedProjectionEntry[] = [];
-
-	// Process per-team queries in bounded chunks. Each chunk awaits
-	// before the next one starts, so we never have more than
-	// `PER_TEAM_CONCURRENCY` pooled connections in flight for the
-	// per-team step.
-	for (let i = 0; i < teamIds.length; i += PER_TEAM_CONCURRENCY) {
-		const chunk = teamIds.slice(i, i + PER_TEAM_CONCURRENCY);
-		const chunkResults = await Promise.all(
-			chunk.map(async (teamId) => {
-				const players = await findRosterStats(teamId, seasonIds);
-				if (players.length === 0) return null;
-				const roster: RosterStats = {
-					teamId,
-					players,
-					leagueAverages,
-				};
-				const projection = projectRoster(roster, config);
-				return { teamId, projection };
-			}),
-		);
-		for (const r of chunkResults) {
-			if (r) out.push(r);
-		}
+	for (const teamId of teamIds) {
+		const players = byTeam.get(teamId);
+		if (!players || players.length === 0) continue;
+		const roster: RosterStats = { teamId, players, leagueAverages };
+		out.push({ teamId, projection: projectRoster(roster, config) });
 	}
 
 	return out;

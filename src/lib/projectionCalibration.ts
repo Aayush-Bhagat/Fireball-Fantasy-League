@@ -347,8 +347,11 @@ function invertMatrix(M: number[][]): number[][] | null {
 /* -------------------------------------------------------------------------- */
 
 async function main(): Promise<void> {
-	const seasonArg = process.argv[2];
-	if (!seasonArg) {
+	// Accept both `... 1 2 3 4` and `... "1 2 3 4"`. Reading only
+	// `argv[2]` silently calibrated on the first season when multiple
+	// ids were passed, so join all remaining args before splitting.
+	const seasonArgs = process.argv.slice(2);
+	if (seasonArgs.length === 0) {
 		console.error(
 			"Usage: npx tsx src/lib/projectionCalibration.ts <seasonIds...>\n" +
 				"Example: npx tsx src/lib/projectionCalibration.ts 1 2 3 4",
@@ -356,7 +359,8 @@ async function main(): Promise<void> {
 		process.exit(1);
 	}
 
-	const seasonIds = seasonArg
+	const seasonIds = seasonArgs
+		.join(" ")
 		.split(/[\s,]+/)
 		.map((s) => Number(s))
 		.filter((n) => Number.isFinite(n) && n > 0);
